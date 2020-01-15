@@ -3,7 +3,7 @@
 # Project
 cmake_minimum_required(VERSION 3.10)
 project(cv_reconstruct)
-set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD 14)
 
 # Mac OSX Check
 if (${CMAKE_SYSTEM_NAME} MATCHES "Darwin")
