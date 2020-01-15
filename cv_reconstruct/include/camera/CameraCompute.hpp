@@ -9,7 +9,7 @@
 #include <eigen3/Eigen/Eigen>
 #include <opencv2/core/core.hpp>
 
-#include "camera/StereoCameraSettings.hpp"
+#include "camera/CameraSettings.hpp"
 
 namespace Camera
 {
@@ -18,7 +18,7 @@ namespace Camera
     public:
         /// Construct compute module with given stereo camera setup
         /// \param settings The stereo camera setup that will be used to run computations
-        CameraCompute(StereoCameraSettings settings);
+        CameraCompute(Settings::StereoCameraSettings settings);
 
         /// Compute the fundamental matrix with the given left and right image
         /// \param leftImage The left stereo image
@@ -27,7 +27,7 @@ namespace Camera
         Eigen::Matrix3f FundamentalMatrix(const cv::Mat &leftImage, const cv::Mat &rightImage);
 
     private:
-        StereoCameraSettings m_StereoSettings;
+        Settings::StereoCameraSettings m_StereoSettings;
     };
 }
 

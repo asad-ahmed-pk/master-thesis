@@ -7,7 +7,7 @@
 
 namespace Camera
 {
-    CameraCompute::CameraCompute(StereoCameraSettings settings) : m_StereoSettings(std::move(settings))
+    CameraCompute::CameraCompute(Settings::StereoCameraSettings settings) : m_StereoSettings(std::move(settings))
     {
 
     }
