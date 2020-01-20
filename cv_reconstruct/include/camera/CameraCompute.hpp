@@ -36,10 +36,16 @@ namespace Camera
         /// \return The computed essential matrix
         Eigen::Matrix3f EssentialMatrix(const cv::Mat& leftImage, const cv::Mat& rightImage, const Eigen::Matrix3f& KL, const Eigen::Matrix3f& KR);
 
-    private:
-        void ComputeMatchingFeatures(const cv::Mat& leftImage, const cv::Mat& rightImage, std::vector<cv::Point2f>& pointsLeft, std::vector<cv::Point2f>& pointsRight);
+        /// Get a copy of the updated, rectified stereo camera setup
+        /// \return Updated stereo camera settings with rectification information for new projection and transform matrices
+        Settings::StereoCameraSettings GetRectifiedStereoSettings();
 
     private:
+        void ComputeMatchingFeatures(const cv::Mat& leftImage, const cv::Mat& rightImage, std::vector<cv::Point2f>& pointsLeft, std::vector<cv::Point2f>& pointsRight);
+        void Rectify();
+
+    private:
+        bool m_IsStereoRectified { false };
         Settings::StereoCameraSettings m_StereoSettings;
     };
 }

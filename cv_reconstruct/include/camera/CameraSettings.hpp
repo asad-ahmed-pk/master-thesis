@@ -6,6 +6,7 @@
 #ifndef CV_RECONSTRUCT_CAMERASETTINGS_HPP
 #define CV_RECONSTRUCT_CAMERASETTINGS_HPP
 
+#include <opencv2/core/core.hpp>
 #include <eigen3/Eigen/Eigen>
 
 namespace Camera
@@ -18,6 +19,25 @@ namespace Camera
             Eigen::Matrix3f K = Eigen::Matrix3f::Zero();
             Eigen::VectorXf D;
             Eigen::Vector2i ImageResolutionInPixels = Eigen::Vector2i::Zero();
+        };
+
+        /// Settings for the stereo rectified camera system
+        struct StereoRectifiedSettings
+        {
+            // Rectified rotation transform for left (RL) and right (RR) cameras
+            cv::Mat RL;
+            cv::Mat RR;
+
+            // Projection matrices for the rectified coordinate system for the left (PL), and right (PR) cameras
+            cv::Mat PL;
+            cv::Mat PR;
+
+            // 4x4 disparity to depth mapping matrix
+            cv::Mat Q;
+
+            // Valid image spaces after rectification in rectified images
+            cv::Rect ValidRectLeft;
+            cv::Rect ValidRectRight;
         };
 
         /// The settings for a stereo camera rig
@@ -34,6 +54,9 @@ namespace Camera
 
             // Transform from left camera origin to right camera origin
             Eigen::Vector3f T = Eigen::Vector3f::Zero();
+
+            // Stereo rectified settings
+            StereoRectifiedSettings RectifiedSettings;
         };
     }
 }

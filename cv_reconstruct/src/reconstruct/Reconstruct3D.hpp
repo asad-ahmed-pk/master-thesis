@@ -9,6 +9,8 @@
 #include "camera/CameraSettings.hpp"
 
 #include <opencv2/core/core.hpp>
+#include <opencv2/calib3d/calib3d.hpp>
+#include <memory>
 
 namespace Reconstruct
 {
@@ -16,7 +18,7 @@ namespace Reconstruct
     {
     public:
         /// Create a 3D reconstructor for the given stereo rig
-        /// \param stereoSetup The calibrated, stereo rig setup
+        /// \param stereoSetup The calibrated, stereo rig setup with stereo rectification already applied
         explicit Reconstruct3D(Camera::Settings::StereoCameraSettings& stereoSetup);
 
         /// Generate the disparity map for the given stereo images
@@ -27,6 +29,7 @@ namespace Reconstruct
 
     private:
         Camera::Settings::StereoCameraSettings m_StereoCameraSetup;
+        cv::Ptr<cv::StereoSGBM> m_StereoMatcher;
     };
 }
 

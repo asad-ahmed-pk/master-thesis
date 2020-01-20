@@ -15,7 +15,8 @@ namespace Camera
 
     CameraCompute::CameraCompute(Settings::StereoCameraSettings settings) : m_StereoSettings(std::move(settings))
     {
-
+        // compute rectification matrices and information
+        Rectify();
     }
 
     // Compute F matrix
@@ -92,5 +93,43 @@ namespace Camera
                 pointsRight.push_back(keypointsRight[firstMatch.trainIdx].pt);
             }
         }
+    }
+
+    // Stereo rectification
+    void CameraCompute::Rectify()
+    {
+        // convert stereo setup matrices to CV
+        cv::Mat K1, K2, R, T;
+        std::vector<float> D1, D2;      // lens distortion co-effs
+        cv::Point2i imageSize { m_StereoSettings.LeftCamSettings.ImageResolutionInPixels.x(), m_StereoSettings.LeftCamSettings.ImageResolutionInPixels.y() };
+
+        cv::eigen2cv(m_StereoSettings.LeftCamSettings.K, K1);
+        cv::eigen2cv(m_StereoSettings.RightCamSettings.K, K2);
+
+        cv::eigen2cv(m_StereoSettings.R, R);
+        cv::eigen2cv(m_StereoSettings.T, T);
+
+        cv::eigen2cv(m_StereoSettings.LeftCamSettings.D, D1);
+        cv::eigen2cv(m_StereoSettings.RightCamSettings.D, D2);
+
+        // rectify and store rectified projection, and transform matrices
+        cv::stereoRectify(K1, D1, K2, D2, imageSize, R, T,
+                m_StereoSettings.RectifiedSettings.RL,m_StereoSettings.RectifiedSettings.RR,
+                m_StereoSettings.RectifiedSettings.PL, m_StereoSettings.RectifiedSettings.PR,
+                m_StereoSettings.RectifiedSettings.Q,
+                cv::CALIB_ZERO_DISPARITY, -1, cv::Size(),
+                &m_StereoSettings.RectifiedSettings.ValidRectLeft, &m_StereoSettings.RectifiedSettings.ValidRectRight);
+
+        m_IsStereoRectified = true;
+    }
+
+    // Get copy of camera settings
+    Settings::StereoCameraSettings CameraCompute::GetRectifiedStereoSettings()
+    {
+        if (!m_IsStereoRectified) {
+            Rectify();
+        }
+
+        return m_StereoSettings;
     }
 }
