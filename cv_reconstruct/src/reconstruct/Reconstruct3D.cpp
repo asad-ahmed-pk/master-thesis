@@ -6,13 +6,14 @@
 #include "reconstruct/Reconstruct3D.hpp"
 
 #include <opencv2/imgproc/imgproc.hpp>
+#include <opencv2/highgui.hpp>
 #include <opencv2/core/eigen.hpp>
 
 namespace Reconstruct
 {
     const int SGM_MIN_DISPARITY = 0;
-    const int SGM_BLOCK_SIZE = 3;
-    const int SGM_NUM_DISPARITIES = 16;
+    const int SGM_BLOCK_SIZE = 9;
+    const int SGM_NUM_DISPARITIES = 112;
 
     constexpr int SGM_P1 = 8 * 3 * SGM_BLOCK_SIZE * SGM_BLOCK_SIZE;
     constexpr int SGM_P2 = 32 * 3 * SGM_BLOCK_SIZE * SGM_BLOCK_SIZE;
@@ -22,6 +23,11 @@ namespace Reconstruct
     {
         // setup stereo matcher
         m_StereoMatcher = cv::StereoSGBM::create(SGM_MIN_DISPARITY, SGM_NUM_DISPARITIES, SGM_BLOCK_SIZE, SGM_P1, SGM_P2);
+        m_StereoMatcher->setSpeckleRange(20);
+        m_StereoMatcher->setUniquenessRatio(10);
+        m_StereoMatcher->setSpeckleWindowSize(100);
+        m_StereoMatcher->setSpeckleRange(32);
+        m_StereoMatcher->setDisp12MaxDiff(1);
     }
 
     // Disparity map
@@ -48,18 +54,18 @@ namespace Reconstruct
 
         cv::Size size { m_StereoCameraSetup.LeftCamSettings.ImageResolutionInPixels.x(), m_StereoCameraSetup.LeftCamSettings.ImageResolutionInPixels.y() };
 
-        // re-project images to be rectified
-        //cv::undistortPoints(leftImage, leftImageRectified, K1, D1, m_StereoCameraSetup.RectifiedSettings.RL, m_StereoCameraSetup.RectifiedSettings.PL);
-        //cv::undistortPoints(rightImage, rightImageRectified, K2, D2, m_StereoCameraSetup.RectifiedSettings.RR, m_StereoCameraSetup.RectifiedSettings.PR);
-
         // remap image to rectified coords
         cv::Mat map11, map12, map21, map22;
         initUndistortRectifyMap(K1, D1, R1, P1, size, CV_16SC2, map11, map12);
         initUndistortRectifyMap(K2, D2, R2, P2, size, CV_16SC2, map21, map22);
 
         cv::Mat leftImageRectified, rightImageRectified;
-        remap(leftImage, leftImageRectified, map11, map12, cv::INTER_LINEAR);
-        remap(rightImage, rightImageRectified, map21, map22, cv::INTER_LINEAR);
+        cv::remap(leftImage, leftImageRectified, map11, map12, cv::INTER_LINEAR);
+        cv::remap(rightImage, rightImageRectified, map21, map22, cv::INTER_LINEAR);
+
+        // debugging: write out to file
+        cv::imwrite("left_rect.png", leftImageRectified);
+        cv::imwrite("right_rect.png", rightImageRectified);
 
         // compute disparity
         cv::Mat disparity;
