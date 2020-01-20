@@ -99,15 +99,24 @@ namespace Camera
     void CameraCompute::Rectify()
     {
         // convert stereo setup matrices to CV
-        cv::Mat K1, K2, R, T;
+        cv::Mat K1(3, 3, CV_64F);
+        cv::Mat K2(3, 3, CV_64F);
+        cv::Mat R(3, 3, CV_64F);
+        cv::Mat T;
+
         std::vector<float> D1, D2;      // lens distortion co-effs
         cv::Point2i imageSize { m_StereoSettings.LeftCamSettings.ImageResolutionInPixels.x(), m_StereoSettings.LeftCamSettings.ImageResolutionInPixels.y() };
 
         cv::eigen2cv(m_StereoSettings.LeftCamSettings.K, K1);
+        K1.convertTo(K1, CV_64F);
         cv::eigen2cv(m_StereoSettings.RightCamSettings.K, K2);
+        K2.convertTo(K2, CV_64F);
 
         cv::eigen2cv(m_StereoSettings.R, R);
+        R.convertTo(R, CV_64F);
+
         cv::eigen2cv(m_StereoSettings.T, T);
+        T.convertTo(T, CV_64F);
 
         cv::eigen2cv(m_StereoSettings.LeftCamSettings.D, D1);
         cv::eigen2cv(m_StereoSettings.RightCamSettings.D, D2);
