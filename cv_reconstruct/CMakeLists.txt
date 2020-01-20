@@ -33,8 +33,16 @@ list(APPEND CAMERA_SOURCES
         src/camera/CameraCompute.cpp
 )
 
+list(APPEND RECONSTRUCT_3D_SOURCES
+        src/reconstruct/Reconstruct3D.cpp
+)
+
 # Executables
 
-# Camera compute test
+# Camera compute module test
 add_executable(camera_compute_test src/test/camera_compute_test.cpp ${CAMERA_SOURCES})
 target_link_libraries(camera_compute_test ${OpenCV_LIBS} ${Boost_LIBRARIES})
+
+# Reconstruct module test
+add_executable(reconstruct_test src/test/reconstruct_test.cpp ${CAMERA_SOURCES} ${RECONSTRUCT_3D_SOURCES})
+target_link_libraries(reconstruct_test ${OpenCV_LIBS} ${Boost_LIBRARIES})
