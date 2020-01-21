@@ -19,7 +19,7 @@ namespace Reconstruct
     public:
         /// Create a 3D reconstructor for the given stereo rig
         /// \param stereoSetup The calibrated, stereo rig setup with stereo rectification already applied
-        explicit Reconstruct3D(Camera::Settings::StereoCameraSettings& stereoSetup);
+        explicit Reconstruct3D(const Camera::Settings::StereoCameraSettings& stereoSetup);
 
         /// Generate the disparity map for the given stereo images
         /// \param leftImage The left camera image

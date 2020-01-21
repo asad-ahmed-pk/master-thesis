@@ -12,22 +12,23 @@
 namespace Reconstruct
 {
     const int SGM_MIN_DISPARITY = 0;
-    const int SGM_BLOCK_SIZE = 9;
-    const int SGM_NUM_DISPARITIES = 112;
+    const int SGM_BLOCK_SIZE = 11;
+    const int SGM_NUM_DISPARITIES = 160;
 
     constexpr int SGM_P1 = 8 * 3 * SGM_BLOCK_SIZE * SGM_BLOCK_SIZE;
     constexpr int SGM_P2 = 32 * 3 * SGM_BLOCK_SIZE * SGM_BLOCK_SIZE;
 
     // Constructor
-    Reconstruct3D::Reconstruct3D(Camera::Settings::StereoCameraSettings &stereoSetup) : m_StereoCameraSetup(stereoSetup)
+    Reconstruct3D::Reconstruct3D(const Camera::Settings::StereoCameraSettings& stereoSetup) : m_StereoCameraSetup(stereoSetup)
     {
         // setup stereo matcher
         m_StereoMatcher = cv::StereoSGBM::create(SGM_MIN_DISPARITY, SGM_NUM_DISPARITIES, SGM_BLOCK_SIZE, SGM_P1, SGM_P2);
-        m_StereoMatcher->setSpeckleRange(20);
+
         m_StereoMatcher->setUniquenessRatio(10);
-        m_StereoMatcher->setSpeckleWindowSize(100);
-        m_StereoMatcher->setSpeckleRange(32);
+        m_StereoMatcher->setSpeckleRange(2);
+        m_StereoMatcher->setSpeckleWindowSize(128);
         m_StereoMatcher->setDisp12MaxDiff(1);
+        m_StereoMatcher->setPreFilterCap(31);
     }
 
     // Disparity map
@@ -54,7 +55,7 @@ namespace Reconstruct
 
         cv::Size size { m_StereoCameraSetup.LeftCamSettings.ImageResolutionInPixels.x(), m_StereoCameraSetup.LeftCamSettings.ImageResolutionInPixels.y() };
 
-        // remap image to rectified coords
+        // remap image using rectified projection
         cv::Mat map11, map12, map21, map22;
         initUndistortRectifyMap(K1, D1, R1, P1, size, CV_16SC2, map11, map12);
         initUndistortRectifyMap(K2, D2, R2, P2, size, CV_16SC2, map21, map22);

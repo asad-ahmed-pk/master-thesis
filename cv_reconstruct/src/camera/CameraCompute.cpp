@@ -15,7 +15,7 @@ namespace Camera
 
     CameraCompute::CameraCompute(Settings::StereoCameraSettings settings) : m_StereoSettings(std::move(settings))
     {
-        // compute rectification matrices and information
+        // compute rectification matrices for new optimal camera projection
         Rectify();
     }
 
@@ -102,10 +102,10 @@ namespace Camera
         cv::Mat K1(3, 3, CV_64F);
         cv::Mat K2(3, 3, CV_64F);
         cv::Mat R(3, 3, CV_64F);
-        cv::Mat T;
+        cv::Mat T(1, 3, CV_64F);
 
         std::vector<float> D1, D2;      // lens distortion co-effs
-        cv::Point2i imageSize { m_StereoSettings.LeftCamSettings.ImageResolutionInPixels.x(), m_StereoSettings.LeftCamSettings.ImageResolutionInPixels.y() };
+        cv::Size imageSize { m_StereoSettings.LeftCamSettings.ImageResolutionInPixels.x(), m_StereoSettings.LeftCamSettings.ImageResolutionInPixels.y() };
 
         cv::eigen2cv(m_StereoSettings.LeftCamSettings.K, K1);
         K1.convertTo(K1, CV_64F);
@@ -126,7 +126,7 @@ namespace Camera
                 m_StereoSettings.RectifiedSettings.RL,m_StereoSettings.RectifiedSettings.RR,
                 m_StereoSettings.RectifiedSettings.PL, m_StereoSettings.RectifiedSettings.PR,
                 m_StereoSettings.RectifiedSettings.Q,
-                cv::CALIB_ZERO_DISPARITY, -1, cv::Size(),
+                cv::CALIB_ZERO_DISPARITY, 0, cv::Size(),
                 &m_StereoSettings.RectifiedSettings.ValidRectLeft, &m_StereoSettings.RectifiedSettings.ValidRectRight);
 
         m_IsStereoRectified = true;
