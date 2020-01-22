@@ -10,6 +10,10 @@
 
 #include <opencv2/core/core.hpp>
 #include <opencv2/calib3d/calib3d.hpp>
+
+#include <pcl/point_cloud.h>
+#include <pcl/point_types.h>
+
 #include <memory>
 
 namespace Reconstruct
@@ -26,6 +30,12 @@ namespace Reconstruct
         /// \param rightImage The right camera image
         /// \return The disparity map
         cv::Mat GenerateDisparityMap(const cv::Mat& leftImage, const cv::Mat& rightImage) const;
+
+        /// Generate point cloud from disparity map
+        /// \param disparity The 8 or 16 bit disparity image
+        /// \param cameraImage A RGB camera image used for creating the disparity map
+        /// \return The generated point cloud with X,Y,Z
+        pcl::PointCloud<pcl::PointXYZRGB> GeneratePointCloud(const cv::Mat& disparity, const cv::Mat& cameraImage) const;
 
     private:
         Camera::Settings::StereoCameraSettings m_StereoCameraSetup;

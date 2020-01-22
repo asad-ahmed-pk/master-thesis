@@ -20,6 +20,12 @@ include_directories(${Boost_INCLUDE_DIR})
 # Eigen3
 find_package(Eigen3 3.3 REQUIRED NO_MODULE)
 
+# PCL
+find_package(PCL 1.8 REQUIRED COMPONENTS common io visualization)
+include_directories(${PCL_INCLUDE_DIRS})
+link_directories(${PCL_LIBRARY_DIRS})
+add_definitions(${PCL_DEFINITIONS})
+
 # Includes for eigen for MacOS
 if (${MACOSX})
     include_directories(eigen3)
@@ -45,4 +51,4 @@ target_link_libraries(camera_compute_test ${OpenCV_LIBS} ${Boost_LIBRARIES})
 
 # Reconstruct module test
 add_executable(reconstruct_test src/test/reconstruct_test.cpp ${CAMERA_SOURCES} ${RECONSTRUCT_3D_SOURCES})
-target_link_libraries(reconstruct_test ${OpenCV_LIBS} ${Boost_LIBRARIES})
+target_link_libraries(reconstruct_test ${OpenCV_LIBS} ${Boost_LIBRARIES} ${PCL_LIBRARIES})

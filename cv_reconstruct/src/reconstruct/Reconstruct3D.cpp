@@ -74,4 +74,11 @@ namespace Reconstruct
 
         return disparity;
     }
+
+    // Point cloud generation
+    pcl::PointCloud<pcl::PointXYZRGB> Reconstruct3D::GeneratePointCloud(const cv::Mat& disparity, const cv::Mat& cameraImage) const
+    {
+        // TODO: generate X,Y,Z from disparity and create PCL point cloud with colour values
+
+    }
 }
