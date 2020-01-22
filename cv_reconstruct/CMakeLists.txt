@@ -43,6 +43,10 @@ list(APPEND RECONSTRUCT_3D_SOURCES
         src/reconstruct/Reconstruct3D.cpp
 )
 
+list(APPEND OTHER_SOURCES
+        include/nlohmann/json.hpp
+)
+
 # Executables
 
 # Camera compute module test
@@ -50,5 +54,5 @@ add_executable(camera_compute_test src/test/camera_compute_test.cpp ${CAMERA_SOU
 target_link_libraries(camera_compute_test ${OpenCV_LIBS} ${Boost_LIBRARIES})
 
 # Reconstruct module test
-add_executable(reconstruct_test src/test/reconstruct_test.cpp ${CAMERA_SOURCES} ${RECONSTRUCT_3D_SOURCES})
+add_executable(reconstruct_test src/test/reconstruct_test.cpp ${CAMERA_SOURCES} ${RECONSTRUCT_3D_SOURCES} ${OTHER_SOURCES})
 target_link_libraries(reconstruct_test ${OpenCV_LIBS} ${Boost_LIBRARIES} ${PCL_LIBRARIES})
