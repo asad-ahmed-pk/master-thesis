@@ -37,6 +37,7 @@ include_directories(include)
 # Sources
 list(APPEND CAMERA_SOURCES
         src/camera/CameraCompute.cpp
+        src/camera/CameraCalibParser.cpp
 )
 
 list(APPEND RECONSTRUCT_3D_SOURCES
