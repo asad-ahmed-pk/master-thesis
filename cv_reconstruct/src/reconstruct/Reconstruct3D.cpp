@@ -5,6 +5,7 @@
 
 #include "reconstruct/Reconstruct3D.hpp"
 
+#include <cmath>
 #include <opencv2/imgproc/imgproc.hpp>
 #include <opencv2/highgui.hpp>
 #include <opencv2/core/eigen.hpp>
@@ -78,7 +79,46 @@ namespace Reconstruct
     // Point cloud generation
     pcl::PointCloud<pcl::PointXYZRGB> Reconstruct3D::GeneratePointCloud(const cv::Mat& disparity, const cv::Mat& cameraImage) const
     {
-        // TODO: generate X,Y,Z from disparity and create PCL point cloud with colour values
+        cv::Mat reprojected3D;
+        cv::reprojectImageTo3D(disparity, reprojected3D, m_StereoCameraSetup.RectifiedSettings.Q);
 
+        pcl::PointCloud<pcl::PointXYZRGB> pointCloud;
+
+        cv::Vec3f coords;
+        pcl::PointXYZRGB point;
+
+        uint32_t count = 0;
+
+        for (int row = 0; row < reprojected3D.rows; row++)
+        {
+            for (int col = 0; col < reprojected3D.cols; col++)
+            {
+                coords = reprojected3D.at<cv::Vec3f>(row, col);
+
+                // skip points with infinity values and zero depth
+                if (isinf(coords[0]) || isinf(coords[1]) || isinf(coords[2])) {
+                    continue;
+                }
+
+                // set 3D point X,Y,Z and RGB
+                point.x = coords[0];
+                point.y = coords[1];
+                point.z = coords[2];
+
+                point.r = cameraImage.at<cv::Vec3b>(row, col)[2];
+                point.g = cameraImage.at<cv::Vec3b>(row, col)[1];
+                point.b = cameraImage.at<cv::Vec3b>(row, col)[0];
+
+                pointCloud.push_back(point);
+
+                count++;
+            }
+        }
+
+        pointCloud.width = count;
+        pointCloud.height = 1;
+        pointCloud.is_dense = true;
+
+        return pointCloud;
     }
 }

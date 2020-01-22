@@ -14,6 +14,10 @@
 #include <opencv2/core/core.hpp>
 #include <opencv2/highgui/highgui.hpp>
 
+#include <pcl/io/pcd_io.h>
+#include <pcl/point_cloud.h>
+#include <pcl/point_types.h>
+
 // constants for camera calibration from dataset
 const Eigen::Matrix3f K1 = (Eigen::Matrix3f() << 837.619011, 0.0, 522.434637,
                                                 0.0, 839.808333, 402.367400,
@@ -77,9 +81,17 @@ int main(int argc, char** argv)
     cv::Mat disparity = reconstructor.GenerateDisparityMap(leftImage, rightImage);
 
     std::cout << "\nDisparity map computed successfully" << std::endl;
-    //std::cout << "\n" << disparity << std::endl;
     cv::imwrite("disparity_map.png", disparity);
 
+    // create point cloud
+    pcl::PointCloud<pcl::PointXYZRGB> pointCloud;
+    pointCloud = reconstructor.GeneratePointCloud(disparity, leftImage);
+
+    // save point cloud file
+    std::cout << "\nSaving point cloud file..." << std::endl;
+    pcl::io::savePCDFileBinary("generated_point_cloud.pcd", pointCloud);
+
+    std::cout << "Done";
     std::cout << std::endl;
     return 0;
 }
