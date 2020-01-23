@@ -28,6 +28,8 @@ const Eigen::Matrix3f R = (Eigen::Matrix3f() << 9.9997625494747e-001, -6.3729476
 
 const Eigen::Vector3f T = (Eigen::Vector3f() << 1.194711e-001, 3.144088e-004, 1.423872e-004).finished();
 
+const Eigen::Vector2i IMAGE_RES { 1024, 768 };
+
 
 TEST_CASE("JSON calib file parsed correctly", "[camera_calib_parse]")
 {
@@ -48,6 +50,8 @@ TEST_CASE("JSON calib file parsed correctly", "[camera_calib_parse]")
     REQUIRE(calib.LeftCamSettings.D == D1);
     REQUIRE(calib.RightCamSettings.K == K2);
     REQUIRE(calib.RightCamSettings.D == D2);
+    REQUIRE(calib.LeftCamSettings.ImageResolutionInPixels == IMAGE_RES);
+    REQUIRE(calib.RightCamSettings.ImageResolutionInPixels == IMAGE_RES);
 
     // extrinsics
     REQUIRE(calib.R == R);

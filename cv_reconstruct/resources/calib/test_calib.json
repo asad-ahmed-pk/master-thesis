@@ -13,7 +13,11 @@
           0.1766205,
           0.0,
           0.0
-        ]
+        ],
+        "image_resolution": {
+          "width": 1024,
+          "height": 768
+        }
       },
       "right_cam": {
         "K": {
@@ -27,7 +31,11 @@
           0.1538358,
           0.0,
           0.0
-        ]
+        ],
+        "image_resolution": {
+          "width": 1024,
+          "height": 768
+        }
       }
     },
     "extrinsic": {
