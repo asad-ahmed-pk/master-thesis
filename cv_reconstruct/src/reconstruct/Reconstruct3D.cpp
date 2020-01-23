@@ -20,7 +20,7 @@ namespace Reconstruct
     constexpr int SGM_P2 = 32 * 3 * SGM_BLOCK_SIZE * SGM_BLOCK_SIZE;
 
     // Constructor
-    Reconstruct3D::Reconstruct3D(const Camera::Settings::StereoCameraSettings& stereoSetup) : m_StereoCameraSetup(stereoSetup)
+    Reconstruct3D::Reconstruct3D(const Camera::Calib::StereoCalib& stereoSetup) : m_StereoCameraSetup(stereoSetup)
     {
         // setup stereo matcher
         m_StereoMatcher = cv::StereoSGBM::create(SGM_MIN_DISPARITY, SGM_NUM_DISPARITIES, SGM_BLOCK_SIZE, SGM_P1, SGM_P2);
@@ -39,22 +39,22 @@ namespace Reconstruct
         cv::Mat K1, K2;
         std::vector<float> D1, D2;
 
-        cv::eigen2cv(m_StereoCameraSetup.LeftCamSettings.K, K1);
+        cv::eigen2cv(m_StereoCameraSetup.LeftCameraCalib.K, K1);
         K1.convertTo(K1, CV_64F);
 
-        cv::eigen2cv(m_StereoCameraSetup.RightCamSettings.K, K2);
+        cv::eigen2cv(m_StereoCameraSetup.RightCameraCalib.K, K2);
         K2.convertTo(K2, CV_64F);
 
-        cv::eigen2cv(m_StereoCameraSetup.LeftCamSettings.D, D1);
-        cv::eigen2cv(m_StereoCameraSetup.RightCamSettings.D, D2);
+        cv::eigen2cv(m_StereoCameraSetup.LeftCameraCalib.D, D1);
+        cv::eigen2cv(m_StereoCameraSetup.RightCameraCalib.D, D2);
 
         // other required matrices
-        cv::Mat R1 = m_StereoCameraSetup.RectifiedSettings.RL;
-        cv::Mat R2 = m_StereoCameraSetup.RectifiedSettings.RR;
-        cv::Mat P1 = m_StereoCameraSetup.RectifiedSettings.PL;
-        cv::Mat P2 = m_StereoCameraSetup.RectifiedSettings.PR;
+        cv::Mat R1 = m_StereoCameraSetup.Rectification.RL;
+        cv::Mat R2 = m_StereoCameraSetup.Rectification.RR;
+        cv::Mat P1 = m_StereoCameraSetup.Rectification.PL;
+        cv::Mat P2 = m_StereoCameraSetup.Rectification.PR;
 
-        cv::Size size { m_StereoCameraSetup.LeftCamSettings.ImageResolutionInPixels.x(), m_StereoCameraSetup.LeftCamSettings.ImageResolutionInPixels.y() };
+        cv::Size size {m_StereoCameraSetup.LeftCameraCalib.ImageResolutionInPixels.x(), m_StereoCameraSetup.LeftCameraCalib.ImageResolutionInPixels.y() };
 
         // remap image using rectified projection
         cv::Mat map11, map12, map21, map22;
@@ -80,7 +80,7 @@ namespace Reconstruct
     pcl::PointCloud<pcl::PointXYZRGB> Reconstruct3D::GeneratePointCloud(const cv::Mat& disparity, const cv::Mat& cameraImage) const
     {
         cv::Mat reprojected3D;
-        cv::reprojectImageTo3D(disparity, reprojected3D, m_StereoCameraSetup.RectifiedSettings.Q);
+        cv::reprojectImageTo3D(disparity, reprojected3D, m_StereoCameraSetup.Rectification.Q);
 
         pcl::PointCloud<pcl::PointXYZRGB> pointCloud;
 

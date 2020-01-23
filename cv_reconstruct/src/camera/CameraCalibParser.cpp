@@ -14,7 +14,7 @@ namespace Camera
     const std::string ROOT_NODE { "stereo_calib" };
 
     // Parse calib in JSON file
-    bool CameraCalibParser::ParseStereoCalibJSONFile(const std::string& filePath, Settings::StereoCameraSettings& stereoCalib) const
+    bool CameraCalibParser::ParseStereoCalibJSONFile(const std::string& filePath, Calib::StereoCalib& stereoCalib) const
     {
         if (!boost::filesystem::exists(filePath)) {
             return false;
@@ -28,19 +28,19 @@ namespace Camera
         fs.close();
 
         // parse intrinsics for left camera
-        stereoCalib.LeftCamSettings.K = ParseK(json[ROOT_NODE]["intrinsic"]["left_cam"]["K"]);
-        stereoCalib.LeftCamSettings.D = ParseDistortionCoeffs(json[ROOT_NODE]["intrinsic"]["left_cam"]["distortion"]);
+        stereoCalib.LeftCameraCalib.K = ParseK(json[ROOT_NODE]["intrinsic"]["left_cam"]["K"]);
+        stereoCalib.LeftCameraCalib.D = ParseDistortionCoeffs(json[ROOT_NODE]["intrinsic"]["left_cam"]["distortion"]);
 
         // parse intrinsics for right camera
-        stereoCalib.RightCamSettings.K = ParseK(json[ROOT_NODE]["intrinsic"]["right_cam"]["K"]);
-        stereoCalib.RightCamSettings.D = ParseDistortionCoeffs(json[ROOT_NODE]["intrinsic"]["right_cam"]["distortion"]);
+        stereoCalib.RightCameraCalib.K = ParseK(json[ROOT_NODE]["intrinsic"]["right_cam"]["K"]);
+        stereoCalib.RightCameraCalib.D = ParseDistortionCoeffs(json[ROOT_NODE]["intrinsic"]["right_cam"]["distortion"]);
 
         // parse image resolution
         nlohmann::json res = json[ROOT_NODE]["intrinsic"]["left_cam"]["image_resolution"];
-        stereoCalib.LeftCamSettings.ImageResolutionInPixels = Eigen::Vector2i { res["width"], res["height"] };
+        stereoCalib.LeftCameraCalib.ImageResolutionInPixels = Eigen::Vector2i {res["width"], res["height"] };
 
         res = json[ROOT_NODE]["intrinsic"]["right_cam"]["image_resolution"];
-        stereoCalib.RightCamSettings.ImageResolutionInPixels = Eigen::Vector2i { res["width"], res["height"] };
+        stereoCalib.RightCameraCalib.ImageResolutionInPixels = Eigen::Vector2i {res["width"], res["height"] };
 
         // parse extrinsics (relative transform b/w cameras with 1st cam as world origin)
         stereoCalib.T = ParseT(json[ROOT_NODE]["extrinsic"]["T"]);

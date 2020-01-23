@@ -9,7 +9,7 @@
 #include <eigen3/Eigen/Eigen>
 #include <opencv2/core/core.hpp>
 
-#include "camera/CameraSettings.hpp"
+#include "camera/CameraCalib.hpp"
 
 namespace Camera
 {
@@ -18,7 +18,7 @@ namespace Camera
     public:
         /// Construct compute module with given stereo camera setup
         /// \param settings The stereo camera setup that will be used to run computations
-        CameraCompute(Settings::StereoCameraSettings settings);
+        CameraCompute(Calib::StereoCalib settings);
 
         /// Compute the fundamental matrix with the given left and right image
         /// \param leftImage The left stereo image
@@ -38,7 +38,7 @@ namespace Camera
 
         /// Get a copy of the updated, rectified stereo camera setup
         /// \return Updated stereo camera settings with rectification information for new projection and transform matrices
-        Settings::StereoCameraSettings GetRectifiedStereoSettings();
+        Calib::StereoCalib GetRectifiedStereoSettings();
 
     private:
         void ComputeMatchingFeatures(const cv::Mat& leftImage, const cv::Mat& rightImage, std::vector<cv::Point2f>& pointsLeft, std::vector<cv::Point2f>& pointsRight);
@@ -46,7 +46,7 @@ namespace Camera
 
     private:
         bool m_IsStereoRectified { false };
-        Settings::StereoCameraSettings m_StereoSettings;
+        Calib::StereoCalib m_StereoSettings;
     };
 }
 

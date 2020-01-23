@@ -13,7 +13,7 @@ namespace Camera
 {
     const float NN_MATCH_RATIO { 0.8f };
 
-    CameraCompute::CameraCompute(Settings::StereoCameraSettings settings) : m_StereoSettings(std::move(settings))
+    CameraCompute::CameraCompute(Calib::StereoCalib settings) : m_StereoSettings(std::move(settings))
     {
         // compute rectification matrices for new optimal camera projection
         Rectify();
@@ -105,11 +105,11 @@ namespace Camera
         cv::Mat T(1, 3, CV_64F);
 
         std::vector<float> D1, D2;      // lens distortion co-effs
-        cv::Size imageSize { m_StereoSettings.LeftCamSettings.ImageResolutionInPixels.x(), m_StereoSettings.LeftCamSettings.ImageResolutionInPixels.y() };
+        cv::Size imageSize {m_StereoSettings.LeftCameraCalib.ImageResolutionInPixels.x(), m_StereoSettings.LeftCameraCalib.ImageResolutionInPixels.y() };
 
-        cv::eigen2cv(m_StereoSettings.LeftCamSettings.K, K1);
+        cv::eigen2cv(m_StereoSettings.LeftCameraCalib.K, K1);
         K1.convertTo(K1, CV_64F);
-        cv::eigen2cv(m_StereoSettings.RightCamSettings.K, K2);
+        cv::eigen2cv(m_StereoSettings.RightCameraCalib.K, K2);
         K2.convertTo(K2, CV_64F);
 
         cv::eigen2cv(m_StereoSettings.R, R);
@@ -118,22 +118,22 @@ namespace Camera
         cv::eigen2cv(m_StereoSettings.T, T);
         T.convertTo(T, CV_64F);
 
-        cv::eigen2cv(m_StereoSettings.LeftCamSettings.D, D1);
-        cv::eigen2cv(m_StereoSettings.RightCamSettings.D, D2);
+        cv::eigen2cv(m_StereoSettings.LeftCameraCalib.D, D1);
+        cv::eigen2cv(m_StereoSettings.RightCameraCalib.D, D2);
 
         // rectify and store rectified projection, and transform matrices
         cv::stereoRectify(K1, D1, K2, D2, imageSize, R, T,
-                m_StereoSettings.RectifiedSettings.RL,m_StereoSettings.RectifiedSettings.RR,
-                m_StereoSettings.RectifiedSettings.PL, m_StereoSettings.RectifiedSettings.PR,
-                m_StereoSettings.RectifiedSettings.Q,
-                cv::CALIB_ZERO_DISPARITY, 0, cv::Size(),
-                &m_StereoSettings.RectifiedSettings.ValidRectLeft, &m_StereoSettings.RectifiedSettings.ValidRectRight);
+                          m_StereoSettings.Rectification.RL, m_StereoSettings.Rectification.RR,
+                          m_StereoSettings.Rectification.PL, m_StereoSettings.Rectification.PR,
+                          m_StereoSettings.Rectification.Q,
+                          cv::CALIB_ZERO_DISPARITY, 0, cv::Size(),
+                          &m_StereoSettings.Rectification.ValidRectLeft, &m_StereoSettings.Rectification.ValidRectRight);
 
         m_IsStereoRectified = true;
     }
 
     // Get copy of camera settings
-    Settings::StereoCameraSettings CameraCompute::GetRectifiedStereoSettings()
+    Calib::StereoCalib CameraCompute::GetRectifiedStereoSettings()
     {
         if (!m_IsStereoRectified) {
             Rectify();

@@ -7,7 +7,7 @@
 
 #include "catch2/catch.hpp"
 #include "camera/CameraCalibParser.hpp"
-#include "camera/CameraSettings.hpp"
+#include "camera/CameraCalib.hpp"
 
 #include <eigen3/Eigen/Eigen>
 
@@ -34,7 +34,7 @@ const Eigen::Vector2i IMAGE_RES { 1024, 768 };
 TEST_CASE("JSON calib file parsed correctly", "[camera_calib_parse]")
 {
     Camera::CameraCalibParser parser;
-    Camera::Settings::StereoCameraSettings calib;
+    Camera::Calib::StereoCalib calib;
 
     parser.ParseStereoCalibJSONFile("../resources/calib/test_calib.json", calib);
 
@@ -46,12 +46,12 @@ TEST_CASE("JSON calib file parsed correctly", "[camera_calib_parse]")
     D2 << -3.508059e-001, 1.538358e-001, 0.000000e+000, 0.000000e+000;
 
     // check all matrices were parse correctly
-    REQUIRE(calib.LeftCamSettings.K == K1);
-    REQUIRE(calib.LeftCamSettings.D == D1);
-    REQUIRE(calib.RightCamSettings.K == K2);
-    REQUIRE(calib.RightCamSettings.D == D2);
-    REQUIRE(calib.LeftCamSettings.ImageResolutionInPixels == IMAGE_RES);
-    REQUIRE(calib.RightCamSettings.ImageResolutionInPixels == IMAGE_RES);
+    REQUIRE(calib.LeftCameraCalib.K == K1);
+    REQUIRE(calib.LeftCameraCalib.D == D1);
+    REQUIRE(calib.RightCameraCalib.K == K2);
+    REQUIRE(calib.RightCameraCalib.D == D2);
+    REQUIRE(calib.LeftCameraCalib.ImageResolutionInPixels == IMAGE_RES);
+    REQUIRE(calib.RightCameraCalib.ImageResolutionInPixels == IMAGE_RES);
 
     // extrinsics
     REQUIRE(calib.R == R);

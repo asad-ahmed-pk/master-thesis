@@ -10,7 +10,7 @@
 #include <eigen3/Eigen/Eigen>
 
 #include "nlohmann/json.hpp"
-#include "camera/CameraSettings.hpp"
+#include "camera/CameraCalib.hpp"
 
 namespace Camera
 {
@@ -21,7 +21,7 @@ namespace Camera
         /// \param filePath The path to the JSON file with the stereo calibration
         /// \param stereoCalib The stereo calibration (not rectified) that will be populated
         /// \return True if file is read and parsed correctly
-        bool ParseStereoCalibJSONFile(const std::string& filePath, Settings::StereoCameraSettings& stereoCalib) const;
+        bool ParseStereoCalibJSONFile(const std::string& filePath, Calib::StereoCalib& stereoCalib) const;
 
     private:
         Eigen::Matrix3f ParseK(const nlohmann::json& json) const;

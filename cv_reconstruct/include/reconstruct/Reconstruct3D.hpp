@@ -6,7 +6,7 @@
 #ifndef CV_RECONSTRUCT_RECONSTRUCT3D_HPP
 #define CV_RECONSTRUCT_RECONSTRUCT3D_HPP
 
-#include "camera/CameraSettings.hpp"
+#include "camera/CameraCalib.hpp"
 
 #include <opencv2/core/core.hpp>
 #include <opencv2/calib3d/calib3d.hpp>
@@ -23,7 +23,7 @@ namespace Reconstruct
     public:
         /// Create a 3D reconstructor for the given stereo rig
         /// \param stereoSetup The calibrated, stereo rig setup with stereo rectification already applied
-        explicit Reconstruct3D(const Camera::Settings::StereoCameraSettings& stereoSetup);
+        explicit Reconstruct3D(const Camera::Calib::StereoCalib& stereoSetup);
 
         /// Generate the disparity map for the given stereo images
         /// \param leftImage The left camera image
@@ -38,7 +38,7 @@ namespace Reconstruct
         pcl::PointCloud<pcl::PointXYZRGB> GeneratePointCloud(const cv::Mat& disparity, const cv::Mat& cameraImage) const;
 
     private:
-        Camera::Settings::StereoCameraSettings m_StereoCameraSetup;
+        Camera::Calib::StereoCalib m_StereoCameraSetup;
         cv::Ptr<cv::StereoSGBM> m_StereoMatcher;
     };
 }

@@ -4,7 +4,7 @@
 //
 
 #include "camera/CameraCompute.hpp"
-#include "camera/CameraSettings.hpp"
+#include "camera/CameraCalib.hpp"
 #include "camera/CameraCalibParser.hpp"
 #include "reconstruct/Reconstruct3D.hpp"
 
@@ -26,7 +26,7 @@ const std::string RIGHT_IMG_PATH { "test_images/img_00_right.jpg" };
 int main(int argc, char** argv)
 {
     // parse calib from file
-    Camera::Settings::StereoCameraSettings stereoSetup;
+    Camera::Calib::StereoCalib stereoSetup;
     Camera::CameraCalibParser parser;
     parser.ParseStereoCalibJSONFile("../resources/calib/test_calib.json", stereoSetup);
 
