@@ -10,11 +10,13 @@
 #include <opencv2/highgui.hpp>
 #include <opencv2/core/eigen.hpp>
 
+#include <fstream>
+
 namespace Reconstruct
 {
     const int SGM_MIN_DISPARITY = 0;
     const int SGM_BLOCK_SIZE = 11;
-    const int SGM_NUM_DISPARITIES = 160;
+    const int SGM_NUM_DISPARITIES = 32;
 
     constexpr int SGM_P1 = 8 * 3 * SGM_BLOCK_SIZE * SGM_BLOCK_SIZE;
     constexpr int SGM_P2 = 32 * 3 * SGM_BLOCK_SIZE * SGM_BLOCK_SIZE;
@@ -96,7 +98,7 @@ namespace Reconstruct
                 coords = reprojected3D.at<cv::Vec3f>(row, col);
 
                 // skip points with infinity values and zero depth
-                if (isinf(coords[0]) || isinf(coords[1]) || isinf(coords[2])) {
+                if (isinf(coords[0]) || isinf(coords[1]) || isinf(coords[2]) || (coords[2] >= 5.90 && coords[2] < 6.0)) {
                     continue;
                 }
 
@@ -111,6 +113,47 @@ namespace Reconstruct
 
                 pointCloud.push_back(point);
 
+                count++;
+            }
+        }
+
+        pointCloud.width = count;
+        pointCloud.height = 1;
+        pointCloud.is_dense = true;
+
+        return pointCloud;
+    }
+
+    // Generate point cloud by direct calculation from disparity
+    pcl::PointCloud<pcl::PointXYZRGB> Reconstruct3D::Triangulate3D(const cv::Mat &disparity, const cv::Mat& leftCamImage, const cv::Mat& rightCamImage) const
+    {
+        pcl::PointCloud<pcl::PointXYZRGB> pointCloud;
+
+        cv::Vec3f coords;
+        pcl::PointXYZRGB point;
+
+        uint32_t count = 0;
+        short d;
+        float f = m_StereoCameraSetup.LeftCameraCalib.K(0, 0);
+
+        for (int i = 0; i < disparity.rows; i++)
+        {
+            for (int j = 0; j < disparity.cols; j++)
+            {
+                d = disparity.at<short>(i, j);
+                if (d == -16 || d == 0) {
+                    continue;
+                }
+
+                point.z = f * (m_StereoCameraSetup.T(0) / static_cast<float>(d));
+                point.x = (static_cast<float>(i) - m_StereoCameraSetup.LeftCameraCalib.K(0, 2)) * (point.z / f);
+                point.y = (static_cast<float>(j) - m_StereoCameraSetup.LeftCameraCalib.K(1, 2)) * (point.z / f);
+
+                point.r = leftCamImage.at<cv::Vec3b>(i, j)[2];
+                point.g = leftCamImage.at<cv::Vec3b>(i, j)[1];
+                point.b = leftCamImage.at<cv::Vec3b>(i, j)[0];
+
+                pointCloud.push_back(point);
                 count++;
             }
         }

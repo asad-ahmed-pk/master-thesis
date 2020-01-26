@@ -13,6 +13,7 @@
 
 #include <eigen3/Eigen/Eigen>
 #include <opencv2/core/core.hpp>
+#include <opencv2/core/base.hpp>
 #include <opencv2/highgui/highgui.hpp>
 
 #include <pcl/io/pcd_io.h>
@@ -42,13 +43,21 @@ int main(int argc, char** argv)
     cv::Mat rightImage = cv::imread(RIGHT_IMG_PATH, cv::IMREAD_COLOR);
 
     cv::Mat disparity = reconstructor.GenerateDisparityMap(leftImage, rightImage);
+    cv::Mat disparity8;
+    cv::normalize(disparity, disparity8, 0, 255, cv::NORM_MINMAX, CV_8U);
 
     std::cout << "\nDisparity map computed successfully" << std::endl;
     cv::imwrite("disparity_map.png", disparity);
+    cv::imwrite("disparity_map_8.png", disparity8);
 
     // create point cloud
     pcl::PointCloud<pcl::PointXYZRGB> pointCloud;
-    pointCloud = reconstructor.GeneratePointCloud(disparity, leftImage);
+    //pointCloud = reconstructor.GeneratePointCloud(disparity, leftImage);
+
+    cv::Mat leftRect, rightRect;
+    leftRect = cv::imread("../resources/test_images/rect_img_00_left.jpg");
+    rightRect = cv::imread("../resources/test_images/rect_img_00_right.jpg");
+    pointCloud = reconstructor.Triangulate3D(disparity, leftRect, rightRect);
 
     // save point cloud file
     std::cout << "\nSaving point cloud file..." << std::endl;

@@ -37,6 +37,8 @@ namespace Reconstruct
         /// \return The generated point cloud with X,Y,Z
         pcl::PointCloud<pcl::PointXYZRGB> GeneratePointCloud(const cv::Mat& disparity, const cv::Mat& cameraImage) const;
 
+        pcl::PointCloud<pcl::PointXYZRGB> Triangulate3D(const cv::Mat& disparity, const cv::Mat& leftCamImage, const cv::Mat& rightCamImage) const;
+
     private:
         Camera::Calib::StereoCalib m_StereoCameraSetup;
         cv::Ptr<cv::StereoSGBM> m_StereoMatcher;
