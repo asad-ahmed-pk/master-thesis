@@ -37,7 +37,19 @@ namespace Reconstruct
         /// \return The generated point cloud with X,Y,Z
         pcl::PointCloud<pcl::PointXYZRGB> GeneratePointCloud(const cv::Mat& disparity, const cv::Mat& cameraImage) const;
 
-        pcl::PointCloud<pcl::PointXYZRGB> Triangulate3D(const cv::Mat& disparity, const cv::Mat& leftCamImage, const cv::Mat& rightCamImage) const;
+        /// Generate point cloud using triangulation method
+        /// \param disparity The disparity image (parallax map)
+        /// \param leftImage The left camera image (rectified)
+        /// \param rightImage The right camera image (rectified)
+        /// \return Returns the generated point cloud with RGB information
+        pcl::PointCloud<pcl::PointXYZRGB> Triangulate3D(const cv::Mat& disparity, const cv::Mat& leftImage, const cv::Mat& rightImage) const;
+
+        /// Apply stereo rectification to the images
+        /// \param leftImage The left camera image (rectified)
+        /// \param rightImage The right camera image (rectified)
+        /// \param rectLeftImage Will be updated with the rectified image for the left camera
+        /// \param rectRightImage Will be updated with the rectified image for the right camera
+        void RectifyImages(const cv::Mat& leftImage, const cv::Mat& rightImage, cv::Mat& rectLeftImage, cv::Mat& rectRightImage) const;
 
     private:
         Camera::Calib::StereoCalib m_StereoCameraSetup;

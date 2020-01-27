@@ -37,43 +37,9 @@ namespace Reconstruct
     // Disparity map
     cv::Mat Reconstruct3D::GenerateDisparityMap(const cv::Mat &leftImage, const cv::Mat &rightImage) const
     {
-        // convert to cv from eigen
-        cv::Mat K1, K2;
-        std::vector<float> D1, D2;
-
-        cv::eigen2cv(m_StereoCameraSetup.LeftCameraCalib.K, K1);
-        K1.convertTo(K1, CV_64F);
-
-        cv::eigen2cv(m_StereoCameraSetup.RightCameraCalib.K, K2);
-        K2.convertTo(K2, CV_64F);
-
-        cv::eigen2cv(m_StereoCameraSetup.LeftCameraCalib.D, D1);
-        cv::eigen2cv(m_StereoCameraSetup.RightCameraCalib.D, D2);
-
-        // other required matrices
-        cv::Mat R1 = m_StereoCameraSetup.Rectification.RL;
-        cv::Mat R2 = m_StereoCameraSetup.Rectification.RR;
-        cv::Mat P1 = m_StereoCameraSetup.Rectification.PL;
-        cv::Mat P2 = m_StereoCameraSetup.Rectification.PR;
-
-        cv::Size size {m_StereoCameraSetup.LeftCameraCalib.ImageResolutionInPixels.x(), m_StereoCameraSetup.LeftCameraCalib.ImageResolutionInPixels.y() };
-
-        // remap image using rectified projection
-        cv::Mat map11, map12, map21, map22;
-        initUndistortRectifyMap(K1, D1, R1, P1, size, CV_16SC2, map11, map12);
-        initUndistortRectifyMap(K2, D2, R2, P2, size, CV_16SC2, map21, map22);
-
-        cv::Mat leftImageRectified, rightImageRectified;
-        cv::remap(leftImage, leftImageRectified, map11, map12, cv::INTER_LINEAR);
-        cv::remap(rightImage, rightImageRectified, map21, map22, cv::INTER_LINEAR);
-
-        // debugging: write out to file
-        cv::imwrite("left_rect.png", leftImageRectified);
-        cv::imwrite("right_rect.png", rightImageRectified);
-
         // compute disparity
         cv::Mat disparity;
-        m_StereoMatcher->compute(leftImageRectified, rightImageRectified, disparity);
+        m_StereoMatcher->compute(leftImage, rightImage, disparity);
 
         return disparity;
     }
@@ -125,7 +91,7 @@ namespace Reconstruct
     }
 
     // Generate point cloud by direct calculation from disparity
-    pcl::PointCloud<pcl::PointXYZRGB> Reconstruct3D::Triangulate3D(const cv::Mat &disparity, const cv::Mat& leftCamImage, const cv::Mat& rightCamImage) const
+    pcl::PointCloud<pcl::PointXYZRGB> Reconstruct3D::Triangulate3D(const cv::Mat &disparity, const cv::Mat& leftImage, const cv::Mat& rightImage) const
     {
         pcl::PointCloud<pcl::PointXYZRGB> pointCloud;
 
@@ -149,9 +115,9 @@ namespace Reconstruct
                 point.x = (static_cast<float>(i) - m_StereoCameraSetup.LeftCameraCalib.K(0, 2)) * (point.z / f);
                 point.y = (static_cast<float>(j) - m_StereoCameraSetup.LeftCameraCalib.K(1, 2)) * (point.z / f);
 
-                point.r = leftCamImage.at<cv::Vec3b>(i, j)[2];
-                point.g = leftCamImage.at<cv::Vec3b>(i, j)[1];
-                point.b = leftCamImage.at<cv::Vec3b>(i, j)[0];
+                point.r = leftImage.at<cv::Vec3b>(i, j)[2];
+                point.g = leftImage.at<cv::Vec3b>(i, j)[1];
+                point.b = leftImage.at<cv::Vec3b>(i, j)[0];
 
                 pointCloud.push_back(point);
                 count++;
@@ -163,5 +129,43 @@ namespace Reconstruct
         pointCloud.is_dense = true;
 
         return pointCloud;
+    }
+
+    // Apply stereo rectification to left and right images
+    void Reconstruct3D::RectifyImages(const cv::Mat &leftImage, const cv::Mat &rightImage, cv::Mat &rectLeftImage, cv::Mat &rectRightImage) const
+    {
+        // convert to cv from eigen
+        cv::Mat K1, K2;
+        std::vector<float> D1, D2;
+
+        cv::eigen2cv(m_StereoCameraSetup.LeftCameraCalib.K, K1);
+        K1.convertTo(K1, CV_64F);
+
+        cv::eigen2cv(m_StereoCameraSetup.RightCameraCalib.K, K2);
+        K2.convertTo(K2, CV_64F);
+
+        cv::eigen2cv(m_StereoCameraSetup.LeftCameraCalib.D, D1);
+        cv::eigen2cv(m_StereoCameraSetup.RightCameraCalib.D, D2);
+
+        // other required matrices
+        cv::Mat R1 = m_StereoCameraSetup.Rectification.RL;
+        cv::Mat R2 = m_StereoCameraSetup.Rectification.RR;
+        cv::Mat P1 = m_StereoCameraSetup.Rectification.PL;
+        cv::Mat P2 = m_StereoCameraSetup.Rectification.PR;
+
+        cv::Size size {m_StereoCameraSetup.LeftCameraCalib.ImageResolutionInPixels.x(), m_StereoCameraSetup.LeftCameraCalib.ImageResolutionInPixels.y() };
+
+        // remap image using rectified projection
+        cv::Mat map11, map12, map21, map22;
+        initUndistortRectifyMap(K1, D1, R1, P1, size, CV_16SC2, map11, map12);
+        initUndistortRectifyMap(K2, D2, R2, P2, size, CV_16SC2, map21, map22);
+
+        cv::Mat leftImageRectified, rightImageRectified;
+        cv::remap(leftImage, rectLeftImage, map11, map12, cv::INTER_LINEAR);
+        cv::remap(rightImage, rectRightImage, map21, map22, cv::INTER_LINEAR);
+
+        // debugging: write out to file
+        cv::imwrite("left_rect.png", rectLeftImage);
+        cv::imwrite("right_rect.png", rectRightImage);
     }
 }
