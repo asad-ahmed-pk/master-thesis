@@ -52,6 +52,9 @@ namespace Reconstruct
         void RectifyImages(const cv::Mat& leftImage, const cv::Mat& rightImage, cv::Mat& rectLeftImage, cv::Mat& rectRightImage) const;
 
     private:
+        pcl::PointCloud<pcl::PointXYZRGB> PointCloudMatrixCompute(const cv::Mat& leftImage, const cv::Mat& disparity) const;
+
+    private:
         Camera::Calib::StereoCalib m_StereoCameraSetup;
         cv::Ptr<cv::StereoSGBM> m_StereoMatcher;
     };

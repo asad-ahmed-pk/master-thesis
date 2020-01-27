@@ -100,7 +100,8 @@ namespace Reconstruct
 
         uint32_t count = 0;
         short d;
-        float f = m_StereoCameraSetup.LeftCameraCalib.K(0, 0);
+        float f = m_StereoCameraSetup.LeftCameraCalib.K(0, 0);       // focal length
+        float b = m_StereoCameraSetup.T(0);                             // baseline
 
         for (int i = 0; i < disparity.rows; i++)
         {
@@ -167,5 +168,68 @@ namespace Reconstruct
         // debugging: write out to file
         cv::imwrite("left_rect.png", rectLeftImage);
         cv::imwrite("right_rect.png", rectRightImage);
+    }
+
+    // TODO: Fix - compute 3D locations directly from parallax map using matrix operation
+    // useful later for parallel implementation
+    pcl::PointCloud<pcl::PointXYZRGB> Reconstruct3D::PointCloudMatrixCompute(const cv::Mat &leftImage, const cv::Mat &disparity) const
+    {
+        pcl::PointCloud<pcl::PointXYZRGB> pointCloud;
+        pcl::PointXYZRGB point;
+
+        uint32_t count = 0;
+        float f = m_StereoCameraSetup.LeftCameraCalib.K(0, 0);       // focal length
+        float b = m_StereoCameraSetup.T(0);                             // baseline
+
+        // new method using matrix multiplication
+        int N = disparity.rows * disparity.cols;
+
+        // Matrix P: will be filled with 3D coordinates X, Y, Z, W
+        cv::Mat P(4, N, CV_32FC1);
+
+        // Matrix M: Image scale matrix
+        cv::Mat M = cv::Mat::zeros(4, 4, CV_32FC1);
+
+        // Matrix I: Image matrix with image points (4xN)
+        cv::Mat I(4, N, CV_32FC1, cv::Scalar(1.0));
+        int n = 0;
+        for (int y = 0; y < disparity.rows; y++)
+        {
+            for (int x = 0; x < disparity.cols; x++)
+            {
+                I.at<float>(0, n) = x;
+                I.at<float>(1, n) = y;
+                I.at<float>(3, n) = static_cast<float>(disparity.at<short>(x, y));
+                n++;
+            }
+        }
+
+        // calculate by matrix multiplication
+        P = M * I;
+
+        // create point cloud from result P matrix
+        int row, col = 0;
+        for (int n = 0; n < N; n++)
+        {
+            point.x = P.at<float>(0, n) / P.at<float>(3, n);
+            point.y = P.at<float>(1, n) / P.at<float>(3, n);
+            point.z = P.at<float>(2, n) / P.at<float>(3, n);
+
+            col = static_cast<int>(I.at<float>(0, n));
+            row = static_cast<int>(I.at<float>(1, n));
+
+            point.r = leftImage.at<cv::Vec3b>(row, col)[2];
+            point.g = leftImage.at<cv::Vec3b>(row, col)[1];
+            point.b = leftImage.at<cv::Vec3b>(row, col)[0];
+
+            pointCloud.push_back(point);
+            count++;
+        }
+
+        pointCloud.width = count;
+        pointCloud.height = 1;
+        pointCloud.is_dense = true;
+
+        return pointCloud;
     }
 }
