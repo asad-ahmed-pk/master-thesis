@@ -5,23 +5,24 @@ cmake_minimum_required(VERSION 3.10)
 project(network_protocol)
 set(CMAKE_CXX_STANDARD 14)
 
-# Mac OSX Check
-if (${CMAKE_SYSTEM_NAME} MATCHES "Darwin")
-    set(MACOSX TRUE)
-endif()
+set(LIB_NAME cv_networking)
 
-# OpenCV
-find_package(OpenCV 4.1 REQUIRED)
+# set include directories
+include_directories(include)
 
 # Boost
 find_package(Boost 1.60 REQUIRED COMPONENTS system thread)
 include_directories(${Boost_INCLUDE_DIR})
 
-# Eigen3
-find_package(Eigen3 3.3 REQUIRED NO_MODULE)
+# Actor sources
+list(APPEND ACTOR_SOURCES src/actor/RobotStreamer.cpp)
 
-# Includes for eigen for MacOS
-if (${MACOSX})
-    include_directories(eigen3)
-endif()
+# Core sources
+list(APPEND CORE_SOURCES
+        src/core/StereoStream.cpp
+        src/core/StereoStreamerClient.cpp
+)
 
+# The networking library
+add_library(${LIB_NAME} STATIC ${CORE_SOURCES} ${ACTOR_SOURCES})
+target_link_libraries(${LIB_NAME} ${Boost_LIBRARIES})
