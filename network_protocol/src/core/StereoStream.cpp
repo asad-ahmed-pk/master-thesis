@@ -54,7 +54,24 @@ namespace CVNetwork
     // Send stereo data
     void StereoStream::WriteStereoImageData(const Message::StereoMessage &message) const
     {
-        // TODO: write message to socket according to protocol specification
+        // write data header
+        Protocol::ProtocolStream::WriteHeaderForDataMessage(*m_Socket, Protocol::DataMessageID::DATA_ID_STEREO);
+
+        // write size information for both images
+        boost::array<unsigned int, 2> sizeData { message.LeftImageDataSize, message.RightImageDataSize };
+        boost::asio::write(*m_Socket, boost::asio::buffer(sizeData));
+
+        // write left image and right image data
+        boost::asio::write(*m_Socket, boost::asio::buffer(message.LeftImageData, message.LeftImageDataSize));
+        boost::asio::write(*m_Socket, boost::asio::buffer(message.RightImageData, message.RightImageDataSize));
+
+        // write location of robot
+        boost::array<float, 3> locationData { message.X, message.Y, message.Z };
+        boost::asio::write(*m_Socket, boost::asio::buffer(locationData));
+
+        // write orientation of robot
+        boost::array<float, 9> rotationData { message.R1, message.R2, message.R3, message.R4, message.R5, message.R6, message.R7, message.R8, message.R9 };
+        boost::asio::write(*m_Socket, boost::asio::buffer(rotationData));
     }
 
     // Read stereo data

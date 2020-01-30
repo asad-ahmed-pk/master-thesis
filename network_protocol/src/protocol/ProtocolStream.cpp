@@ -6,7 +6,6 @@
 #include "ProtocolStream.hpp"
 
 #include <boost/array.hpp>
-#include <string>
 
 namespace CVNetwork
 {

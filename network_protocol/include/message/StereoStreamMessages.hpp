@@ -14,7 +14,10 @@ namespace CVNetwork
         struct StereoMessage
         {
             unsigned char* LeftImageData;
-            unsigned char* RightStereoImageData;
+            unsigned char* RightImageData;
+
+            unsigned int LeftImageDataSize;
+            unsigned int RightImageDataSize;
 
             float X; float Y; float Z;
 
