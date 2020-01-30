@@ -18,6 +18,7 @@ include_directories(${Boost_INCLUDE_DIR})
 list(APPEND CORE_SOURCES
         src/core/StereoStream.cpp
         src/core/StereoStreamerClient.cpp
+        src/core/ReconstructionServer.cpp
 )
 
 # Protocol sources

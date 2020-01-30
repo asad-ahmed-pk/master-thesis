@@ -21,7 +21,7 @@ namespace CVNetwork
         class StereoStreamerClient
         {
         public:
-            /// Construct a default instance of the client with a reference to the robot streamer
+            /// Construct a default instance of the client with the given calibration data
             /// \param calib The calibration data
             StereoStreamerClient(Message::StereoCalibMessage calib);
 
