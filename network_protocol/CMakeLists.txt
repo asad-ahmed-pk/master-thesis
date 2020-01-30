@@ -14,15 +14,17 @@ include_directories(include)
 find_package(Boost 1.60 REQUIRED COMPONENTS system thread)
 include_directories(${Boost_INCLUDE_DIR})
 
-# Actor sources
-list(APPEND ACTOR_SOURCES src/actor/RobotStreamer.cpp)
-
 # Core sources
 list(APPEND CORE_SOURCES
         src/core/StereoStream.cpp
         src/core/StereoStreamerClient.cpp
 )
 
+# Protocol sources
+list(APPEND PROTOCOL_SOURCES
+        src/protocol/ProtocolStream.cpp
+)
+
 # The networking library
-add_library(${LIB_NAME} STATIC ${CORE_SOURCES} ${ACTOR_SOURCES})
+add_library(${LIB_NAME} STATIC ${CORE_SOURCES} ${PROTOCOL_SOURCES})
 target_link_libraries(${LIB_NAME} ${Boost_LIBRARIES})

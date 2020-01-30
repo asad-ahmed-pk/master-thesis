@@ -5,13 +5,12 @@
 
 #include "StereoStreamerClient.hpp"
 
-
 namespace CVNetwork
 {
     namespace Clients
     {
         // Constructor
-        StereoStreamerClient::StereoStreamerClient(const Actor::RobotStreamer* robotStreamer) : m_RobotStreamer(robotStreamer)
+        StereoStreamerClient::StereoStreamerClient(Message::StereoCalibMessage calib) : m_CalibMessage(calib)
         {
 
         }
@@ -50,13 +49,22 @@ namespace CVNetwork
         // Main thread loop
         void StereoStreamerClient::RunThread()
         {
-            while (m_IsRunning)
+            // initiate the flow by sending server message that flow will begin
+            bool isCalibRequested = m_StereoStream.InitiateStereoAndCheckIfCalibNeeded();
+            if (isCalibRequested)
             {
-                // TODO: initiate the flow by sending server message that flow will begin
+                // request robot streamer actor for calib data
+                m_StereoStream.WriteCalibData(m_CalibMessage);
+            }
 
-                // TODO: get acknowledgement from server. If server requests calib file, send calib
+            // run main stereo stream loop
+            RunStereoStreamLoop();
+        }
 
-                // main data stream loop
+        // Stereo stream loop for sending stereo image data to server
+        void StereoStreamerClient::RunStereoStreamLoop()
+        {
+            while (m_IsRunning) {
                 // read from queue and send any pending messages
                 Message::StereoMessage message = GetNextStereoMessageInQueue();
                 m_StereoStream.WriteStereoImageData(message);

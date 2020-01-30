@@ -39,6 +39,12 @@ namespace CVNetwork
         /// \return Returns the message that was read from the stream
         Message::StereoMessage ReadStereoImageData() const;
 
+        /// Notify server and get server ready to receive stereo stream. Also checks if calib is needed or not.
+        /// \return Returns true if server is requesting calib data. False if ok to start streaming stereo.
+        bool InitiateStereoAndCheckIfCalibNeeded() const;
+
+        void WriteCalibData(const Message::StereoCalibMessage& message) const;
+
     private:
         std::unique_ptr<boost::asio::ip::tcp::socket> m_Socket { nullptr };
         boost::asio::io_service m_IOService;

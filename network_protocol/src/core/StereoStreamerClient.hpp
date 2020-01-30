@@ -12,7 +12,6 @@
 #include <mutex>
 
 #include "StereoStream.hpp"
-#include "actor/RobotStreamer.hpp"
 #include "message/StereoStreamMessages.hpp"
 
 namespace CVNetwork
@@ -23,8 +22,8 @@ namespace CVNetwork
         {
         public:
             /// Construct a default instance of the client with a reference to the robot streamer
-            /// \param robotStreamer The robot streamer that will provide the stereo stream and calibration
-            StereoStreamerClient(const Actor::RobotStreamer* robotStreamer);
+            /// \param calib The calibration data
+            StereoStreamerClient(Message::StereoCalibMessage calib);
 
             ~StereoStreamerClient();
 
@@ -43,11 +42,13 @@ namespace CVNetwork
 
         private:
             void RunThread();
+            void RunStereoStreamLoop();
             Message::StereoMessage GetNextStereoMessageInQueue();
 
         private:
-            const Actor::RobotStreamer* m_RobotStreamer;
             std::queue<Message::StereoMessage> m_DataQueue;
+
+            Message::StereoCalibMessage m_CalibMessage;
             StereoStream m_StereoStream;
 
             bool m_IsRunning { false };
