@@ -20,16 +20,16 @@ namespace CVNetwork
             /// Write bytes for sending a control message of the given control type
             /// \param socket A reference to the socket to which bytes will be written
             /// \param controlMessageID The ID to identify the type of control message being sent
-            static void WriteHeaderForControlMessage(const boost::asio::ip::tcp::socket& socket, ControlMessageID controlMessageID);
+            static void WriteHeaderForControlMessage(boost::asio::ip::tcp::socket& socket, ControlMessageID controlMessageID);
 
             /// Read the control message and parse the ID
             /// \param socket The socket to read from
             /// \return Returns the parsed control message id
-            static ControlMessageID ReadControlMessage(const boost::asio::ip::tcp::socket& socket);
+            static ControlMessageID ReadControlMessage(boost::asio::ip::tcp::socket& socket);
 
             /// Write bytes for sending a data message
             /// \param socket A reference to the socket to which bytes will be written
-            static void WriteHeaderForDataMessage(const boost::asio::ip::tcp::socket& socket, DataMessageID dataMessageID);
+            static void WriteHeaderForDataMessage(boost::asio::ip::tcp::socket& socket, DataMessageID dataMessageID);
         };
     }
 }
