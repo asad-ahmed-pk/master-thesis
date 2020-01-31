@@ -3,7 +3,7 @@
 // The client for streaming stereo image data and pose of the robot to the reconstruction server
 //
 
-#include "StereoStreamerClient.hpp"
+#include "client/StereoStreamerClient.hpp"
 
 namespace CVNetwork
 {

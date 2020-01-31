@@ -3,7 +3,9 @@
 // Server responsible for 3D reconstruction from the stereo stream from the robot
 //
 
-#include "ReconstructionServer.hpp"
+#include "server/ReconstructionServer.hpp"
+
+#include <iostream>
 
 namespace CVNetwork
 {
@@ -18,32 +20,46 @@ namespace CVNetwork
         // Destructor
         ReconstructionServer::~ReconstructionServer()
         {
-            // close and wait for thread to join
-            m_IsRunning = false;
-            m_Thread.join();
+            std::cout << "\nDestructor called" << std::endl;
 
-            // close connection in the stereo stream
-            m_StereoStream.CloseConnection();
+            // close and wait for thread to join
+            if (m_Thread.joinable())
+            {
+                m_IsRunning = false;
+                m_Thread.join();
+
+                // close connection in the stereo stream
+                m_StereoStream.CloseConnection();
+
+                std::cout << "\nShut down server" << std::endl;
+            }
         }
 
         // Start server
         void ReconstructionServer::StartServer()
         {
+            std::cout << "\nStarting server" << std::endl;
+
             // close socket if open
             m_StereoStream.CloseConnection();
 
             // create and run thread
             m_Thread = std::thread(&ReconstructionServer::ServerMainThread, this);
+            m_IsRunning = true;
+        }
+
+        void ReconstructionServer::StopServer() {
+            m_IsRunning = false;
         }
 
         // The main server thread
         void ReconstructionServer::ServerMainThread()
         {
+            std::cout << "\nMain server thread running... Waiting for a stereo streaming client to connect on port " << m_Port << std::endl;
+
             // open socket and listen on port for connections
             if (m_StereoStream.StartListeningForConnection(m_Port))
             {
-                m_IsRunning = true;
-
                 // start the flow: either ask for calib data or begin the stereo stream
                 Message::StereoCalibMessage calibMessage{};
                 m_StereoStream.WaitForConnectAndStartFlow(m_IsCalibRequired, calibMessage);

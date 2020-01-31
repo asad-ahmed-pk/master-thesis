@@ -12,7 +12,7 @@
 #include <string>
 #include <mutex>
 
-#include "StereoStream.hpp"
+#include "../../src/core/StereoStream.hpp"
 #include "message/StereoStreamMessages.hpp"
 
 namespace CVNetwork
@@ -31,6 +31,9 @@ namespace CVNetwork
 
             /// Start listening for a connection
             void StartServer();
+
+            /// Shut down server
+            void StopServer();
 
         private:
             void ServerMainThread();

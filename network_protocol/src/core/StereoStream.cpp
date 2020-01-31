@@ -45,10 +45,11 @@ namespace CVNetwork
     // Open socket as a server and listen
     bool StereoStream::StartListeningForConnection(int port)
     {
-        if (m_Socket->is_open()) {
+        if (m_Socket != nullptr && m_Socket->is_open()) {
             CloseConnection();
         }
 
+        m_Socket = std::make_unique<tcp::socket>(m_IOService);
         m_IOService.run();
 
         tcp::acceptor acceptor(m_IOService, tcp::endpoint(tcp::v4(), port));
@@ -61,7 +62,7 @@ namespace CVNetwork
     // Close connection
     void StereoStream::CloseConnection()
     {
-        if (m_Socket->is_open()) {
+        if (m_Socket != nullptr && m_Socket->is_open()) {
             m_Socket->close();
             m_Socket = nullptr;
         }
