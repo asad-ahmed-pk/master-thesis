@@ -95,10 +95,36 @@ namespace CVNetwork
     // Read stereo data
     Message::StereoMessage StereoStream::ReadStereoImageData() const
     {
-        Message::StereoMessage message;
+        Message::StereoMessage message{};
 
-        // TODO: read from socket according to protocol specification and convert to struct message
+        // read in left and right image sizes from header
+        boost::array<unsigned int, 2> sizeData{};
+        boost::asio::read(*m_Socket, boost::asio::buffer(sizeData));
 
+        message.LeftImageDataSize = sizeData[0];
+        message.RightImageDataSize = sizeData[1];
+
+        // read in left and right image data
+        boost::asio::read(*m_Socket, boost::asio::buffer(message.LeftImageData, message.LeftImageDataSize));
+        boost::asio::read(*m_Socket, boost::asio::buffer(message.RightImageData, message.RightImageDataSize));
+
+        // read pose data
+        boost::array<float, 12> poseData{};
+        boost::asio::read(*m_Socket, boost::asio::buffer(poseData));
+
+        message.X = poseData[0];
+        message.Y = poseData[1];
+        message.Z = poseData[2];
+
+        message.R1 = poseData[3];
+        message.R2 = poseData[4];
+        message.R3 = poseData[5];
+        message.R4 = poseData[6];
+        message.R5 = poseData[7];
+        message.R6 = poseData[8];
+        message.R7 = poseData[9];
+        message.R8 = poseData[10];
+        message.R9 = poseData[11];
 
         return message;
     }
@@ -176,6 +202,9 @@ namespace CVNetwork
         data[25] = message.r7;
         data[26] = message.r8;
         data[27] = message.r9;
+
+        // write to socket
+        boost::asio::write(*m_Socket, boost::asio::buffer(data));
     }
 
     // Read calib data from socket

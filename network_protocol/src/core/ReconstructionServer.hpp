@@ -23,10 +23,9 @@ namespace CVNetwork
         {
         public:
             /// Create an instance of the server with the given address
-            /// \param ip The IPv4 address. Default is localhost.
             /// \param port The port that the server will listen on. Default is 7000.
             /// \param isCalibRequired Set to true if client should provide calib data after connecting. Default is true.
-            ReconstructionServer(const std::string& ip = "localhost", int port = 7000, bool isCalibRequired = true);
+            ReconstructionServer(int port = 7000, bool isCalibRequired = true);
 
             ~ReconstructionServer();
 
@@ -38,7 +37,6 @@ namespace CVNetwork
             void RunStereoLoop();
 
         private:
-            const std::string m_IP;
             int m_Port;
 
             bool m_IsRunning { false };

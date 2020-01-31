@@ -10,7 +10,7 @@ namespace CVNetwork
     namespace Servers
     {
         // Constructor
-        ReconstructionServer::ReconstructionServer(const std::string& ip, int port, bool isCalibRequired) : m_IP(ip), m_Port(port), m_IsCalibRequired(isCalibRequired)
+        ReconstructionServer::ReconstructionServer(int port, bool isCalibRequired) : m_Port(port), m_IsCalibRequired(isCalibRequired)
         {
 
         }
