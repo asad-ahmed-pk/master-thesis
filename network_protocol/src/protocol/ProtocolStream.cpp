@@ -29,6 +29,16 @@ namespace CVNetwork
             return controlMessageID;
         }
 
+        DataMessageID ProtocolStream::ReadDataMessage(boost::asio::ip::tcp::socket &socket)
+        {
+            boost::array<int, 2> data;
+            boost::asio::read(socket, boost::asio::buffer(data));
+
+            // second header is the data id
+            DataMessageID dataMessageID = static_cast<DataMessageID >(data[1]);
+            return dataMessageID;
+        }
+
         // Write data message header
         void ProtocolStream::WriteHeaderForDataMessage(boost::asio::ip::tcp::socket &socket, DataMessageID dataMessageID)
         {

@@ -10,7 +10,7 @@ namespace CVNetwork
     namespace Servers
     {
         // Constructor
-        ReconstructionServer::ReconstructionServer(const std::string& ip, int port) : m_IP(ip), m_Port(port)
+        ReconstructionServer::ReconstructionServer(const std::string& ip, int port, bool isCalibRequired) : m_IP(ip), m_Port(port), m_IsCalibRequired(isCalibRequired)
         {
 
         }
@@ -29,7 +29,41 @@ namespace CVNetwork
         // Start server
         void ReconstructionServer::StartServer()
         {
-            // TODO: open socket and listen for connections
+            // close socket if open
+            m_StereoStream.CloseConnection();
+
+            // create and run thread
+            m_Thread = std::thread(&ReconstructionServer::ServerMainThread, this);
+        }
+
+        // The main server thread
+        void ReconstructionServer::ServerMainThread()
+        {
+            // open socket and listen on port for connections
+            if (m_StereoStream.StartListeningForConnection(m_Port))
+            {
+                m_IsRunning = true;
+
+                // start the flow: either ask for calib data or begin the stereo stream
+                Message::StereoCalibMessage calibMessage{};
+                m_StereoStream.WaitForConnectAndStartFlow(m_IsCalibRequired, calibMessage);
+
+                // by this point - getting continuous stream of stereo images
+                RunStereoLoop();
+            }
+        }
+
+        // Main stereo loop
+        void ReconstructionServer::RunStereoLoop()
+        {
+            while (m_IsRunning)
+            {
+                Message::StereoMessage message = m_StereoStream.ReadStereoImageData();
+
+                m_Mutex.lock();
+                m_DataQueue.push(message);
+                m_Mutex.unlock();
+            }
         }
     }
 }

@@ -22,11 +22,16 @@ namespace CVNetwork
 
         ~StereoStream() {};
 
-        /// Connect to the given ip and port
+        /// Connect to the given ip and port of a server as a client
         /// \param ip The IPv4 IP address
         /// \param port The port of the server
         /// \return Returns true on success
-        bool Connect(const std::string& ip, int port);
+        bool ConnectToServer(const std::string& ip, int port);
+
+        /// Open a socket and begin listening for a client
+        /// \param port The port that the server is listening on
+        /// \return Returns true on success
+        bool StartListeningForConnection(int port);
 
         /// Close the connection to the server
         void CloseConnection();
@@ -43,7 +48,18 @@ namespace CVNetwork
         /// \return Returns true if server is requesting calib data. False if ok to start streaming stereo.
         bool InitiateStereoAndCheckIfCalibNeeded() const;
 
+        /// Start the flow by sending the control message, and optionally ask for calib data if required.
+        /// \param isCalibRequired If true, calib data will be requested first
+        /// \param calibMessage Will be set with the calib data if isCalibRequired is set to true.
+        void WaitForConnectAndStartFlow(bool isCalibRequired, Message::StereoCalibMessage& calibMessage) const;
+
+        /// Send calibration data through the socket
+        /// \param message The message with the calibration data
         void WriteCalibData(const Message::StereoCalibMessage& message) const;
+
+        /// Read calib data from the socket
+        /// \param message Will be filled with calib data that was received
+        void ReadCalibData(Message::StereoCalibMessage& message) const;
 
     private:
         std::unique_ptr<boost::asio::ip::tcp::socket> m_Socket { nullptr };

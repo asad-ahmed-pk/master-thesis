@@ -26,9 +26,9 @@ namespace CVNetwork
             m_StereoStream.CloseConnection();
         }
 
-        // Connect to reconstruct server
+        // ConnectToServer to reconstruct server
         bool StereoStreamerClient::ConnectToReconstructServer(const std::string& ip, int port) {
-            return m_StereoStream.Connect(ip, port);
+            return m_StereoStream.ConnectToServer(ip, port);
         }
 
         // Run the client indefinitely until requested to close or connection closed
