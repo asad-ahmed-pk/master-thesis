@@ -7,7 +7,6 @@
 #include "message/StereoStreamMessages.hpp"
 #include "../protocol/ProtocolStream.hpp"
 
-#include <string>
 #include <memory>
 #include <boost/array.hpp>
 
@@ -25,25 +24,20 @@ namespace CVNetwork
     // Connect to server as client
     bool StereoStream::ConnectToServer(const std::string& ip, int port)
     {
-        if (m_Socket->is_open()) {
+        if (m_Socket != nullptr && m_Socket->is_open()) {
             CloseConnection();
         }
 
-        // resolve address of server
-        const std::string address { ip + ":" + std::to_string(port) };
-        tcp::resolver resolver(m_IOService);
-        tcp::resolver::iterator results = resolver.resolve(address);
-
         m_Socket = std::make_unique<tcp::socket>(m_IOService);
-        boost::asio::connect(*m_Socket, results);
+        m_Socket->connect(tcp::endpoint(boost::asio::ip::address::from_string(ip), port));
 
         m_IOService.run();
 
         return (m_Socket != nullptr && m_Socket->is_open());
     }
 
-    // Open socket as a server and listen
-    bool StereoStream::StartListeningForConnection(int port)
+    // Open socket as a server and wait for the client to connect
+    bool StereoStream::StereoStreamClientConnected(int port)
     {
         if (m_Socket != nullptr && m_Socket->is_open()) {
             CloseConnection();
@@ -52,6 +46,7 @@ namespace CVNetwork
         m_Socket = std::make_unique<tcp::socket>(m_IOService);
         m_IOService.run();
 
+        // wait till a client connects
         tcp::acceptor acceptor(m_IOService, tcp::endpoint(tcp::v4(), port));
         acceptor.accept(*m_Socket);
 
@@ -138,7 +133,7 @@ namespace CVNetwork
 
         // expect response from server: either begin stereo or ask for calib
         Protocol::ControlMessageID controlMessageID = Protocol::ProtocolStream::ReadControlMessage(*m_Socket);
-        return (controlMessageID == Protocol::ControlMessageID::CONTROL_ID_BEGIN_STEREO_DATA_STREAM);
+        return (controlMessageID == Protocol::ControlMessageID::CONTROL_ID_CALIB_REQUEST);
     }
 
     // Initiate flow by waiting for stereo streamer connection request or direct stereo flow request
@@ -253,5 +248,10 @@ namespace CVNetwork
         message.r7 = data[25];
         message.r8 = data[26];
         message.r9 = data[27];
+    }
+
+    // Get next message from the protocol stream
+    void StereoStream::GetNextMessage(Protocol::HeaderID &headerID, Protocol::ControlMessageID &controlMessageID, Protocol::DataMessageID &dataMessageID) {
+        Protocol::ProtocolStream::ReadNextMessage(*m_Socket, headerID, controlMessageID, dataMessageID);
     }
 }

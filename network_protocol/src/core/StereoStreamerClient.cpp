@@ -3,6 +3,8 @@
 // The client for streaming stereo image data and pose of the robot to the reconstruction server
 //
 
+#include <iostream>
+
 #include "client/StereoStreamerClient.hpp"
 
 namespace CVNetwork
@@ -19,8 +21,10 @@ namespace CVNetwork
         StereoStreamerClient::~StereoStreamerClient()
         {
             // close and wait for thread to join
-            m_IsRunning = false;
-            m_Thread.join();
+            if (m_Thread.joinable()) {
+                m_IsRunning = false;
+                m_Thread.join();
+            }
 
             // close connection in the stereo stream
             m_StereoStream.CloseConnection();
@@ -32,10 +36,9 @@ namespace CVNetwork
         }
 
         // Run the client indefinitely until requested to close or connection closed
-        void StereoStreamerClient::Run()
-        {
-            m_IsRunning = true;
+        void StereoStreamerClient::Run() {
             m_Thread = std::thread(&StereoStreamerClient::RunThread, this);
+            m_IsRunning = true;
         }
 
         // Add a stereo data message to the queue
@@ -49,25 +52,30 @@ namespace CVNetwork
         // Main thread loop
         void StereoStreamerClient::RunThread()
         {
+            std::cout << "\nMain thread running..." << std::endl;
+
             // initiate the flow by sending server message that flow will begin
             bool isCalibRequested = m_StereoStream.InitiateStereoAndCheckIfCalibNeeded();
-            if (isCalibRequested)
-            {
-                // request robot streamer actor for calib data
+            if (isCalibRequested) {
+                std::cout << "\nServer requested calibration data. Sending calib data..." << std::endl;
                 m_StereoStream.WriteCalibData(m_CalibMessage);
             }
 
             // run main stereo stream loop
+            std::cout << "\nRunning main stereo loop" << std::endl;
             RunStereoStreamLoop();
         }
 
         // Stereo stream loop for sending stereo image data to server
         void StereoStreamerClient::RunStereoStreamLoop()
         {
-            while (m_IsRunning) {
-                // read from queue and send any pending messages
-                Message::StereoMessage message = GetNextStereoMessageInQueue();
-                m_StereoStream.WriteStereoImageData(message);
+            while (m_IsRunning)
+            {
+                if (!m_DataQueue.empty()) {
+                    // read from queue and send any pending messages
+                    Message::StereoMessage message = GetNextStereoMessageInQueue();
+                    m_StereoStream.WriteStereoImageData(message);
+                }
             }
         }
 

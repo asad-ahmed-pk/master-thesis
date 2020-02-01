@@ -29,17 +29,17 @@ list(APPEND PROTOCOL_SOURCES
         src/protocol/ProtocolStream.cpp
 )
 
-# Test program sources
-list(APPEND TEST_SOURCES
-        src/test/test_server.cpp
-)
-
 # The networking library
 add_library(${LIB_NAME} STATIC ${CORE_SOURCES} ${PROTOCOL_SOURCES})
 target_link_libraries(${LIB_NAME} ${Boost_LIBRARIES})
 
 # Test programs
 if (${COMPILE_TEST_PROGRAMS})
-    add_executable(test_server ${TEST_SOURCES})
-    target_link_libraries(test_server ${LIB_NAME})
+    # 3D reconstruction server
+    add_executable(test_reconstruction_server src/test/test_reconstruction_server.cpp)
+    target_link_libraries(test_reconstruction_server ${LIB_NAME})
+
+    # stereo streaming client
+    add_executable(test_stereo_client src/test/test_stereo_client.cpp)
+    target_link_libraries(test_stereo_client ${LIB_NAME})
 endif ()

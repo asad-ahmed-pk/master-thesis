@@ -37,7 +37,8 @@ namespace CVNetwork
 
         private:
             void ServerMainThread();
-            void RunStereoLoop();
+            void RunMainServerLoop();
+            void ProcessDataMessage(Protocol::DataMessageID dataMessageID);
 
         private:
             int m_Port;

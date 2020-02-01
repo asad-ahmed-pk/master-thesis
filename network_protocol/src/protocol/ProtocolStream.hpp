@@ -32,6 +32,13 @@ namespace CVNetwork
             /// \return Returns the parse data message id
             static DataMessageID ReadDataMessage(boost::asio::ip::tcp::socket& socket);
 
+            /// Read the next message from the stream. This could either be a data message or a control message. The appropriate enum will be set.
+            /// \param socket The socket to read the next message from
+            /// \param headerID Will be set with the type of message (control or message)
+            /// \param controlMessageID If headerID is a control message, will be set with type id of the control message.
+            /// \param dataMessageID If headerID is a data message, will be set with the type id of the data message.
+            static void ReadNextMessage(boost::asio::ip::tcp::socket& socket, HeaderID& headerID, ControlMessageID& controlMessageID, DataMessageID& dataMessageID);
+
             /// Write bytes for sending a data message
             /// \param socket A reference to the socket to which bytes will be written
             static void WriteHeaderForDataMessage(boost::asio::ip::tcp::socket& socket, DataMessageID dataMessageID);

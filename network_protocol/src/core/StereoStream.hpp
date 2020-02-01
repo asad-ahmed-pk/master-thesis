@@ -9,6 +9,7 @@
 #include <boost/asio.hpp>
 #include <memory>
 
+#include "../protocol/protocol.hpp"
 #include "message/StereoStreamMessages.hpp"
 
 namespace CVNetwork
@@ -31,7 +32,7 @@ namespace CVNetwork
         /// Open a socket and begin listening for a client
         /// \param port The port that the server is listening on
         /// \return Returns true on success
-        bool StartListeningForConnection(int port);
+        bool StereoStreamClientConnected(int port);
 
         /// Close the connection to the server
         void CloseConnection();
@@ -60,6 +61,12 @@ namespace CVNetwork
         /// Read calib data from the socket
         /// \param message Will be filled with calib data that was received
         void ReadCalibData(Message::StereoCalibMessage& message) const;
+
+        /// Get the next message from the socket
+        /// \param headerID The type of message (control or data)
+        /// \param controlMessageID If control, will be set with the control ID
+        /// \param dataMessageID If data, will be set with the data ID
+        void GetNextMessage(Protocol::HeaderID& headerID, Protocol::ControlMessageID& controlMessageID, Protocol::DataMessageID& dataMessageID);
 
     private:
         std::unique_ptr<boost::asio::ip::tcp::socket> m_Socket { nullptr };

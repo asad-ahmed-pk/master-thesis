@@ -49,7 +49,7 @@ namespace CVNetwork
         }
 
         void ReconstructionServer::StopServer() {
-            m_IsRunning = false;
+            m_IsRunning = false;        // setting to false will cause loop to exit in RunMainServerLoop()
         }
 
         // The main server thread
@@ -57,28 +57,71 @@ namespace CVNetwork
         {
             std::cout << "\nMain server thread running... Waiting for a stereo streaming client to connect on port " << m_Port << std::endl;
 
-            // open socket and listen on port for connections
-            if (m_StereoStream.StartListeningForConnection(m_Port))
+            // open socket and listen on port for the stereo streamer to connect
+            if (m_StereoStream.StereoStreamClientConnected(m_Port))
             {
+                std::cout << "\nClient connected on port " << m_Port << std::endl;
+
                 // start the flow: either ask for calib data or begin the stereo stream
                 Message::StereoCalibMessage calibMessage{};
                 m_StereoStream.WaitForConnectAndStartFlow(m_IsCalibRequired, calibMessage);
 
-                // by this point - getting continuous stream of stereo images
-                RunStereoLoop();
+                if (m_IsCalibRequired) {
+                    std::cout << "\nReceived calib from client: " << calibMessage.fx1 << " " << calibMessage.fx2 << std::endl;
+                }
+
+                // run the main server loop
+                RunMainServerLoop();
             }
         }
 
-        // Main stereo loop
-        void ReconstructionServer::RunStereoLoop()
+        // Main server loop
+        void ReconstructionServer::RunMainServerLoop()
         {
+            std::cout << "\nRunning main server loop. Reading messages from client" << std::endl;
+
+            Protocol::HeaderID  headerID;
+            Protocol::DataMessageID dataMessageID;
+            Protocol::ControlMessageID controlMessageID;
+
             while (m_IsRunning)
             {
-                Message::StereoMessage message = m_StereoStream.ReadStereoImageData();
+                // get the next message and respond to it
+                m_StereoStream.GetNextMessage(headerID, controlMessageID, dataMessageID);
 
-                m_Mutex.lock();
-                m_DataQueue.push(message);
-                m_Mutex.unlock();
+                switch (headerID)
+                {
+                    // got a control message
+                    case Protocol::HeaderID::HEADER_ID_CONTROL:
+                        // TODO: process control message (can be exit message)
+                        break;
+
+                    // got a data message
+                    case Protocol::HeaderID::HEADER_ID_DATA:
+                        ProcessDataMessage(dataMessageID);
+                        break;
+                }
+            }
+        }
+
+        // Process data message
+        void ReconstructionServer::ProcessDataMessage(CVNetwork::Protocol::DataMessageID dataMessageID)
+        {
+            switch (dataMessageID)
+            {
+                // got a stereo data message - add to queue
+                case Protocol::DataMessageID::DATA_ID_STEREO: {
+                    Message::StereoMessage message = m_StereoStream.ReadStereoImageData();
+
+                    m_Mutex.lock();
+                    m_DataQueue.push(message);
+                    m_Mutex.unlock();
+
+                    break;
+                }
+
+                case Protocol::DataMessageID::DATA_ID_CALIB:
+                    break;
             }
         }
     }

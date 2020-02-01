@@ -11,6 +11,30 @@ namespace CVNetwork
 {
     namespace Protocol
     {
+        // Read next message and determine if control or data message
+        void ProtocolStream::ReadNextMessage(boost::asio::ip::tcp::socket &socket, HeaderID &headerID, ControlMessageID &controlMessageID, DataMessageID &dataMessageID)
+        {
+            socket.wait(boost::asio::ip::tcp::socket::wait_read);
+
+            boost::array<int, 2> headerData {};
+            boost::asio::read(socket, boost::asio::buffer(headerData));
+
+            // first field: the main header id
+            headerID = static_cast<HeaderID>(headerData[0]);
+
+            // depending on type of header id parse the correct message type
+            switch (headerID)
+            {
+                case HEADER_ID_CONTROL:
+                    controlMessageID = static_cast<ControlMessageID>(headerData[1]);
+                    break;
+
+                case HEADER_ID_DATA:
+                    dataMessageID = static_cast<DataMessageID>(headerData[1]);
+                    break;
+            }
+        }
+
         // Write control message header
         void ProtocolStream::WriteHeaderForControlMessage(boost::asio::ip::tcp::socket &socket, ControlMessageID controlMessageID)
         {
@@ -21,7 +45,7 @@ namespace CVNetwork
         // Read and parse control message ID
         ControlMessageID ProtocolStream::ReadControlMessage(boost::asio::ip::tcp::socket &socket)
         {
-            boost::array<int, 2> data;
+            boost::array<int, 2> data{};
             boost::asio::read(socket, boost::asio::buffer(data));
 
             // first header is message ID, 2nd is the control ID
@@ -31,7 +55,7 @@ namespace CVNetwork
 
         DataMessageID ProtocolStream::ReadDataMessage(boost::asio::ip::tcp::socket &socket)
         {
-            boost::array<int, 2> data;
+            boost::array<int, 2> data{};
             boost::asio::read(socket, boost::asio::buffer(data));
 
             // second header is the data id
