@@ -51,9 +51,6 @@ int main(int argc, char** argv)
 
             if (encodedImage1 && encodedImage2)
             {
-                message.LeftImageDataSize = message.LeftImageData.size();
-                message.RightImageDataSize = message.RightImageData.size();
-
                 message.X = 100;
                 message.Y = 200;
                 message.Z = 300;

@@ -72,7 +72,7 @@ namespace CVNetwork
         Protocol::ProtocolStream::WriteHeaderForDataMessage(*m_Socket, Protocol::DataMessageID::DATA_ID_STEREO);
 
         // write size information for both images
-        boost::array<unsigned long, 2> sizeData { message.LeftImageDataSize, message.RightImageDataSize };
+        boost::array<unsigned long, 2> sizeData { static_cast<unsigned long>(message.LeftImageData.size()), static_cast<unsigned long>(message.RightImageData.size()) };
         boost::asio::write(*m_Socket, boost::asio::buffer(sizeData));
 
         // write left image and right image data

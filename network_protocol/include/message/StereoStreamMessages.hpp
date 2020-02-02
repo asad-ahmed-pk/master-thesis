@@ -15,14 +15,14 @@ namespace CVNetwork
         // Message with stereo images and pose of robot when images were taken
         struct StereoMessage
         {
+            // PNG Encoded image data for left and right cameras
             std::vector<unsigned char> LeftImageData;
             std::vector<unsigned char> RightImageData;
 
-            unsigned long LeftImageDataSize;
-            unsigned long RightImageDataSize;
-
+            // The transform of the robot in world space
             float X; float Y; float Z;
 
+            // The rotation of the robot in world space
             float R1, R2, R3;
             float R4, R5, R6;
             float R7, R8, R9;
