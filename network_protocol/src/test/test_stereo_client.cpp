@@ -5,7 +5,6 @@
 
 #include <iostream>
 #include <string>
-#include <opencv2/highgui/highgui.hpp>
 #include <opencv2/imgcodecs/imgcodecs.hpp>
 
 #include "message/StereoStreamMessages.hpp"
@@ -61,6 +60,7 @@ int main(int argc, char** argv)
         }
 
         // input before closing test program
+        std::cout << "\n\nPress ENTER to exit client" << std::endl;
         std::cin.get();
     }
 
