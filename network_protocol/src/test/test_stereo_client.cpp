@@ -12,6 +12,8 @@ int main(int argc, char** argv)
 {
     // create test calib message
     CVNetwork::Message::StereoCalibMessage calibMessage{};
+    calibMessage.fx1 = 100;
+    calibMessage.fx2 = 200;
 
     // connect to reconstruction server
     CVNetwork::Clients::StereoStreamerClient client(calibMessage);

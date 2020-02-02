@@ -45,6 +45,8 @@ namespace CVNetwork
         // Read and parse control message ID
         ControlMessageID ProtocolStream::ReadControlMessage(boost::asio::ip::tcp::socket &socket)
         {
+            socket.wait(boost::asio::ip::tcp::socket::wait_read);
+
             boost::array<int, 2> data{};
             boost::asio::read(socket, boost::asio::buffer(data));
 
@@ -55,6 +57,8 @@ namespace CVNetwork
 
         DataMessageID ProtocolStream::ReadDataMessage(boost::asio::ip::tcp::socket &socket)
         {
+            socket.wait(boost::asio::ip::tcp::socket::wait_read);
+
             boost::array<int, 2> data{};
             boost::asio::read(socket, boost::asio::buffer(data));
 
