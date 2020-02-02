@@ -17,6 +17,12 @@ option(COMPILE_TEST_PROGRAMS "Compile the test client and server programs" ON)
 find_package(Boost 1.60 REQUIRED COMPONENTS system thread)
 include_directories(${Boost_INCLUDE_DIR})
 
+# OpenCV if test programs are set to ON
+if (${COMPILE_TEST_PROGRAMS})
+    message("Compiling test programs with OpenCV 4.1")
+    find_package(OpenCV 4.1 REQUIRED)
+endif()
+
 # Core sources
 list(APPEND CORE_SOURCES
         src/core/StereoStream.cpp
@@ -37,9 +43,9 @@ target_link_libraries(${LIB_NAME} ${Boost_LIBRARIES})
 if (${COMPILE_TEST_PROGRAMS})
     # 3D reconstruction server
     add_executable(test_reconstruction_server src/test/test_reconstruction_server.cpp)
-    target_link_libraries(test_reconstruction_server ${LIB_NAME})
+    target_link_libraries(test_reconstruction_server ${LIB_NAME} ${OpenCV_LIBS})
 
     # stereo streaming client
     add_executable(test_stereo_client src/test/test_stereo_client.cpp)
-    target_link_libraries(test_stereo_client ${LIB_NAME})
+    target_link_libraries(test_stereo_client ${LIB_NAME} ${OpenCV_LIBS})
 endif ()

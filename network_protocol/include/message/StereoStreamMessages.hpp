@@ -6,6 +6,8 @@
 #ifndef NETWORK_PROTOCOL_STEREOSTREAMMESSAGES_HPP
 #define NETWORK_PROTOCOL_STEREOSTREAMMESSAGES_HPP
 
+#include <vector>
+
 namespace CVNetwork
 {
     namespace Message
@@ -13,11 +15,11 @@ namespace CVNetwork
         // Message with stereo images and pose of robot when images were taken
         struct StereoMessage
         {
-            unsigned char* LeftImageData;
-            unsigned char* RightImageData;
+            std::vector<unsigned char> LeftImageData;
+            std::vector<unsigned char> RightImageData;
 
-            unsigned int LeftImageDataSize;
-            unsigned int RightImageDataSize;
+            unsigned long LeftImageDataSize;
+            unsigned long RightImageDataSize;
 
             float X; float Y; float Z;
 

@@ -71,10 +71,15 @@ namespace CVNetwork
         {
             while (m_IsRunning)
             {
-                if (!m_DataQueue.empty()) {
+                if (!m_DataQueue.empty())
+                {
+                    std::cout << "\nFound stereo data in queue. Sending to server..." << std::endl;
+
                     // read from queue and send any pending messages
                     Message::StereoMessage message = GetNextStereoMessageInQueue();
                     m_StereoStream.WriteStereoImageData(message);
+
+                    std::cout << "\nStereo data sent to server." << std::endl;
                 }
             }
         }

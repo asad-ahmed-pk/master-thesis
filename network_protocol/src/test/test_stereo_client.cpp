@@ -4,12 +4,27 @@
 //
 
 #include <iostream>
+#include <string>
+#include <opencv2/highgui/highgui.hpp>
+#include <opencv2/imgcodecs/imgcodecs.hpp>
 
 #include "message/StereoStreamMessages.hpp"
 #include "client/StereoStreamerClient.hpp"
 
 int main(int argc, char** argv)
 {
+    cv::Mat img1, img2;
+
+    // optional command line arguments to 2 images
+    if (argc >= 3)
+    {
+        std::string img1Path = argv[1];
+        std::string img2Path = argv[2];
+
+        img1 = cv::imread(img1Path, cv::IMREAD_COLOR);
+        img2 = cv::imread(img2Path, cv::IMREAD_COLOR);
+    }
+
     // create test calib message
     CVNetwork::Message::StereoCalibMessage calibMessage{};
     calibMessage.fx1 = 100;
@@ -25,6 +40,30 @@ int main(int argc, char** argv)
         // initiate stereo flow
         client.Run();
 
+        // if 2 stereo images were loaded - send them to the server
+        if (img1.data && img2.data)
+        {
+            CVNetwork::Message::StereoMessage message{};
+
+            // encode images
+            bool encodedImage1 = cv::imencode(".png", img1, message.LeftImageData);
+            bool encodedImage2 = cv::imencode(".png", img2, message.RightImageData);
+
+            if (encodedImage1 && encodedImage2)
+            {
+                message.LeftImageDataSize = message.LeftImageData.size();
+                message.RightImageDataSize = message.RightImageData.size();
+
+                message.X = 100;
+                message.Y = 200;
+                message.Z = 300;
+
+                std::cout << "\nSending stereo image to server..." << std::endl;
+                client.AddStereoDataToQueue(message);
+            }
+        }
+
+        // input before closing test program
         std::cin.get();
     }
 

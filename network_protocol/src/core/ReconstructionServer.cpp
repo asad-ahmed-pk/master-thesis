@@ -20,8 +20,6 @@ namespace CVNetwork
         // Destructor
         ReconstructionServer::~ReconstructionServer()
         {
-            std::cout << "\nDestructor called" << std::endl;
-
             // close and wait for thread to join
             if (m_Thread.joinable())
             {
@@ -86,20 +84,23 @@ namespace CVNetwork
 
             while (m_IsRunning)
             {
-                // get the next message and respond to it
-                m_StereoStream.GetNextMessage(headerID, controlMessageID, dataMessageID);
-
-                switch (headerID)
+                // get the next message and respond to it if there is data
+                if (m_StereoStream.IsDataAvailableToRead())
                 {
-                    // got a control message
-                    case Protocol::HeaderID::HEADER_ID_CONTROL:
-                        // TODO: process control message (can be exit message)
-                        break;
+                    m_StereoStream.GetNextMessage(headerID, controlMessageID, dataMessageID);
 
-                    // got a data message
-                    case Protocol::HeaderID::HEADER_ID_DATA:
-                        ProcessDataMessage(dataMessageID);
-                        break;
+                    switch (headerID)
+                    {
+                        // got a control message
+                        case Protocol::HeaderID::HEADER_ID_CONTROL:
+                            // TODO: process control message (can be exit message)
+                            break;
+
+                            // got a data message
+                        case Protocol::HeaderID::HEADER_ID_DATA:
+                            ProcessDataMessage(dataMessageID);
+                            break;
+                    }
                 }
             }
         }
@@ -113,9 +114,14 @@ namespace CVNetwork
                 case Protocol::DataMessageID::DATA_ID_STEREO: {
                     Message::StereoMessage message = m_StereoStream.ReadStereoImageData();
 
+                    std::cout << "\nStereo data read from client" << std::endl;
+                    std::cout << "\nX, Y, Z = " << message.X << ", " << message.Y << ", " << message.Z << std::endl;
+
                     m_Mutex.lock();
                     m_DataQueue.push(message);
                     m_Mutex.unlock();
+
+                    std::cout << "\nAdded to queue" << std::endl;
 
                     break;
                 }
@@ -123,6 +129,24 @@ namespace CVNetwork
                 case Protocol::DataMessageID::DATA_ID_CALIB:
                     break;
             }
+        }
+
+        // Get stereo data from queue
+        bool ReconstructionServer::GetNextStereoDataFromQueue(Message::StereoMessage &message)
+        {
+            m_Mutex.lock();
+
+            if (!m_DataQueue.empty())
+            {
+                message = m_DataQueue.front();
+                m_DataQueue.pop();
+                m_Mutex.unlock();
+
+                return true;
+            }
+
+            m_Mutex.unlock();
+            return false;
         }
     }
 }

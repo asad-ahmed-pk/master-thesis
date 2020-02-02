@@ -72,12 +72,12 @@ namespace CVNetwork
         Protocol::ProtocolStream::WriteHeaderForDataMessage(*m_Socket, Protocol::DataMessageID::DATA_ID_STEREO);
 
         // write size information for both images
-        boost::array<unsigned int, 2> sizeData { message.LeftImageDataSize, message.RightImageDataSize };
+        boost::array<unsigned long, 2> sizeData { message.LeftImageDataSize, message.RightImageDataSize };
         boost::asio::write(*m_Socket, boost::asio::buffer(sizeData));
 
         // write left image and right image data
-        boost::asio::write(*m_Socket, boost::asio::buffer(message.LeftImageData, message.LeftImageDataSize));
-        boost::asio::write(*m_Socket, boost::asio::buffer(message.RightImageData, message.RightImageDataSize));
+        boost::asio::write(*m_Socket, boost::asio::buffer(message.LeftImageData));
+        boost::asio::write(*m_Socket, boost::asio::buffer(message.RightImageData));
 
         // write location of robot
         boost::array<float, 3> locationData { message.X, message.Y, message.Z };
@@ -94,15 +94,15 @@ namespace CVNetwork
         Message::StereoMessage message{};
 
         // read in left and right image sizes from header
-        boost::array<unsigned int, 2> sizeData{};
+        boost::array<unsigned long, 2> sizeData{};
         boost::asio::read(*m_Socket, boost::asio::buffer(sizeData));
 
-        message.LeftImageDataSize = sizeData[0];
-        message.RightImageDataSize = sizeData[1];
+        message.LeftImageData.resize(sizeData[0]);
+        message.RightImageData.resize(sizeData[1]);
 
         // read in left and right image data
-        boost::asio::read(*m_Socket, boost::asio::buffer(message.LeftImageData, message.LeftImageDataSize));
-        boost::asio::read(*m_Socket, boost::asio::buffer(message.RightImageData, message.RightImageDataSize));
+        boost::asio::read(*m_Socket, boost::asio::buffer(message.LeftImageData));
+        boost::asio::read(*m_Socket, boost::asio::buffer(message.RightImageData));
 
         // read pose data
         boost::array<float, 12> poseData{};
@@ -253,5 +253,10 @@ namespace CVNetwork
     // Get next message from the protocol stream
     void StereoStream::GetNextMessage(Protocol::HeaderID &headerID, Protocol::ControlMessageID &controlMessageID, Protocol::DataMessageID &dataMessageID) {
         Protocol::ProtocolStream::ReadNextMessage(*m_Socket, headerID, controlMessageID, dataMessageID);
+    }
+
+    // Check if data available
+    bool StereoStream::IsDataAvailableToRead() const {
+        return (m_Socket->available() > 0);
     }
 }

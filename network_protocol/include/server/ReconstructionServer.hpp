@@ -35,6 +35,11 @@ namespace CVNetwork
             /// Shut down server
             void StopServer();
 
+            /// Get the next stereo data message from the queue that has been received from the client.
+            /// \param message Will be set with the message if true is returned
+            /// \return Returns true if there was data in the queue. False if no data.
+            bool GetNextStereoDataFromQueue(Message::StereoMessage& message);
+
         private:
             void ServerMainThread();
             void RunMainServerLoop();

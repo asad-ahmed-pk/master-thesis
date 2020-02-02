@@ -68,6 +68,10 @@ namespace CVNetwork
         /// \param dataMessageID If data, will be set with the data ID
         void GetNextMessage(Protocol::HeaderID& headerID, Protocol::ControlMessageID& controlMessageID, Protocol::DataMessageID& dataMessageID);
 
+        /// Check if there is data to read
+        /// \return Returns true if there is data that can be read
+        bool IsDataAvailableToRead() const;
+
     private:
         std::unique_ptr<boost::asio::ip::tcp::socket> m_Socket { nullptr };
         boost::asio::io_service m_IOService;
