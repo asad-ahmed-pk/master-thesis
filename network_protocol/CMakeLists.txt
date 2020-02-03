@@ -14,7 +14,7 @@ include_directories(include)
 option(COMPILE_TEST_PROGRAMS "Compile the test client and server programs" ON)
 
 # Boost
-find_package(Boost 1.60 REQUIRED COMPONENTS system thread)
+find_package(Boost 1.66 REQUIRED COMPONENTS system thread)
 include_directories(${Boost_INCLUDE_DIR})
 
 # OpenCV if test programs are set to ON
