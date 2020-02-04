@@ -8,7 +8,7 @@ set(CMAKE_CXX_STANDARD 14)
 set(LIB_NAME cv_networking)
 
 # set include directories
-include_directories(include)
+include_directories(include/cv_networking)
 
 # option to compile test client and server programs
 option(COMPILE_TEST_PROGRAMS "Compile the test client and server programs" ON)

@@ -12,7 +12,7 @@
 #include <string>
 #include <mutex>
 
-#include "../../src/core/StereoStream.hpp"
+#include "../../../src/core/StereoStream.hpp"
 #include "message/StereoStreamMessages.hpp"
 
 namespace CVNetwork
