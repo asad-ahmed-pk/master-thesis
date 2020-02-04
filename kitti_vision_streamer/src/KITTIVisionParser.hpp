@@ -27,7 +27,7 @@ public:
 
     /// Get the parsed data samples
     /// \param samples Will be populated with data samples containing the images and pose
-    void GetParsedDataSamples(std::vector<DataSample> samples) const;
+    void GetParsedDataSamples(std::vector<DataSample>& samples) const;
 
 private:
     void ParseCalib();
@@ -36,12 +36,17 @@ private:
     Eigen::Matrix3f MatrixFromLine(const std::string& line) const;
     Eigen::Vector3f Vector3FromLine(const std::string& line) const;
     Eigen::VectorXf VectorXFromLine(const std::string& line, int n) const;
+    Eigen::Matrix3f RotationMatrixFromEuler(float roll, float pitch, float yaw) const;
     void GetFloatComponentsFromLine(const std::string& line, std::vector<float>& components) const;
+    void GetFilesInDirectory(const std::string& directory, std::vector<std::string>& files) const;
+    DataSample BuildSampleFromFileID(const std::string& fileID) const;
 
 private:
     const std::string m_CalibFolderPath;
     const std::string m_DataFolderPath;
-    std::vector<DataSample> m_DataSamples{};
+    std::string m_ImageFileExtension;
+    std::vector<DataSample> m_DataSamples;
+    std::vector<std::string> m_FileIDs;
     Calib m_Calib{};
 };
 

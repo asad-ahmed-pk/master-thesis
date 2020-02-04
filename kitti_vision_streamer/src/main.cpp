@@ -52,6 +52,22 @@ int main(int argc, char** argv)
     std::cout << "\nT:\n" << calib.T;
     std::cout << "\nR:\n" << calib.R;
 
+    // get data samples
+    std::vector<DataSample> samples;
+    parser.GetParsedDataSamples(samples);
+
+    // print first 2
+    std::cout << "\nFirst 2 samples" << std::endl;
+    for (int i = 0; i < 2; i++)
+    {
+        std::cout << "\n\n" << i << ": \n";
+        std::cout << "\nImage 1: " << samples[i].Camera1ImagePath;
+        std::cout << "\nImage 2: " << samples[i].Camera2ImagePath;
+        std::cout << "\n(X, Y, Z): " << "(" << samples[i].T[0] << ", " << samples[i].T[1] << ", " << samples[i].T[2] << ")";
+        std::cout << "\nR:\n" << samples[i].R;
+    }
+
+    std::cout << std::endl;
     return 0;
 }
 
