@@ -3,7 +3,7 @@
 // Server responsible for 3D reconstruction from the stereo stream from the robot
 //
 
-#include "server/ReconstructionServer.hpp"
+#include "cv_networking/server/ReconstructionServer.hpp"
 
 #include <iostream>
 
@@ -29,14 +29,18 @@ namespace CVNetwork
                 // close connection in the stereo stream
                 m_StereoStream.CloseConnection();
 
+#ifndef NDEBUG
                 std::cout << "\nShut down server" << std::endl;
+#endif
             }
         }
 
         // Start server
         void ReconstructionServer::StartServer()
         {
+#ifndef NDEBUG
             std::cout << "\nStarting server" << std::endl;
+#endif
 
             // close socket if open
             m_StereoStream.CloseConnection();
@@ -53,12 +57,16 @@ namespace CVNetwork
         // The main server thread
         void ReconstructionServer::ServerMainThread()
         {
+#ifndef NDEBUG
             std::cout << "\nMain server thread running... Waiting for a stereo streaming client to connect on port " << m_Port << std::endl;
+#endif
 
             // open socket and listen on port for the stereo streamer to connect
             if (m_StereoStream.StereoStreamClientConnected(m_Port))
             {
+#ifndef NDEBUG
                 std::cout << "\nClient connected on port " << m_Port << std::endl;
+#endif
 
                 // start the flow: either ask for calib data or begin the stereo stream
                 Message::StereoCalibMessage calibMessage{};
@@ -76,7 +84,9 @@ namespace CVNetwork
         // Main server loop
         void ReconstructionServer::RunMainServerLoop()
         {
+#ifndef NDEBUG
             std::cout << "\nRunning main server loop. Reading messages from client" << std::endl;
+#endif
 
             Protocol::HeaderID  headerID;
             Protocol::DataMessageID dataMessageID;
@@ -114,14 +124,18 @@ namespace CVNetwork
                 case Protocol::DataMessageID::DATA_ID_STEREO: {
                     Message::StereoMessage message = m_StereoStream.ReadStereoImageData();
 
+#ifndef NDEBUG
                     std::cout << "\nStereo data read from client" << std::endl;
                     std::cout << "\nX, Y, Z = " << message.X << ", " << message.Y << ", " << message.Z << std::endl;
+#endif
 
                     m_Mutex.lock();
                     m_DataQueue.push(message);
                     m_Mutex.unlock();
 
+#ifndef NDEBUG
                     std::cout << "\nAdded to queue" << std::endl;
+#endif
 
                     break;
                 }

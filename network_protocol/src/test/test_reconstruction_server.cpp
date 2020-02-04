@@ -10,7 +10,7 @@
 #include <opencv2/highgui/highgui.hpp>
 #include <opencv2/imgcodecs/imgcodecs.hpp>
 
-#include "server/ReconstructionServer.hpp"
+#include "cv_networking/server/ReconstructionServer.hpp"
 
 int main(int argc, char** argv)
 {

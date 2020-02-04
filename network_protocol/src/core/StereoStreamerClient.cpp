@@ -4,8 +4,11 @@
 //
 
 #include <iostream>
+#include <chrono>
 
-#include "client/StereoStreamerClient.hpp"
+#include "cv_networking/client/StereoStreamerClient.hpp"
+
+#define THREAD_WAIT_SLEEP_TIME_SECONDS 1
 
 namespace CVNetwork
 {
@@ -32,6 +35,7 @@ namespace CVNetwork
 
         // ConnectToServer to reconstruct server
         bool StereoStreamerClient::ConnectToReconstructServer(const std::string& ip, int port) {
+            try{}
             return m_StereoStream.ConnectToServer(ip, port);
         }
 
@@ -52,7 +56,9 @@ namespace CVNetwork
         // Main thread loop
         void StereoStreamerClient::RunThread()
         {
+#ifndef NDEBUG
             std::cout << "\nMain thread running..." << std::endl;
+#endif
 
             // initiate the flow by sending server message that flow will begin
             bool isCalibRequested = m_StereoStream.InitiateStereoAndCheckIfCalibNeeded();
@@ -62,7 +68,10 @@ namespace CVNetwork
             }
 
             // run main stereo stream loop
+#ifndef NDEBUG
             std::cout << "\nRunning main stereo loop" << std::endl;
+#endif
+
             RunStereoStreamLoop();
         }
 
@@ -73,14 +82,21 @@ namespace CVNetwork
             {
                 if (!m_DataQueue.empty())
                 {
+#ifndef NDEBUG
                     std::cout << "\nFound stereo data in queue. Sending to server..." << std::endl;
+#endif
 
                     // read from queue and send any pending messages
                     Message::StereoMessage message = GetNextStereoMessageInQueue();
                     m_StereoStream.WriteStereoImageData(message);
 
+#ifndef NDEBUG
                     std::cout << "\nStereo data sent to server." << std::endl;
+#endif
                 }
+
+                // sleep so that the user of the client can add messages to queue
+                std::this_thread::sleep_for(std::chrono::seconds(THREAD_WAIT_SLEEP_TIME_SECONDS));
             }
         }
 

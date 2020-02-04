@@ -7,9 +7,6 @@ set(CMAKE_CXX_STANDARD 14)
 
 set(LIB_NAME cv_networking)
 
-# set include directories
-include_directories(include/cv_networking)
-
 # option to compile test client and server programs
 option(COMPILE_TEST_PROGRAMS "Compile the test client and server programs" ON)
 
@@ -38,6 +35,9 @@ list(APPEND PROTOCOL_SOURCES
 # The networking library
 add_library(${LIB_NAME} STATIC ${CORE_SOURCES} ${PROTOCOL_SOURCES})
 target_link_libraries(${LIB_NAME} ${Boost_LIBRARIES})
+
+# set include directories
+target_include_directories(${LIB_NAME} PUBLIC include)
 
 # Test programs
 if (${COMPILE_TEST_PROGRAMS})

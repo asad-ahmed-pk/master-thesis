@@ -30,6 +30,9 @@ struct Calib
 /// A sample from the dataset. Encodes 2 images and the vehicle pose at the time the images were taken
 struct DataSample
 {
+    // Sample unique ID
+    std::string ID;
+
     // Camera image file paths
     std::string Camera1ImagePath;
     std::string Camera2ImagePath;

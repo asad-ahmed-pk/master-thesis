@@ -3,9 +3,9 @@
 // Handles streaming of data from the rover to the cv reconstruct module in the pipeline
 //
 
-#include "StereoStream.hpp"
-#include "message/StereoStreamMessages.hpp"
-#include "../protocol/ProtocolStream.hpp"
+#include "cv_networking/core/StereoStream.hpp"
+#include "cv_networking/message/StereoStreamMessages.hpp"
+#include "cv_networking/protocol/ProtocolStream.hpp"
 
 #include <memory>
 #include <boost/array.hpp>

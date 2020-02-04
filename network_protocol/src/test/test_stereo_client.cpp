@@ -7,8 +7,8 @@
 #include <string>
 #include <opencv2/imgcodecs/imgcodecs.hpp>
 
-#include "message/StereoStreamMessages.hpp"
-#include "client/StereoStreamerClient.hpp"
+#include "cv_networking/message/StereoStreamMessages.hpp"
+#include "cv_networking/client/StereoStreamerClient.hpp"
 
 int main(int argc, char** argv)
 {

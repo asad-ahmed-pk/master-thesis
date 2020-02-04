@@ -9,8 +9,8 @@
 #include <boost/asio.hpp>
 #include <memory>
 
-#include "../protocol/protocol.hpp"
-#include "message/StereoStreamMessages.hpp"
+#include "cv_networking/protocol/protocol.hpp"
+#include "cv_networking/message/StereoStreamMessages.hpp"
 
 namespace CVNetwork
 {

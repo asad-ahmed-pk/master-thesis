@@ -12,8 +12,8 @@
 #include <string>
 #include <mutex>
 
-#include "../../../src/core/StereoStream.hpp"
-#include "message/StereoStreamMessages.hpp"
+#include "cv_networking/core/StereoStream.hpp"
+#include "cv_networking/message/StereoStreamMessages.hpp"
 
 namespace CVNetwork
 {

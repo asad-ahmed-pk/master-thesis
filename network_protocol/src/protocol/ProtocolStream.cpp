@@ -3,7 +3,7 @@
 // Static class with functions for common protocol read / write operations for streams
 //
 
-#include "ProtocolStream.hpp"
+#include "cv_networking/protocol/ProtocolStream.hpp"
 
 #include <boost/array.hpp>
 

@@ -109,6 +109,8 @@ DataSample KITTIVisionParser::BuildSampleFromFileID(const std::string &fileID) c
 {
     DataSample sample;
 
+    sample.ID = fileID;
+
     // build image 1 and 2 paths
     boost::filesystem::path img1Path(m_DataFolderPath);
     img1Path = (img1Path / IMAGE_LEFT_FOLDER_NAME / DATA_SUBFOLDER_NAME / (fileID + m_ImageFileExtension));

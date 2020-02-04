@@ -14,7 +14,7 @@ endif()
 find_package(OpenCV 4.1 REQUIRED)
 
 # Boost
-find_package(Boost 1.66 COMPONENTS system filesystem program_options REQUIRED)
+find_package(Boost 1.66 COMPONENTS system filesystem thread program_options REQUIRED)
 include_directories(${Boost_INCLUDE_DIR})
 
 # Eigen3
@@ -30,7 +30,6 @@ if (${MACOSX})
 endif()
 
 # Include dirs
-include_directories(include)
 include_directories(${LIB_CV_NETWORKING_INCLUDE_DIR})
 
 # Executables
