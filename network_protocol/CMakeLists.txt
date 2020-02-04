@@ -34,10 +34,11 @@ list(APPEND PROTOCOL_SOURCES
 
 # The networking library
 add_library(${LIB_NAME} STATIC ${CORE_SOURCES} ${PROTOCOL_SOURCES})
+add_library(reconstruction::networking ALIAS ${LIB_NAME})
 target_link_libraries(${LIB_NAME} ${Boost_LIBRARIES})
 
 # set include directories
-target_include_directories(${LIB_NAME} PUBLIC include)
+target_include_directories(${LIB_NAME} PUBLIC ${PROJECT_SOURCE_DIR}/include)
 
 # Test programs
 if (${COMPILE_TEST_PROGRAMS})

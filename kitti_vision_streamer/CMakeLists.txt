@@ -36,5 +36,5 @@ include_directories(${LIB_CV_NETWORKING_INCLUDE_DIR})
 
 # Main executable
 add_executable(${PROJECT_NAME} src/main.cpp src/KITTIVisionParser.cpp)
-target_link_libraries(${PROJECT_NAME} ${OpenCV_LIBS} ${Boost_LIBRARIES} ${CMAKE_SOURCE_DIR}/${LIB_CV_NETWORKING})
+target_link_libraries(${PROJECT_NAME} ${OpenCV_LIBS} ${Boost_LIBRARIES} reconstruction::networking)
 
