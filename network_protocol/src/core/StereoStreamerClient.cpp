@@ -34,9 +34,15 @@ namespace CVNetwork
         }
 
         // ConnectToServer to reconstruct server
-        bool StereoStreamerClient::ConnectToReconstructServer(const std::string& ip, int port) {
-            try{}
-            return m_StereoStream.ConnectToServer(ip, port);
+        bool StereoStreamerClient::ConnectToReconstructServer(const std::string& ip, int port)
+        {
+            try {
+                return m_StereoStream.ConnectToServer(ip, port);
+            }
+            catch (boost::system::system_error& error) {
+                m_StereoStream.CloseConnection();
+                return false;
+            }
         }
 
         // Run the client indefinitely until requested to close or connection closed
