@@ -40,6 +40,15 @@ namespace CVNetwork
             /// \return Returns true if there was data in the queue. False if no data.
             bool GetNextStereoDataFromQueue(Message::StereoMessage& message);
 
+            /// Get the calib message if it was received from the client. Call IsCalibAvailable() to ensure it is available.
+            /// Otherwise, a default calib message will be returned
+            /// \return The calib message that was received from the client
+            Message::StereoCalibMessage GetCalibMessage() const;
+
+            /// Check if the calib data has arrived
+            /// \return Returns true if calib data is available
+            bool IsCalibAvailable() const;
+
         private:
             void ServerMainThread();
             void RunMainServerLoop();
@@ -49,9 +58,11 @@ namespace CVNetwork
             int m_Port;
 
             bool m_IsRunning { false };
+            bool m_IsCalibAvailable { false };
             bool m_IsCalibRequired;
 
             StereoStream m_StereoStream;
+            Message::StereoCalibMessage m_CalibMessage;
 
             std::queue<Message::StereoMessage> m_DataQueue;
             std::thread m_Thread;

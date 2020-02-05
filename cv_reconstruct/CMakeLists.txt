@@ -44,6 +44,7 @@ list(APPEND CAMERA_SOURCES
 list(APPEND RECONSTRUCT_3D_SOURCES
         src/reconstruct/Reconstruct3D.cpp
         src/reconstruct/ReconstructionServer.cpp
+        src/config/ConfigParser.cpp
 )
 
 # External sources

@@ -73,12 +73,26 @@ namespace CVNetwork
                 m_StereoStream.WaitForConnectAndStartFlow(m_IsCalibRequired, calibMessage);
 
                 if (m_IsCalibRequired) {
+#ifndef NDEBUG
                     std::cout << "\nReceived calib from client: " << calibMessage.fx1 << " " << calibMessage.fx2 << std::endl;
+#endif
+                    m_IsCalibAvailable = true;
+                    m_CalibMessage = calibMessage;
                 }
 
                 // run the main server loop
                 RunMainServerLoop();
             }
+        }
+
+        // Calib check
+        bool ReconstructionServer::IsCalibAvailable() const {
+            return m_IsCalibAvailable;
+        }
+
+        // Get calib
+        Message::StereoCalibMessage ReconstructionServer::GetCalibMessage() const {
+            return m_CalibMessage;
         }
 
         // Main server loop

@@ -8,8 +8,13 @@
 #define MASTER_THESIS_RECONSTRUCTIONSERVER_HPP
 
 #include <string>
+#include <memory>
 
 #include "ReconstructStatusCode.hpp"
+#include "config/Config.hpp"
+#include "camera/CameraCalib.hpp"
+#include "cv_networking/server/ReconstructionServer.hpp"
+#include "reconstruct/Reconstruct3D.hpp"
 
 namespace Reconstruct
 {
@@ -17,9 +22,10 @@ namespace Reconstruct
     {
     public:
         /// Create an instance of a server that expects a connection from a single client
-        /// \param port (optional) The port of the reconstruction server. Default is 7000.
-        explicit ReconstructionServer(int port = 7000);
+        /// The server will configure parameters from the JSON config file
+        ReconstructionServer();
 
+        /// Server destructor
         ~ReconstructionServer();
 
         /// Run the server until client disconnects. This is a blocking call.
@@ -27,7 +33,13 @@ namespace Reconstruct
         ReconstructServerStatusCode Run();
 
     private:
-        int m_Port;
+        Camera::Calib::StereoCalib ConvertNetworkCalibMessage(CVNetwork::Message::StereoCalibMessage& calibMessage) const;
+
+    private:
+        Config::Config m_Config;
+        std::unique_ptr<Reconstruct3D> m_Reconstruction;
+        std::unique_ptr<Camera::Calib::StereoCalib> m_Calib { nullptr };
+        std::unique_ptr<CVNetwork::Servers::ReconstructionServer> m_ReconstructionServer { nullptr };
     };
 }
 
