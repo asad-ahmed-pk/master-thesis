@@ -84,6 +84,48 @@ namespace Reconstruct
     // Convert network calib message
     Camera::Calib::StereoCalib ReconstructionServer::ConvertNetworkCalibMessage(CVNetwork::Message::StereoCalibMessage &calibMessage) const
     {
-        // TODO: convert the message that was received from the networking stack to a stereo message record for the reconstruction module
+        Camera::Calib::StereoCalib calib{};
+
+        calib.LeftCameraCalib.K(0, 0) = calibMessage.fx1;
+        calib.LeftCameraCalib.K(1, 1) = calibMessage.fy1;
+        calib.LeftCameraCalib.K(0, 2) = calibMessage.cx1;
+        calib.LeftCameraCalib.K(1, 2) = calibMessage.cy1;
+
+        calib.LeftCameraCalib.D(0) = calibMessage.d11;
+        calib.LeftCameraCalib.D(0) = calibMessage.d12;
+        calib.LeftCameraCalib.D(0) = calibMessage.d13;
+        calib.LeftCameraCalib.D(0) = calibMessage.d14;
+        calib.LeftCameraCalib.D(0) = calibMessage.d15;
+        calib.LeftCameraCalib.D(0) = calibMessage.d16;
+        calib.LeftCameraCalib.D(0) = calibMessage.d17;
+        calib.LeftCameraCalib.D(0) = calibMessage.d18;
+
+        calib.RightCameraCalib.K(0, 0) = calibMessage.fx2;
+        calib.RightCameraCalib.K(1, 1) = calibMessage.fy2;
+        calib.RightCameraCalib.K(0, 2) = calibMessage.cx2;
+        calib.RightCameraCalib.K(1, 2) = calibMessage.cy2;
+
+        calib.RightCameraCalib.D(0) = calibMessage.d21;
+        calib.RightCameraCalib.D(0) = calibMessage.d22;
+        calib.RightCameraCalib.D(0) = calibMessage.d23;
+        calib.RightCameraCalib.D(0) = calibMessage.d24;
+        calib.RightCameraCalib.D(0) = calibMessage.d25;
+        calib.RightCameraCalib.D(0) = calibMessage.d26;
+        calib.RightCameraCalib.D(0) = calibMessage.d27;
+        calib.RightCameraCalib.D(0) = calibMessage.d28;
+
+        calib.T(0) = calibMessage.t1;
+        calib.T(1) = calibMessage.t2;
+        calib.T(2) = calibMessage.t3;
+
+        calib.R(0, 0) = calibMessage.r1;
+        calib.R(0, 1) = calibMessage.r2;
+        calib.R(0, 2) = calibMessage.r3;
+        calib.R(1, 0) = calibMessage.r4;
+        calib.R(1, 1) = calibMessage.r5;
+        calib.R(1, 2) = calibMessage.r6;
+        calib.R(2, 0) = calibMessage.r7;
+        calib.R(2, 1) = calibMessage.r8;
+        calib.R(2, 2) = calibMessage.r9;
     }
 }

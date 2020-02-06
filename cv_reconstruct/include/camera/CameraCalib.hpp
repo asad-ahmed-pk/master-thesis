@@ -17,7 +17,7 @@ namespace Camera
         struct CameraCalib
         {
             Eigen::Matrix3f K = Eigen::Matrix3f::Zero();
-            Eigen::VectorXf D;
+            Eigen::VectorXf D = Eigen::VectorXf(8);
             Eigen::Vector2i ImageResolutionInPixels = Eigen::Vector2i::Zero();
         };
 

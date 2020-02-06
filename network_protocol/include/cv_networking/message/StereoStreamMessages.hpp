@@ -34,12 +34,12 @@ namespace CVNetwork
             // Left camera intrinsics
             float fx1; float fy1;
             float cx1; float cy1;
-            float d11, d12, d13, d14;
+            float d11, d12, d13, d14, d15, d16, d17, d18;
 
             // Right camera intrinsics
             float fx2; float fy2;
             float cx2; float cy2;
-            float d21, d22, d23, d24;
+            float d21, d22, d23, d24, d25, d26, d27, d28;
 
             // Relative extrinsics
             float t1; float t2; float t3;

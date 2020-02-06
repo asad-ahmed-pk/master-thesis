@@ -14,7 +14,7 @@ namespace CVNetwork
 {
     using boost::asio::ip::tcp;
 
-    const int TOTAL_CALIB_ELEMENTS { 28 };
+    const int TOTAL_CALIB_ELEMENTS { 36 };
 
     StereoStream::StereoStream()
     {
@@ -172,32 +172,40 @@ namespace CVNetwork
         data[5] = message.d12;
         data[6] = message.d13;
         data[7] = message.d14;
+        data[8] = message.d15;
+        data[9] = message.d16;
+        data[10] = message.d17;
+        data[11] = message.d18;
 
         // right cam intrinsics
-        data[8] = message.fx2;
-        data[9] = message.fy2;
-        data[10] = message.cx2;
-        data[11] = message.cy2;
-        data[12] = message.d21;
-        data[13] = message.d22;
-        data[14] = message.d23;
-        data[15] = message.d24;
+        data[12] = message.fx2;
+        data[13] = message.fy2;
+        data[14] = message.cx2;
+        data[15] = message.cy2;
+        data[16] = message.d21;
+        data[17] = message.d22;
+        data[18] = message.d23;
+        data[19] = message.d24;
+        data[20] = message.d25;
+        data[21] = message.d26;
+        data[22] = message.d27;
+        data[23] = message.d28;
 
         // T
-        data[16] = message.t1;
-        data[17] = message.t2;
-        data[18] = message.t3;
+        data[24] = message.t1;
+        data[25] = message.t2;
+        data[26] = message.t3;
 
         // R
-        data[19] = message.r1;
-        data[20] = message.r2;
-        data[21] = message.r3;
-        data[22] = message.r4;
-        data[23] = message.r5;
-        data[24] = message.r6;
-        data[25] = message.r7;
-        data[26] = message.r8;
-        data[27] = message.r9;
+        data[27] = message.r1;
+        data[28] = message.r2;
+        data[29] = message.r3;
+        data[30] = message.r4;
+        data[31] = message.r5;
+        data[32] = message.r6;
+        data[33] = message.r7;
+        data[34] = message.r8;
+        data[35] = message.r9;
 
         // write to socket
         boost::asio::write(*m_Socket, boost::asio::buffer(data));
@@ -222,32 +230,40 @@ namespace CVNetwork
         message.d12 = data[5];
         message.d13 = data[6];
         message.d14 = data[7];
+        message.d15 = data[8];
+        message.d16 = data[9];
+        message.d17 = data[10];
+        message.d18 = data[11];
 
         // read right cam intrinsics
-        message.fx2 = data[8];
-        message.fy2 = data[9];
-        message.cx2 = data[10];
-        message.cy2 = data[11];
-        message.d21 = data[12];
-        message.d22 = data[13];
-        message.d23 = data[14];
-        message.d24 = data[15];
+        message.fx2 = data[12];
+        message.fy2 = data[13];
+        message.cx2 = data[14];
+        message.cy2 = data[15];
+        message.d21 = data[16];
+        message.d22 = data[17];
+        message.d23 = data[18];
+        message.d24 = data[19];
+        message.d25 = data[20];
+        message.d26 = data[21];
+        message.d27 = data[22];
+        message.d28 = data[23];
 
         // read T
-        message.t1 = data[16];
-        message.t2 = data[17];
-        message.t3 = data[18];
+        message.t1 = data[24];
+        message.t2 = data[25];
+        message.t3 = data[26];
 
         // read R
-        message.r1 = data[19];
-        message.r2 = data[20];
-        message.r3 = data[21];
-        message.r4 = data[22];
-        message.r5 = data[23];
-        message.r6 = data[24];
-        message.r7 = data[25];
-        message.r8 = data[26];
-        message.r9 = data[27];
+        message.r1 = data[27];
+        message.r2 = data[28];
+        message.r3 = data[29];
+        message.r4 = data[30];
+        message.r5 = data[31];
+        message.r6 = data[32];
+        message.r7 = data[33];
+        message.r8 = data[34];
+        message.r9 = data[35];
     }
 
     // Get next message from the protocol stream
