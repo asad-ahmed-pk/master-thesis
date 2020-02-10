@@ -26,7 +26,7 @@
 #define NUM_COMPONENTS_D 5
 
 // Constructor
-KITTIVisionParser::KITTIVisionParser(std::string calibFolder, std::string dataFolder) : m_CalibFolderPath(std::move(calibFolder)), m_DataFolderPath(std::move(dataFolder))
+KITTIVisionParser::KITTIVisionParser(std::string calibFolder, std::string dataFolder, bool isRectifiedData) : m_CalibFolderPath(std::move(calibFolder)), m_DataFolderPath(std::move(dataFolder)), m_IsRectifiedData(isRectifiedData)
 {
     ParseCalib();
     ParseData();
@@ -57,11 +57,17 @@ void KITTIVisionParser::ParseCalib()
     m_Calib.K1 = MatrixFromLine(lines[K1_LINE_INDEX]);
     m_Calib.K2 = MatrixFromLine(lines[K2_LINE_INDEX]);
 
-    m_Calib.D1 = VectorXFromLine(lines[K1_LINE_INDEX + 1], NUM_COMPONENTS_D);
-    m_Calib.D2 = VectorXFromLine(lines[K2_LINE_INDEX + 1], NUM_COMPONENTS_D);
+    m_Calib.D1 = VectorXFromLine(lines[K1_LINE_INDEX + 1], NUM_COMPONENTS_D, 8);
+    m_Calib.D2 = VectorXFromLine(lines[K2_LINE_INDEX + 1], NUM_COMPONENTS_D, 8);
 
-    m_Calib.T = Vector3FromLine(lines[K2_LINE_INDEX + 3]) - Vector3FromLine(lines[K1_LINE_INDEX + 3]);
-    m_Calib.R = MatrixFromLine(lines[K1_LINE_INDEX + 2]) * MatrixFromLine(lines[K2_LINE_INDEX + 2]);
+    m_Calib.T = Vector3FromLine(lines[K1_LINE_INDEX + 3]) - Vector3FromLine(lines[K2_LINE_INDEX + 3]);
+
+    if (!m_IsRectifiedData) {
+        m_Calib.R = MatrixFromLine(lines[K1_LINE_INDEX + 2]).transpose() * MatrixFromLine(lines[K2_LINE_INDEX + 2]);
+    }
+    else {
+        m_Calib.R = MatrixFromLine(lines[K1_LINE_INDEX + 5]).transpose() * MatrixFromLine(lines[K2_LINE_INDEX + 5]);
+    }
 }
 
 // Parse all data
@@ -163,7 +169,7 @@ void KITTIVisionParser::GetFilesInDirectory(const std::string& directory, std::v
 
     for (boost::filesystem::directory_iterator iter(path); iter != end; iter++)
     {
-        if (boost::filesystem::is_regular_file(iter->path())) {
+        if (boost::filesystem::is_regular_file(iter->path()) && !iter->path().stem().empty()) {
             files.push_back(iter->path().string());
         }
     }
@@ -220,10 +226,10 @@ Eigen::Vector3f KITTIVisionParser::Vector3FromLine(const std::string &line) cons
     return v;
 }
 
-// Init dynamic vector x from line
-Eigen::VectorXf KITTIVisionParser::VectorXFromLine(const std::string &line, int n) const
+// Init dynamic vector x from line with max size M but with elements until n
+Eigen::VectorXf KITTIVisionParser::VectorXFromLine(const std::string &line, int n, int m) const
 {
-    Eigen::VectorXf v(n);
+    Eigen::VectorXf v(m);
 
     std::vector<float> components;
     GetFloatComponentsFromLine(line, components);

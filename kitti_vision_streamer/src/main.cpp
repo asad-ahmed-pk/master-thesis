@@ -3,7 +3,6 @@
 
 #include <iostream>
 #include <string>
-#include <opencv2/highgui/highgui.hpp>
 #include <opencv2/imgcodecs/imgcodecs.hpp>
 #include <boost/program_options.hpp>
 
@@ -18,7 +17,7 @@ enum CmdParseResult {
 #define DEFAULT_SEVER_PORT 7000
 
 // Get command line arguments that are required
-CmdParseResult GetCmdArgs(int argc, char** argv, std::string& calibFolder, std::string& dataFolder, std::string& serverAddress, int& serverPort);
+CmdParseResult GetCmdArgs(int argc, char** argv, std::string& calibFolder, std::string& dataFolder, std::string& serverAddress, int& serverPort, bool& isRectifiedData);
 
 // Convert dataset calib to cv networking calib message
 CVNetwork::Message::StereoCalibMessage ConvertToCalibMessage(const Calib& calib);
@@ -30,9 +29,10 @@ int main(int argc, char** argv)
 {
     std::string calibFolder, dataFolder, serverAddress;
     int port = DEFAULT_SEVER_PORT;
+    bool isRectifiedData = false;
 
     // get required arguments
-    CmdParseResult parseResult = GetCmdArgs(argc, argv, calibFolder, dataFolder, serverAddress, port);
+    CmdParseResult parseResult = GetCmdArgs(argc, argv, calibFolder, dataFolder, serverAddress, port, isRectifiedData);
 
     switch (parseResult)
     {
@@ -49,7 +49,7 @@ int main(int argc, char** argv)
     }
 
     // parse calib and data from KITTI dataset
-    KITTIVisionParser parser(calibFolder, dataFolder);
+    KITTIVisionParser parser(calibFolder, dataFolder, isRectifiedData);
     Calib calib = parser.GetParsedCalibData();
 
     std::vector<DataSample> samples;
@@ -75,13 +75,17 @@ int main(int argc, char** argv)
     }
     else {
         std::cout << "\nUnable to connect to server at " << serverAddress << ": " << port;
+        return -1;
     }
+
+    std::cout << "\nMain thread has added all samples to queue. Ctrl-C to end the program" << std::endl;
+    while (true) {};
 
     std::cout << std::endl;
     return 0;
 }
 
-CmdParseResult GetCmdArgs(int argc, char** argv, std::string& calibFolder, std::string& dataFolder, std::string& serverAddress, int& serverPort)
+CmdParseResult GetCmdArgs(int argc, char** argv, std::string& calibFolder, std::string& dataFolder, std::string& serverAddress, int& serverPort, bool& isRectifiedData)
 {
     boost::program_options::options_description desc("Options");
     desc.add_options()
@@ -89,7 +93,8 @@ CmdParseResult GetCmdArgs(int argc, char** argv, std::string& calibFolder, std::
             ("calib_folder", boost::program_options::value<std::string>()->required(), "The path to the folder with the calibration text files")
             ("data_folder", boost::program_options::value<std::string>()->required(), "The path to the folder with the image files. This should contain the image_002, image_003, and oxts folders")
             ("server_ip", boost::program_options::value<std::string>()->required(), "The IPv4 address of the reconstruction server")
-            ("server_port", boost::program_options::value<int>(), "The port on the server for the reconstruction application");
+            ("server_port", boost::program_options::value<int>(), "The port on the server for the reconstruction application")
+            ("rectified", "Rectified images being streamed. Send rectified calibration");
 
     boost::program_options::variables_map vm;
     try
@@ -105,7 +110,8 @@ CmdParseResult GetCmdArgs(int argc, char** argv, std::string& calibFolder, std::
             std::cout << "\n--data_folder: The path to the folder with the image files. This should contain the image_002, image_003, and oxts folders";
             std::cout << "\n--server_ip: The IPv4 address of the reconstruction server";
             std::cout << "\n\nOptional arguments:\n";
-            std::cout << "--server_port: The port for the reconstruction application on the server (default = 7000)\n";
+            std::cout << "--server_port: The port for the reconstruction application on the server (default = 7000)";
+            std::cout << "--rectified: Set arg if rectified images are being streamed\n";
             std::cout << std::endl;
 
             return CmdParseResult::ARGS_HELP;
@@ -119,11 +125,20 @@ CmdParseResult GetCmdArgs(int argc, char** argv, std::string& calibFolder, std::
                 dataFolder = vm["data_folder"].as<std::string>();
                 serverAddress = vm["server_ip"].as<std::string>();
 
+                // optional server port
                 if (vm.count("server_port")) {
                     serverPort = vm["server_port"].as<int>();
                 }
                 else {
                     serverPort = DEFAULT_SEVER_PORT;
+                }
+
+                // optional is rectified data being streamed
+                if (vm.count("rectified")) {
+                    isRectifiedData = true;
+                }
+                else {
+                    isRectifiedData = false;
                 }
 
                 return CmdParseResult::ARGS_VALID;
@@ -142,7 +157,7 @@ CmdParseResult GetCmdArgs(int argc, char** argv, std::string& calibFolder, std::
 // Convert to calib message
 CVNetwork::Message::StereoCalibMessage ConvertToCalibMessage(const Calib& calib)
 {
-    CVNetwork::Message::StereoCalibMessage message;
+    CVNetwork::Message::StereoCalibMessage message{};
 
     message.fx1 = calib.K1(0, 0);
     message.fy1 = calib.K1(1, 1);
@@ -153,6 +168,10 @@ CVNetwork::Message::StereoCalibMessage ConvertToCalibMessage(const Calib& calib)
     message.d12 = calib.D1(1);
     message.d13 = calib.D1(2);
     message.d14 = calib.D1(3);
+    message.d15 = calib.D1(4);
+    message.d16 = 0;
+    message.d17 = 0;
+    message.d18 = 0;
 
     message.fx2 = calib.K2(0, 0);
     message.fy2 = calib.K2(1, 1);
@@ -163,6 +182,10 @@ CVNetwork::Message::StereoCalibMessage ConvertToCalibMessage(const Calib& calib)
     message.d22 = calib.D2(1);
     message.d23 = calib.D2(2);
     message.d24 = calib.D2(3);
+    message.d25 = calib.D2(4);
+    message.d26 = 0;
+    message.d27 = 0;
+    message.d28 = 0;
 
     message.t1 = calib.T(0);
     message.t2 = calib.T(1);
@@ -177,6 +200,8 @@ CVNetwork::Message::StereoCalibMessage ConvertToCalibMessage(const Calib& calib)
     message.r7 = calib.R(2, 0);
     message.r8 = calib.R(2, 1);
     message.r9 = calib.R(2, 2);
+
+    return message;
 }
 
 // Create stereo message from data set sample

@@ -42,7 +42,7 @@ namespace Camera
 
     private:
         void ComputeMatchingFeatures(const cv::Mat& leftImage, const cv::Mat& rightImage, std::vector<cv::Point2f>& pointsLeft, std::vector<cv::Point2f>& pointsRight);
-        void Rectify();
+        void Rectify(cv::Size imageSize);
 
     private:
         bool m_IsStereoRectified { false };

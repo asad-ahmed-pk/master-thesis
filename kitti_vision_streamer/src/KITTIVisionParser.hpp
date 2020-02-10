@@ -17,7 +17,8 @@ public:
     /// Create the dataset with the given folder paths
     /// \param calibFolder The folder with the calib file 'calib_cam_to_cam.txt'
     /// \param dataFolder The folder with the image folders 'image_02', 'image_03', and 'oxts'
-    KITTIVisionParser(std::string calibFolder, std::string dataFolder);
+    /// \param isRectifiedData Set to true if the data being parsed is rectified KITTI data
+    KITTIVisionParser(std::string calibFolder, std::string dataFolder, bool isRectifiedData);
 
     ~KITTIVisionParser() = default;
 
@@ -35,7 +36,7 @@ private:
     void ReadLines(const std::string& filePath, std::vector<std::string>& lines) const;
     Eigen::Matrix3f MatrixFromLine(const std::string& line) const;
     Eigen::Vector3f Vector3FromLine(const std::string& line) const;
-    Eigen::VectorXf VectorXFromLine(const std::string& line, int n) const;
+    Eigen::VectorXf VectorXFromLine(const std::string& line, int n, int m) const;
     Eigen::Matrix3f RotationMatrixFromEuler(float roll, float pitch, float yaw) const;
     void GetFloatComponentsFromLine(const std::string& line, std::vector<float>& components) const;
     void GetFilesInDirectory(const std::string& directory, std::vector<std::string>& files) const;
@@ -44,6 +45,7 @@ private:
 private:
     const std::string m_CalibFolderPath;
     const std::string m_DataFolderPath;
+    bool m_IsRectifiedData;
     std::string m_ImageFileExtension;
     std::vector<DataSample> m_DataSamples;
     std::vector<std::string> m_FileIDs;

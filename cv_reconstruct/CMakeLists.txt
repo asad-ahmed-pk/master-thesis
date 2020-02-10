@@ -43,8 +43,12 @@ list(APPEND CAMERA_SOURCES
 
 list(APPEND RECONSTRUCT_3D_SOURCES
         src/reconstruct/Reconstruct3D.cpp
-        src/reconstruct/ReconstructionServer.cpp
+)
+
+list(APPEND SERVER_SOURCES
+        src/server/ReconstructionServer.cpp
         src/config/ConfigParser.cpp
+        src/server/MessageConverter.cpp
 )
 
 # External sources
@@ -60,7 +64,7 @@ list(APPEND TESTING_SOURCES
 # Executables
 
 # Main reconstruction server executable
-add_executable(cv_server src/main.cpp ${CAMERA_SOURCES} ${RECONSTRUCT_3D_SOURCES} ${EXTERN_SOURCES})
+add_executable(cv_server src/main.cpp ${CAMERA_SOURCES} ${RECONSTRUCT_3D_SOURCES} ${SERVER_SOURCES} ${EXTERN_SOURCES})
 target_link_libraries(cv_server ${OpenCV_LIBS} ${Boost_LIBRARIES} ${PCL_LIBRARIES} reconstruction::networking)
 
 # Camera compute module test program

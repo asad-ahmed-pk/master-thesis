@@ -11,7 +11,7 @@
 
 namespace Config
 {
-#define CONFIG_DEFAULT_PATH "resources/config/config_default.json"
+#define CONFIG_DEFAULT_PATH "../../../cv_reconstruct/resources/config/config_default.json"
 #define CONFIG_FILE_PATH "config.json"
 
     // Parse config
@@ -33,6 +33,7 @@ namespace Config
 
         // server config
         config.ServerPort = serverConfig["port"];
+        config.ShouldRectifyImages = serverConfig["requires_rectification"];
 
         return config;
     }

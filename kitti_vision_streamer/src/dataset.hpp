@@ -17,8 +17,8 @@ struct Calib
     Eigen::Matrix3f K2 = Eigen::Matrix3f::Zero();
 
     // Distortion coefficients
-    Eigen::VectorXf D1;
-    Eigen::VectorXf D2;
+    Eigen::VectorXf D1 = Eigen::VectorXf(8);
+    Eigen::VectorXf D2 = Eigen::VectorXf(8);
 
     // Translation from camera 1 to 2
     Eigen::Vector3f T = Eigen::Vector3f::Zero();

@@ -9,29 +9,35 @@
 #include <opencv2/imgproc/imgproc.hpp>
 #include <opencv2/highgui.hpp>
 #include <opencv2/core/eigen.hpp>
+#include <pcl/common/transforms.h>
 
 #include <fstream>
 
 namespace Reconstruct
 {
-    const int SGM_MIN_DISPARITY = 0;
-    const int SGM_BLOCK_SIZE = 11;
-    const int SGM_NUM_DISPARITIES = 32;
+    const int SGM_MIN_DISPARITY = 1;
+    const int SGM_BLOCK_SIZE = 13;
+    const int SGM_NUM_DISPARITIES = 64;
 
     constexpr int SGM_P1 = 8 * 3 * SGM_BLOCK_SIZE * SGM_BLOCK_SIZE;
     constexpr int SGM_P2 = 32 * 3 * SGM_BLOCK_SIZE * SGM_BLOCK_SIZE;
 
     // Constructor
-    Reconstruct3D::Reconstruct3D(const Camera::Calib::StereoCalib& stereoSetup) : m_StereoCameraSetup(stereoSetup)
+    Reconstruct3D::Reconstruct3D(const Camera::Calib::StereoCalib& stereoSetup, bool shouldRectify) : m_StereoCameraSetup(stereoSetup), m_ShouldRectifyImages(shouldRectify)
     {
         // setup stereo matcher
+
+        /*
         m_StereoMatcher = cv::StereoSGBM::create(SGM_MIN_DISPARITY, SGM_NUM_DISPARITIES, SGM_BLOCK_SIZE, SGM_P1, SGM_P2);
 
         m_StereoMatcher->setUniquenessRatio(10);
         m_StereoMatcher->setSpeckleRange(2);
         m_StereoMatcher->setSpeckleWindowSize(128);
         m_StereoMatcher->setDisp12MaxDiff(1);
-        m_StereoMatcher->setPreFilterCap(31);
+        m_StereoMatcher->setPreFilterCap(10);
+         */
+
+        m_StereoMatcher = cv::StereoBM::create(SGM_NUM_DISPARITIES, SGM_BLOCK_SIZE);
     }
 
     // Disparity map
@@ -39,7 +45,12 @@ namespace Reconstruct
     {
         // compute disparity
         cv::Mat disparity;
-        m_StereoMatcher->compute(leftImage, rightImage, disparity);
+        cv::Mat leftImageGrey, rightImageGrey;
+
+        cv::cvtColor(leftImage, leftImageGrey, cv::COLOR_BGR2GRAY);
+        cv::cvtColor(rightImage, rightImageGrey, cv::COLOR_BGR2GRAY);
+
+        m_StereoMatcher->compute(leftImageGrey, rightImageGrey, disparity);
 
         return disparity;
     }
@@ -133,7 +144,7 @@ namespace Reconstruct
     }
 
     // Apply stereo rectification to left and right images
-    void Reconstruct3D::RectifyImages(const cv::Mat &leftImage, const cv::Mat &rightImage, cv::Mat &rectLeftImage, cv::Mat &rectRightImage) const
+    void Reconstruct3D::RectifyImages(const cv::Mat& leftImage, const cv::Mat& rightImage, cv::Mat& rectLeftImage, cv::Mat& rectRightImage) const
     {
         // convert to cv from eigen
         cv::Mat K1, K2;
@@ -154,7 +165,7 @@ namespace Reconstruct
         cv::Mat P1 = m_StereoCameraSetup.Rectification.PL;
         cv::Mat P2 = m_StereoCameraSetup.Rectification.PR;
 
-        cv::Size size {m_StereoCameraSetup.LeftCameraCalib.ImageResolutionInPixels.x(), m_StereoCameraSetup.LeftCameraCalib.ImageResolutionInPixels.y() };
+        cv::Size size(leftImage.cols, rightImage.rows);
 
         // remap image using rectified projection
         cv::Mat map11, map12, map21, map22;
@@ -164,10 +175,6 @@ namespace Reconstruct
         cv::Mat leftImageRectified, rightImageRectified;
         cv::remap(leftImage, rectLeftImage, map11, map12, cv::INTER_LINEAR);
         cv::remap(rightImage, rectRightImage, map21, map22, cv::INTER_LINEAR);
-
-        // debugging: write out to file
-        cv::imwrite("left_rect.png", rectLeftImage);
-        cv::imwrite("right_rect.png", rectRightImage);
     }
 
     // TODO: Fix - compute 3D locations directly from parallax map using matrix operation
@@ -178,8 +185,8 @@ namespace Reconstruct
         pcl::PointXYZRGB point;
 
         uint32_t count = 0;
-        float f = m_StereoCameraSetup.LeftCameraCalib.K(0, 0);       // focal length
-        float b = m_StereoCameraSetup.T(0);                             // baseline
+        float f = m_StereoCameraSetup.LeftCameraCalib.K(0, 0);          // focal length
+        float b = m_StereoCameraSetup.T(0);                                 // baseline
 
         // new method using matrix multiplication
         int N = disparity.rows * disparity.cols;
@@ -231,5 +238,39 @@ namespace Reconstruct
         pointCloud.is_dense = true;
 
         return pointCloud;
+    }
+
+    // Process frame
+    void Reconstruct3D::ProcessFrame(const Reconstruct::StereoFrame& frame, pcl::PointCloud<pcl::PointXYZRGB>& pointCloud) const
+    {
+        cv::Mat disparity;
+
+        // rectify if image rectification required
+        if (m_ShouldRectifyImages) {
+            cv::Mat leftImageRectified, rightImageRectified;
+            RectifyImages(frame.LeftImage, frame.RightImage, leftImageRectified, rightImageRectified);
+            disparity = GenerateDisparityMap(leftImageRectified, rightImageRectified);
+        }
+        else {
+            disparity = GenerateDisparityMap(frame.LeftImage, frame.RightImage);
+        }
+
+        // triangulation
+        pcl::PointCloud<pcl::PointXYZRGB> temp = Triangulate3D(disparity, frame.LeftImage, frame.RightImage);
+
+        // transform point cloud
+        Eigen::Matrix4f T = Eigen::Matrix4f::Identity();
+        for (int i = 0; i < 3; i++) {
+            for (int j = 0; j < 3; j++) {
+                T(i, j) = frame.Rotation(i, j);
+            }
+        }
+
+        // translation
+        T(0, 3) = frame.Translation(0);
+        T(1, 3) = frame.Translation(1);
+        T(2, 3) = frame.Translation(2);
+
+        pcl::transformPointCloud(temp, pointCloud, T);
     }
 }

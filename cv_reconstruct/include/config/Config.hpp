@@ -12,10 +12,8 @@ namespace Config
 {
     struct Config
     {
-        // Server connection settings
         int ServerPort;
-
-        // 3D Reconstruction settings
+        bool ShouldRectifyImages { true };
     };
 }
 

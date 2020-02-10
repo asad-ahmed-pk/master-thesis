@@ -1,7 +1,8 @@
 {
   "config": {
     "server": {
-      "port": 7000
+      "port": 7000,
+      "requires_rectification": true
     }
   }
 }

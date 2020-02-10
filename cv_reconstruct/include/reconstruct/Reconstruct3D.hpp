@@ -7,6 +7,7 @@
 #define CV_RECONSTRUCT_RECONSTRUCT3D_HPP
 
 #include "camera/CameraCalib.hpp"
+#include "StereoFrame.hpp"
 
 #include <opencv2/core/core.hpp>
 #include <opencv2/calib3d/calib3d.hpp>
@@ -23,7 +24,8 @@ namespace Reconstruct
     public:
         /// Create a 3D reconstructor for the given stereo rig
         /// \param stereoSetup The calibrated, stereo rig setup with stereo rectification already applied
-        explicit Reconstruct3D(const Camera::Calib::StereoCalib& stereoSetup);
+        /// \param shouldRectify Set to true if reconstruction will require stereo rectification of the images that will be received
+        Reconstruct3D(const Camera::Calib::StereoCalib& stereoSetup, bool shouldRectify);
 
         /// Generate the disparity map for the given stereo images
         /// \param leftImage The left camera image
@@ -51,12 +53,18 @@ namespace Reconstruct
         /// \param rectRightImage Will be updated with the rectified image for the right camera
         void RectifyImages(const cv::Mat& leftImage, const cv::Mat& rightImage, cv::Mat& rectLeftImage, cv::Mat& rectRightImage) const;
 
+        /// Process the given stereo frame and compute the point cloud
+        /// \param frame The stereo frame
+        /// \param pointCloud Will be loaded with the computed 3D points in world space
+        void ProcessFrame(const StereoFrame& frame, pcl::PointCloud<pcl::PointXYZRGB>& pointCloud) const;
+
     private:
         pcl::PointCloud<pcl::PointXYZRGB> PointCloudMatrixCompute(const cv::Mat& leftImage, const cv::Mat& disparity) const;
 
     private:
         Camera::Calib::StereoCalib m_StereoCameraSetup;
-        cv::Ptr<cv::StereoSGBM> m_StereoMatcher;
+        cv::Ptr<cv::StereoBM> m_StereoMatcher;
+        bool m_ShouldRectifyImages;
     };
 }
 

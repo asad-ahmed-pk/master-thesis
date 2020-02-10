@@ -16,7 +16,7 @@ namespace Camera
     CameraCompute::CameraCompute(Calib::StereoCalib settings) : m_StereoSettings(std::move(settings))
     {
         // compute rectification matrices for new optimal camera projection
-        Rectify();
+        Rectify(cv::Size(settings.LeftCameraCalib.ImageResolutionInPixels(0), settings.LeftCameraCalib.ImageResolutionInPixels(1)));
     }
 
     // Compute F matrix
@@ -96,7 +96,7 @@ namespace Camera
     }
 
     // Stereo rectification
-    void CameraCompute::Rectify()
+    void CameraCompute::Rectify(cv::Size imageSize)
     {
         // convert stereo setup matrices to CV
         cv::Mat K1(3, 3, CV_64F);
@@ -105,7 +105,6 @@ namespace Camera
         cv::Mat T(1, 3, CV_64F);
 
         std::vector<float> D1, D2;      // lens distortion co-effs
-        cv::Size imageSize {m_StereoSettings.LeftCameraCalib.ImageResolutionInPixels.x(), m_StereoSettings.LeftCameraCalib.ImageResolutionInPixels.y() };
 
         cv::eigen2cv(m_StereoSettings.LeftCameraCalib.K, K1);
         K1.convertTo(K1, CV_64F);
@@ -126,8 +125,67 @@ namespace Camera
                           m_StereoSettings.Rectification.RL, m_StereoSettings.Rectification.RR,
                           m_StereoSettings.Rectification.PL, m_StereoSettings.Rectification.PR,
                           m_StereoSettings.Rectification.Q,
-                          cv::CALIB_ZERO_DISPARITY, 0, cv::Size(),
+                          cv::CALIB_FIX_INTRINSIC, -1, cv::Size(),
                           &m_StereoSettings.Rectification.ValidRectLeft, &m_StereoSettings.Rectification.ValidRectRight);
+
+        /*
+        m_StereoSettings.Rectification.PL.at<double>(0 ,0) = 7.215377e+02;
+        m_StereoSettings.Rectification.PL.at<double>(0, 1) = 0.0;
+        m_StereoSettings.Rectification.PL.at<double>(0, 2) = 6.095593e+02;
+        m_StereoSettings.Rectification.PL.at<double>(0, 3) = 4.485728e+01;
+
+        m_StereoSettings.Rectification.PL.at<double>(1 ,0) = 0.0;
+        m_StereoSettings.Rectification.PL.at<double>(1, 1) = 7.215377e+02;
+        m_StereoSettings.Rectification.PL.at<double>(1, 2) = 1.728540e+02;
+        m_StereoSettings.Rectification.PL.at<double>(1, 3) = 2.163791e-01;
+
+        m_StereoSettings.Rectification.PL.at<double>(2 ,0) = 0.0;
+        m_StereoSettings.Rectification.PL.at<double>(2, 1) = 0.0;
+        m_StereoSettings.Rectification.PL.at<double>(2, 2) = 1.0;
+        m_StereoSettings.Rectification.PL.at<double>(2, 3) = 2.745884e-03;
+
+
+        m_StereoSettings.Rectification.PR.at<double>(0 ,0) = 7.215377e+02;
+        m_StereoSettings.Rectification.PR.at<double>(0, 1) = 0.0;
+        m_StereoSettings.Rectification.PR.at<double>(0, 2) = 6.095593e+02;
+        m_StereoSettings.Rectification.PR.at<double>(0, 3) = -3.395242e+02;
+
+        m_StereoSettings.Rectification.PR.at<double>(1 ,0) = 0.0;
+        m_StereoSettings.Rectification.PR.at<double>(1, 1) = 7.215377e+02;
+        m_StereoSettings.Rectification.PR.at<double>(1, 2) = 1.728540e+02;
+        m_StereoSettings.Rectification.PR.at<double>(1, 3) = 2.199936e+00;
+
+        m_StereoSettings.Rectification.PR.at<double>(2 ,0) = 0.0;
+        m_StereoSettings.Rectification.PR.at<double>(2, 1) = 0.0;
+        m_StereoSettings.Rectification.PR.at<double>(2, 2) = 1.0;
+        m_StereoSettings.Rectification.PR.at<double>(2, 3) = 2.729905e-03;
+
+        m_StereoSettings.Rectification.RL.at<double>(0, 0) = 9.998817e-01;
+        m_StereoSettings.Rectification.RL.at<double>(0, 1) = 1.511453e-02;
+        m_StereoSettings.Rectification.RL.at<double>(0, 2) = -2.841595e-03;
+
+        m_StereoSettings.Rectification.RL.at<double>(1, 0) = -1.511724e-02;
+        m_StereoSettings.Rectification.RL.at<double>(1, 1) = 9.998853e-01;
+        m_StereoSettings.Rectification.RL.at<double>(1, 2) = -9.338510e-04;
+
+        m_StereoSettings.Rectification.RL.at<double>(2, 0) = 2.827154e-03;
+        m_StereoSettings.Rectification.RL.at<double>(2, 1) = 9.766976e-04;
+        m_StereoSettings.Rectification.RL.at<double>(2, 2) = 9.999955e-01;
+
+
+        m_StereoSettings.Rectification.RR.at<double>(0, 0) = 9.998321e-01;
+        m_StereoSettings.Rectification.RR.at<double>(0, 1) = -7.193136e-03;
+        m_StereoSettings.Rectification.RR.at<double>(0, 2) = 1.685599e-02;
+
+        m_StereoSettings.Rectification.RR.at<double>(1, 0) = 7.232804e-03;
+        m_StereoSettings.Rectification.RR.at<double>(1, 1) = 9.999712e-01;
+        m_StereoSettings.Rectification.RR.at<double>(1, 2) = -2.293585e-03;
+
+        m_StereoSettings.Rectification.RR.at<double>(2, 0) = -1.683901e-02;
+        m_StereoSettings.Rectification.RR.at<double>(2, 1) = 2.415116e-03;
+        m_StereoSettings.Rectification.RR.at<double>(2, 2) = 9.998553e-01;
+        */
+
 
         m_IsStereoRectified = true;
     }
@@ -135,10 +193,6 @@ namespace Camera
     // Get copy of camera settings
     Calib::StereoCalib CameraCompute::GetRectifiedStereoSettings()
     {
-        if (!m_IsStereoRectified) {
-            Rectify();
-        }
-
         return m_StereoSettings;
     }
 }

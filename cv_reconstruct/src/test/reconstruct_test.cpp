@@ -11,25 +11,29 @@
 #include <string>
 #include <iostream>
 
-#include <eigen3/Eigen/Eigen>
 #include <opencv2/core/core.hpp>
-#include <opencv2/core/base.hpp>
 #include <opencv2/highgui/highgui.hpp>
 
 #include <pcl/io/pcd_io.h>
 #include <pcl/point_cloud.h>
 #include <pcl/point_types.h>
 
-// Test image paths
-const std::string LEFT_IMG_PATH { "test_images/img_00_left.jpg" };
-const std::string RIGHT_IMG_PATH { "test_images/img_00_right.jpg" };
+// Test file names (placed in same directory as executable)
+#define LEFT_IMG_NAME "img_left.png"
+#define RIGHT_IMG_NAME "img_right.png"
+#define LEFT_IMG_RECTIFIED_NAME "img_left_rectified.png"
+#define RIGHT_IMG_RECTIFIED_NAME "img_right_rectified.png"
+#define CALIB_FILE_NAME "stereo_calib.json"
 
 int main(int argc, char** argv)
 {
     // parse calib from file
     Camera::Calib::StereoCalib stereoSetup;
     Camera::CameraCalibParser parser;
-    parser.ParseStereoCalibJSONFile("../resources/calib/test_calib.json", stereoSetup);
+    if (!parser.ParseStereoCalibJSONFile(CALIB_FILE_NAME, stereoSetup)) {
+        std::cerr << "\nFailed to parse calib file" << std::endl;
+        return -1;
+    }
 
     // create camera compute module and get updated stereo setup with rectification applied
     Camera::CameraCompute cameraCompute { stereoSetup };
@@ -39,24 +43,21 @@ int main(int argc, char** argv)
     Reconstruct::Reconstruct3D reconstructor { stereoSetup };
 
     // read in test images
-    cv::Mat leftImage = cv::imread(LEFT_IMG_PATH, cv::IMREAD_COLOR);
-    cv::Mat rightImage = cv::imread(RIGHT_IMG_PATH, cv::IMREAD_COLOR);
-
-    // testing: use pre-rectified test images
-    cv::Mat leftImageRectified = cv::imread("../resources/test_images/rect_img_00_left.jpg");
-    cv::Mat rightImageRectified = cv::imread("../resources/test_images/rect_img_00_right.jpg");
+    cv::Mat leftImage = cv::imread(LEFT_IMG_NAME, cv::IMREAD_COLOR);
+    cv::Mat rightImage = cv::imread(RIGHT_IMG_NAME, cv::IMREAD_COLOR);
 
     // rectify images
-    //reconstructor.RectifyImages(leftImage, rightImage, leftImageRectified, rightImageRectified);
+    cv::Mat leftImageRectified{};
+    cv::Mat rightImageRectified{};
+    reconstructor.RectifyImages(leftImage, rightImage, leftImageRectified, rightImageRectified);
+
+    cv::imwrite(LEFT_IMG_RECTIFIED_NAME, leftImageRectified);
+    cv::imwrite(RIGHT_IMG_RECTIFIED_NAME, rightImageRectified);
 
     // generate disparity maps
     cv::Mat disparity = reconstructor.GenerateDisparityMap(leftImageRectified, rightImageRectified);
-    cv::Mat disparity8;
-    cv::normalize(disparity, disparity8, 0, 255, cv::NORM_MINMAX, CV_8U);
-
     std::cout << "\nDisparity map computed successfully" << std::endl;
     cv::imwrite("disparity_map.png", disparity);
-    cv::imwrite("disparity_map_8.png", disparity8);
 
     // create point cloud
     pcl::PointCloud<pcl::PointXYZRGB> pointCloud;
@@ -69,6 +70,7 @@ int main(int argc, char** argv)
 
     std::cout << "Done";
     std::cout << std::endl;
+
     return 0;
 }
 
