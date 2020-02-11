@@ -7,7 +7,6 @@
 
 #include <cmath>
 #include <opencv2/imgproc/imgproc.hpp>
-#include <opencv2/highgui.hpp>
 #include <opencv2/core/eigen.hpp>
 #include <pcl/common/transforms.h>
 
@@ -15,12 +14,9 @@
 
 namespace Reconstruct
 {
-    const int SGM_MIN_DISPARITY = 1;
-    const int SGM_BLOCK_SIZE = 13;
-    const int SGM_NUM_DISPARITIES = 64;
-
-    constexpr int SGM_P1 = 8 * 3 * SGM_BLOCK_SIZE * SGM_BLOCK_SIZE;
-    constexpr int SGM_P2 = 32 * 3 * SGM_BLOCK_SIZE * SGM_BLOCK_SIZE;
+    //const int SGM_MIN_DISPARITY = 1;
+    //constexpr int SGM_P1 = 8 * 3 * SGM_BLOCK_SIZE * SGM_BLOCK_SIZE;
+    //constexpr int SGM_P2 = 32 * 3 * SGM_BLOCK_SIZE * SGM_BLOCK_SIZE;
 
     // Constructor
     Reconstruct3D::Reconstruct3D(const Camera::Calib::StereoCalib& stereoSetup, bool shouldRectify) : m_StereoCameraSetup(stereoSetup), m_ShouldRectifyImages(shouldRectify)
@@ -37,7 +33,8 @@ namespace Reconstruct
         m_StereoMatcher->setPreFilterCap(10);
          */
 
-        m_StereoMatcher = cv::StereoBM::create(SGM_NUM_DISPARITIES, SGM_BLOCK_SIZE);
+        // set default block matcher
+        SetBlockMatcherType(STEREO_BLOCK_MATCHER);
     }
 
     // Disparity map
@@ -272,5 +269,31 @@ namespace Reconstruct
         T(2, 3) = frame.Translation(2);
 
         pcl::transformPointCloud(temp, pointCloud, T);
+    }
+
+    void Reconstruct3D::SetStereoBMWindowSize(int size) {
+        m_StereoMatcher->setBlockSize(size);
+    }
+
+    void Reconstruct3D::SetStereoBMNumDisparities(int num) {
+        m_StereoMatcher->setNumDisparities(num);
+    }
+
+    void Reconstruct3D::SetBlockMatcherType(StereoBlockMatcherType type)
+    {
+        if (m_StereoMatcher != nullptr) {
+            m_StereoMatcher = nullptr;
+        }
+
+        // create block matchers with default args
+        switch (type)
+        {
+            case STEREO_BLOCK_MATCHER:
+                m_StereoMatcher = cv::StereoBM::create(16, 21);
+                break;
+
+            case STEREO_SEMI_GLOBAL_BLOCK_MATCHER:
+                m_StereoMatcher = cv::StereoSGBM::create(0, 16, 3);
+        }
     }
 }

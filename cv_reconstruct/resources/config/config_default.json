@@ -1,8 +1,13 @@
 {
   "config": {
     "server": {
-      "port": 7000,
-      "requires_rectification": true
+      "port": 7000
+    },
+    "reconstruction": {
+      "requires_rectification": true,
+      "block_matcher": "stereo_bm",
+      "window_size": 21,
+      "num_disparities": 16
     }
   }
 }

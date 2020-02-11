@@ -8,12 +8,20 @@
 
 #include <string>
 
+#include "reconstruct/Reconstruct3D.hpp"
+
 namespace Config
 {
     struct Config
     {
+        // Server
         int ServerPort;
+
+        // Reconstruction
         bool ShouldRectifyImages { true };
+        Reconstruct::StereoBlockMatcherType BlockMatcherType { Reconstruct::StereoBlockMatcherType::STEREO_BLOCK_MATCHER };
+        int NumDisparities { 16 };
+        int WindowSize { 21 };
     };
 }
 

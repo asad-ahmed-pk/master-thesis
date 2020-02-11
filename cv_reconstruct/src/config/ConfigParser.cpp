@@ -33,7 +33,24 @@ namespace Config
 
         // server config
         config.ServerPort = serverConfig["port"];
-        config.ShouldRectifyImages = serverConfig["requires_rectification"];
+
+        // reconstruction config
+        nlohmann::json reconstructionConfig = json["config"]["reconstruction"];
+        config.ShouldRectifyImages = reconstructionConfig["requires_rectification"];
+
+        std::string bmTypeString = reconstructionConfig["block_matcher"];
+        if (bmTypeString == "stereo_bm") {
+            config.BlockMatcherType = Reconstruct::StereoBlockMatcherType::STEREO_BLOCK_MATCHER;
+        }
+        else if (bmTypeString == "stereo_sgbm") {
+            config.BlockMatcherType = Reconstruct::StereoBlockMatcherType::STEREO_SEMI_GLOBAL_BLOCK_MATCHER;
+        }
+        else {
+            config.BlockMatcherType = Reconstruct::StereoBlockMatcherType::STEREO_BLOCK_MATCHER;
+        }
+
+        config.WindowSize = reconstructionConfig["window_size"];
+        config.NumDisparities = reconstructionConfig["num_disparities"];
 
         return config;
     }

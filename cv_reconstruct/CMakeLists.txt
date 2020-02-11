@@ -47,8 +47,11 @@ list(APPEND RECONSTRUCT_3D_SOURCES
 
 list(APPEND SERVER_SOURCES
         src/server/ReconstructionServer.cpp
-        src/config/ConfigParser.cpp
         src/server/MessageConverter.cpp
+)
+
+list(APPEND CONFIG_SOURCES
+        src/config/ConfigParser.cpp
 )
 
 # External sources
@@ -64,17 +67,13 @@ list(APPEND TESTING_SOURCES
 # Executables
 
 # Main reconstruction server executable
-add_executable(cv_server src/main.cpp ${CAMERA_SOURCES} ${RECONSTRUCT_3D_SOURCES} ${SERVER_SOURCES} ${EXTERN_SOURCES})
+add_executable(cv_server src/main.cpp ${CAMERA_SOURCES} ${RECONSTRUCT_3D_SOURCES} ${SERVER_SOURCES} ${CONFIG_SOURCES} ${EXTERN_SOURCES})
 target_link_libraries(cv_server ${OpenCV_LIBS} ${Boost_LIBRARIES} ${PCL_LIBRARIES} reconstruction::networking)
 
-# Camera compute module test program
-add_executable(camera_compute_test src/test/camera_compute_test.cpp ${CAMERA_SOURCES})
-target_link_libraries(camera_compute_test ${OpenCV_LIBS} ${Boost_LIBRARIES})
-
 # Reconstruct module test program
-add_executable(reconstruct_test src/test/reconstruct_test.cpp ${CAMERA_SOURCES} ${RECONSTRUCT_3D_SOURCES} ${EXTERN_SOURCES})
+add_executable(reconstruct_test src/test/reconstruct_test_kitti_rectified.cpp ${CAMERA_SOURCES} ${RECONSTRUCT_3D_SOURCES} ${CONFIG_SOURCES} ${EXTERN_SOURCES})
 target_link_libraries(reconstruct_test ${OpenCV_LIBS} ${Boost_LIBRARIES} ${PCL_LIBRARIES})
 
 # Catch2 Tests
-add_executable(test_camera_calib_parser test/test_camera_calib_parser.cpp ${CAMERA_SOURCES} ${RECONSTRUCT_3D_SOURCES} ${EXTERN_SOURCES} ${TESTING_SOURCES})
+add_executable(test_camera_calib_parser test/test_camera_calib_parser.cpp ${CAMERA_SOURCES} ${RECONSTRUCT_3D_SOURCES} ${CONFIG_SOURCES} ${EXTERN_SOURCES} ${TESTING_SOURCES})
 target_link_libraries(test_camera_calib_parser ${OpenCV_LIBS} ${Boost_LIBRARIES} ${PCL_LIBRARIES})

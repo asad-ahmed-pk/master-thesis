@@ -52,6 +52,9 @@ int main(int argc, char** argv)
     KITTIVisionParser parser(calibFolder, dataFolder, isRectifiedData);
     Calib calib = parser.GetParsedCalibData();
 
+    std::cout << "\nT:\n" << calib.T;
+    std::cout << "\nR:\n" << calib.R;
+
     std::vector<DataSample> samples;
     parser.GetParsedDataSamples(samples);
 

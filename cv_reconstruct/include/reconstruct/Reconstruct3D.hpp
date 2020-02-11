@@ -19,6 +19,12 @@
 
 namespace Reconstruct
 {
+    // The type of stereo matcher
+    enum StereoBlockMatcherType {
+        STEREO_BLOCK_MATCHER,
+        STEREO_SEMI_GLOBAL_BLOCK_MATCHER
+    };
+
     class Reconstruct3D
     {
     public:
@@ -58,13 +64,26 @@ namespace Reconstruct
         /// \param pointCloud Will be loaded with the computed 3D points in world space
         void ProcessFrame(const StereoFrame& frame, pcl::PointCloud<pcl::PointXYZRGB>& pointCloud) const;
 
+        /// Set the window size for the block matcher for computing disparity
+        /// \param size The window size (odd number)
+        void SetStereoBMWindowSize(int size);
+
+        /// Set the number of disparity levels for the computed disparity images
+        /// \param num Number of disparities (multiple of 16)
+        void SetStereoBMNumDisparities(int num);
+
+        /// Set the type of block matcher that will be used to compute the disparity
+        /// \param type The type of block matcher to use
+        void SetBlockMatcherType(StereoBlockMatcherType type);
+
     private:
         pcl::PointCloud<pcl::PointXYZRGB> PointCloudMatrixCompute(const cv::Mat& leftImage, const cv::Mat& disparity) const;
 
     private:
         Camera::Calib::StereoCalib m_StereoCameraSetup;
-        cv::Ptr<cv::StereoBM> m_StereoMatcher;
+        cv::Ptr<cv::StereoMatcher> m_StereoMatcher { nullptr };
         bool m_ShouldRectifyImages;
+        StereoBlockMatcherType m_StereoBlockMatcherType { STEREO_BLOCK_MATCHER };
     };
 }
 
