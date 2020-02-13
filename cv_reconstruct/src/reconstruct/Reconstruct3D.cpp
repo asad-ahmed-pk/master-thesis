@@ -55,8 +55,13 @@ namespace Reconstruct
     // Point cloud generation
     pcl::PointCloud<pcl::PointXYZRGB> Reconstruct3D::GeneratePointCloud(const cv::Mat& disparity, const cv::Mat& cameraImage) const
     {
+        Eigen::Matrix4f Q = Eigen::Matrix4f::Identity();
+        Q(2, 2) = 0.005 * m_StereoCameraSetup.LeftCameraCalib.K(0, 0);
+        cv::Mat Q_CV(4, 4, CV_64F);
+        cv::eigen2cv(Q, Q_CV);
+
         cv::Mat reprojected3D;
-        cv::reprojectImageTo3D(disparity, reprojected3D, m_StereoCameraSetup.Rectification.Q);
+        cv::reprojectImageTo3D(disparity, reprojected3D, Q_CV);
 
         pcl::PointCloud<pcl::PointXYZRGB> pointCloud;
 
@@ -101,26 +106,31 @@ namespace Reconstruct
     // Generate point cloud by direct calculation from disparity
     pcl::PointCloud<pcl::PointXYZRGB> Reconstruct3D::Triangulate3D(const cv::Mat &disparity, const cv::Mat& leftImage, const cv::Mat& rightImage) const
     {
+        // get true disparity
+        cv::Mat trueDisparity;
+        disparity.convertTo(trueDisparity, CV_32F, 1.0 / 16.0, 0.0);
+
         pcl::PointCloud<pcl::PointXYZRGB> pointCloud;
 
         cv::Vec3f coords;
         pcl::PointXYZRGB point;
 
         uint32_t count = 0;
-        short d;
-        float f = m_StereoCameraSetup.LeftCameraCalib.K(0, 0);       // focal length
-        float b = m_StereoCameraSetup.T(0);                             // baseline
+        float d;
+        float f = (m_StereoCameraSetup.LeftCameraCalib.K(0, 0) + m_StereoCameraSetup.RightCameraCalib.K(1, 1)) / 2.0;
+        f *= 0.005;
 
         for (int i = 0; i < disparity.rows; i++)
         {
             for (int j = 0; j < disparity.cols; j++)
             {
-                d = disparity.at<short>(i, j);
-                if (d == -16 || d == 0) {
+                // skip zero disparities
+                d = trueDisparity.at<float>(i, j);
+                if (d <= 0.0) {
                     continue;
                 }
 
-                point.z = f * (m_StereoCameraSetup.T(0) / static_cast<float>(d));
+                point.z = f * (m_StereoCameraSetup.T(0) / d);
                 point.x = (static_cast<float>(i) - m_StereoCameraSetup.LeftCameraCalib.K(0, 2)) * (point.z / f);
                 point.y = (static_cast<float>(j) - m_StereoCameraSetup.LeftCameraCalib.K(1, 2)) * (point.z / f);
 

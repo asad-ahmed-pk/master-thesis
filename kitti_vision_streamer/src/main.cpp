@@ -78,7 +78,7 @@ int main(int argc, char** argv)
     }
     else {
         std::cout << "\nUnable to connect to server at " << serverAddress << ": " << port;
-        return -1;
+        return 1;
     }
 
     std::cout << "\nMain thread has added all samples to queue. Ctrl-C to end the program" << std::endl;
