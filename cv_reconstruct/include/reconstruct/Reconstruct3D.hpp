@@ -8,6 +8,7 @@
 
 #include "camera/CameraCalib.hpp"
 #include "StereoFrame.hpp"
+#include "Localizer.hpp"
 
 #include <opencv2/core/core.hpp>
 #include <opencv2/calib3d/calib3d.hpp>
@@ -62,7 +63,7 @@ namespace Reconstruct
         /// Process the given stereo frame and compute the point cloud
         /// \param frame The stereo frame
         /// \param pointCloud Will be loaded with the computed 3D points in world space
-        void ProcessFrame(const StereoFrame& frame, pcl::PointCloud<pcl::PointXYZRGB>& pointCloud) const;
+        void ProcessFrame(const StereoFrame& frame, pcl::PointCloud<pcl::PointXYZRGB>& pointCloud);
 
         /// Set the window size for the block matcher for computing disparity
         /// \param size The window size (odd number)
@@ -81,6 +82,7 @@ namespace Reconstruct
 
     private:
         Camera::Calib::StereoCalib m_StereoCameraSetup;
+        Localizer m_Localizer;
         cv::Ptr<cv::StereoMatcher> m_StereoMatcher { nullptr };
         bool m_ShouldRectifyImages;
         StereoBlockMatcherType m_StereoBlockMatcherType { STEREO_BLOCK_MATCHER };

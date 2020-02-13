@@ -110,10 +110,10 @@ namespace Reconstruct
                 // debugging: save temp point cloud
                 //pcl::io::savePCDFileBinary("point_cloud_" + std::to_string(frame.ID) + ".pcd", pointCloud);
 
-                std::cout << "\nProcessed frame at " << frame.Translation(0) << ", " << frame.Translation(1) << ", " << frame.Translation(2) << std::endl;
+                //std::cout << "\nProcessed frame at " << frame.Translation(0) << ", " << frame.Translation(1) << ", " << frame.Translation(2) << std::endl;
                 n++;
 
-                if (n >= 400) {
+                if (n >= 3) {
                     isRunning = false;
                     break;
                 }

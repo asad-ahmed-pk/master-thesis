@@ -8,7 +8,6 @@
 #include <cmath>
 #include <opencv2/imgproc/imgproc.hpp>
 #include <opencv2/core/eigen.hpp>
-#include <pcl/common/transforms.h>
 
 #include <fstream>
 
@@ -118,7 +117,7 @@ namespace Reconstruct
         uint32_t count = 0;
         float d;
         float f = (m_StereoCameraSetup.LeftCameraCalib.K(0, 0) + m_StereoCameraSetup.RightCameraCalib.K(1, 1)) / 2.0;
-        f *= 0.005;
+        //f *= 0.005;
 
         for (int i = 0; i < disparity.rows; i++)
         {
@@ -248,7 +247,7 @@ namespace Reconstruct
     }
 
     // Process frame
-    void Reconstruct3D::ProcessFrame(const Reconstruct::StereoFrame& frame, pcl::PointCloud<pcl::PointXYZRGB>& pointCloud) const
+    void Reconstruct3D::ProcessFrame(const Reconstruct::StereoFrame& frame, pcl::PointCloud<pcl::PointXYZRGB>& pointCloud)
     {
         cv::Mat disparity;
 
@@ -263,22 +262,11 @@ namespace Reconstruct
         }
 
         // triangulation
+        //pcl::PointCloud<pcl::PointXYZRGB> temp = GeneratePointCloud(disparity, frame.LeftImage);
         pcl::PointCloud<pcl::PointXYZRGB> temp = Triangulate3D(disparity, frame.LeftImage, frame.RightImage);
 
         // transform point cloud
-        Eigen::Matrix4f T = Eigen::Matrix4f::Identity();
-        for (int i = 0; i < 3; i++) {
-            for (int j = 0; j < 3; j++) {
-                T(i, j) = frame.Rotation(i, j);
-            }
-        }
-
-        // translation
-        T(0, 3) = frame.Translation(0);
-        T(1, 3) = frame.Translation(1);
-        T(2, 3) = frame.Translation(2);
-
-        pcl::transformPointCloud(temp, pointCloud, T);
+        m_Localizer.TransformPointCloud(frame, temp, pointCloud);
     }
 
     void Reconstruct3D::SetStereoBMWindowSize(int size) {
