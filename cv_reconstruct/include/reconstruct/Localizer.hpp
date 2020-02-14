@@ -9,6 +9,7 @@
 #include <eigen3/Eigen/Eigen>
 #include <pcl/point_cloud.h>
 #include <pcl/point_types.h>
+#include <memory>
 
 #include "StereoFrame.hpp"
 
@@ -28,10 +29,11 @@ namespace Reconstruct
 
     private:
         Eigen::Matrix4f ComputeWorldSpaceTransform(const StereoFrame& frame);
+        Eigen::Vector3f ProjectGPSToMercator(float latitude, float longitude, float altitude) const;
 
     private:
-        float m_InitialLatitude;
-        bool m_InitialLatitideSet { false };
+        std::unique_ptr<Eigen::Matrix4f> m_InitialPose { nullptr };
+        float m_MercatorScale { 1.0 };
     };
 }
 
