@@ -4,10 +4,14 @@
       "port": 7000
     },
     "reconstruction": {
-      "requires_rectification": true,
+      "requires_rectification": false,
       "block_matcher": "stereo_bm",
       "window_size": 21,
-      "num_disparities": 16
+      "num_disparities": 64
+    },
+    "point_cloud_post_processing": {
+      "outlier_min_k": 30,
+      "outlier_std_threshold": 0.5
     }
   }
 }
