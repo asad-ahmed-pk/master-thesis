@@ -12,6 +12,7 @@
 
 #include <pcl/point_cloud.h>
 #include <pcl/point_types.h>
+#include <pcl/io/pcd_io.h>
 #include <pcl/visualization/pcl_visualizer.h>
 
 #include <opencv2/highgui/highgui.hpp>
@@ -134,6 +135,11 @@ int main(int argc, char** argv)
         std::this_thread::sleep_for(std::chrono::milliseconds(100));
     }
 
+    // save to disk
+    std::cout << "\nSaving PCD to disk" << std::endl;
+    pcl::io::savePCDFileBinary("localized.pcd", *pointCloud);
+
+    std::cout << std::endl;
     return 0;
 }
 
