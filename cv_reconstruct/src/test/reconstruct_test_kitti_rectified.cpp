@@ -58,8 +58,8 @@ int main(int argc, char** argv)
 
     // create point cloud
     pcl::PointCloud<pcl::PointXYZRGB> pointCloud;
-    //pointCloud = reconstructor.GeneratePointCloud(disparity, leftImage);
-    pointCloud = reconstructor.Triangulate3D(disparity, leftImage, rightImage);
+    pointCloud = reconstructor.GeneratePointCloud(disparity, leftImage);
+    //pointCloud = reconstructor.Triangulate3D(disparity, leftImage, rightImage);
 
     // save point cloud file
     std::cout << "\nSaving point cloud file..." << std::endl;

@@ -11,6 +11,8 @@
 
 #include <fstream>
 
+#define MISSING_DISPARITY_Z 10000
+
 namespace Reconstruct
 {
     //const int SGM_MIN_DISPARITY = 1;
@@ -60,7 +62,7 @@ namespace Reconstruct
         cv::eigen2cv(Q, Q_CV);
 
         cv::Mat reprojected3D;
-        cv::reprojectImageTo3D(disparity, reprojected3D, Q_CV);
+        cv::reprojectImageTo3D(disparity, reprojected3D, Q_CV, true);
 
         pcl::PointCloud<pcl::PointXYZRGB> pointCloud;
 
@@ -76,13 +78,13 @@ namespace Reconstruct
                 coords = reprojected3D.at<cv::Vec3f>(row, col);
 
                 // skip points with infinity values and zero depth
-                if (isinf(coords[0]) || isinf(coords[1]) || isinf(coords[2]) || (coords[2] >= 5.90 && coords[2] < 6.0)) {
+                if (coords[2] == MISSING_DISPARITY_Z) {
                     continue;
                 }
 
                 // set 3D point X,Y,Z and RGB
                 point.x = coords[0];
-                point.y = coords[1];
+                point.y = -coords[1];
                 point.z = coords[2];
 
                 point.r = cameraImage.at<cv::Vec3b>(row, col)[2];
@@ -262,8 +264,8 @@ namespace Reconstruct
         }
 
         // triangulation
-        //pcl::PointCloud<pcl::PointXYZRGB> temp = GeneratePointCloud(disparity, frame.LeftImage);
-        pcl::PointCloud<pcl::PointXYZRGB> temp = Triangulate3D(disparity, frame.LeftImage, frame.RightImage);
+        pcl::PointCloud<pcl::PointXYZRGB> temp = GeneratePointCloud(disparity, frame.LeftImage);
+        //pcl::PointCloud<pcl::PointXYZRGB> temp = Triangulate3D(disparity, frame.LeftImage, frame.RightImage);
 
         // transform point cloud
         m_Localizer.TransformPointCloud(frame, temp, pointCloud);

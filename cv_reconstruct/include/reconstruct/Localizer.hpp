@@ -27,9 +27,15 @@ namespace Reconstruct
         /// \param output The output point cloud in world space
         void TransformPointCloud(const StereoFrame& frame, const pcl::PointCloud<pcl::PointXYZRGB>& input, pcl::PointCloud<pcl::PointXYZRGB>& output);
 
+        /// Convert the given GPS coords to X,Y,Z using the Mercator projection
+        /// \param latitude GPS latitude
+        /// \param longitude GPS longitude
+        /// \param altitude Altitude in meters
+        /// \return Mercator projected X,Y,Z
+        Eigen::Vector3f ProjectGPSToMercator(float latitude, float longitude, float altitude) const;
+
     private:
         Eigen::Matrix4f ComputeWorldSpaceTransform(const StereoFrame& frame);
-        Eigen::Vector3f ProjectGPSToMercator(float latitude, float longitude, float altitude) const;
 
     private:
         std::unique_ptr<Eigen::Matrix4f> m_InitialPose { nullptr };

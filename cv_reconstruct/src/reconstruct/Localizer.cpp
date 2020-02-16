@@ -8,11 +8,12 @@
 
 #include "reconstruct/Localizer.hpp"
 
-#define EARTH_RADIUS_METERS 6378137.0
+#define EARTH_RADIUS_METERS 6378137.0f
 
 namespace Reconstruct
 {
     // Transform point cloud
+    // Assumes frame translation is in GPS coordinates: [lat, lon, alt] => R3
     void Localizer::TransformPointCloud(const StereoFrame& frame, const pcl::PointCloud<pcl::PointXYZRGB> &input, pcl::PointCloud<pcl::PointXYZRGB> &output)
     {
         // record initial pose and calculate mercator scale
@@ -48,17 +49,31 @@ namespace Reconstruct
         transform.block(0, 0, 3, 3) = R;
         transform.block(0, 3, 3, 1) = T;
 
+
+        std::cout << "\n\nLocalization\n";
+        std::cout << "\nT:\n" << T;
+        std::cout << "\nR:\n" << R;
+        std::cout << "\n\n";
+        //std::cout << "\nTransform:" << transform;
+
+        std::cout << std::endl;
+
         return std::move(transform);
     }
 
     // GPS to Mercator Projection
+    // X: Right, Y: Up, Z: Forward
     Eigen::Vector3f Localizer::ProjectGPSToMercator(float latitude, float longitude, float altitude) const
     {
         Eigen::Vector3f T = Eigen::Vector3f::Zero();
 
-        T(0) = m_MercatorScale * EARTH_RADIUS_METERS * ((M_PI * longitude) / 180.0);
-        T(1) = m_MercatorScale * EARTH_RADIUS_METERS * log(tan((M_PI * (90 + latitude)) / 360.0));
-        T(2) = altitude;
+        float fwd = m_MercatorScale * EARTH_RADIUS_METERS * ((M_PI * longitude) / 180.0);
+        float left = m_MercatorScale * EARTH_RADIUS_METERS * log(tan((M_PI * (90 + latitude)) / 360.0));
+        float up = altitude;
+
+        T(0) = -left;
+        T(1) = up;
+        T(2) = fwd;
 
         return std::move(T);
     }
