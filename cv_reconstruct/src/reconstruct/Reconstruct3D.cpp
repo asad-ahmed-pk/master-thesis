@@ -20,7 +20,7 @@ namespace Reconstruct
     //constexpr int SGM_P2 = 32 * 3 * SGM_BLOCK_SIZE * SGM_BLOCK_SIZE;
 
     // Constructor
-    Reconstruct3D::Reconstruct3D(const Camera::Calib::StereoCalib& stereoSetup, bool shouldRectify) : m_StereoCameraSetup(stereoSetup), m_ShouldRectifyImages(shouldRectify)
+    Reconstruct3D::Reconstruct3D(const Camera::Calib::StereoCalib& stereoSetup) : m_StereoCameraSetup(stereoSetup)
     {
         // setup stereo matcher
 
@@ -248,28 +248,7 @@ namespace Reconstruct
         return pointCloud;
     }
 
-    // Process frame
-    void Reconstruct3D::ProcessFrame(const Reconstruct::StereoFrame& frame, pcl::PointCloud<pcl::PointXYZRGB>& pointCloud)
-    {
-        cv::Mat disparity;
-
-        // rectify if image rectification required
-        if (m_ShouldRectifyImages) {
-            cv::Mat leftImageRectified, rightImageRectified;
-            RectifyImages(frame.LeftImage, frame.RightImage, leftImageRectified, rightImageRectified);
-            disparity = GenerateDisparityMap(leftImageRectified, rightImageRectified);
-        }
-        else {
-            disparity = GenerateDisparityMap(frame.LeftImage, frame.RightImage);
-        }
-
-        // triangulation
-        pcl::PointCloud<pcl::PointXYZRGB> temp = GeneratePointCloud(disparity, frame.LeftImage);
-        //pcl::PointCloud<pcl::PointXYZRGB> temp = Triangulate3D(disparity, frame.LeftImage, frame.RightImage);
-
-        // transform point cloud
-        m_Localizer.TransformPointCloud(frame, temp, pointCloud);
-    }
+    // Setters
 
     void Reconstruct3D::SetStereoBMWindowSize(int size) {
         m_StereoMatcher->setBlockSize(size);

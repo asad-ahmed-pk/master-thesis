@@ -14,7 +14,7 @@ namespace Reconstruct
 {
     // Transform point cloud
     // Assumes frame translation is in GPS coordinates: [lat, lon, alt] => R3
-    void Localizer::TransformPointCloud(const StereoFrame& frame, const pcl::PointCloud<pcl::PointXYZRGB> &input, pcl::PointCloud<pcl::PointXYZRGB> &output)
+    void Localizer::TransformPointCloud(const Pipeline::StereoFrame& frame, const pcl::PointCloud<pcl::PointXYZRGB> &input, pcl::PointCloud<pcl::PointXYZRGB> &output)
     {
         // record initial pose and calculate mercator scale
         if (m_InitialPose == nullptr)
@@ -36,7 +36,7 @@ namespace Reconstruct
     }
 
     // Get 4x4 transformation matrix for GPS location
-    Eigen::Matrix4f Localizer::ComputeWorldSpaceTransform(const StereoFrame& frame)
+    Eigen::Matrix4f Localizer::ComputeWorldSpaceTransform(const Pipeline::StereoFrame& frame)
     {
         // compute relative pose
         Eigen::Matrix3f R0 = m_InitialPose->block(0, 0, 3, 3);

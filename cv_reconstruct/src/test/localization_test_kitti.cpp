@@ -20,6 +20,7 @@
 #include "reconstruct/Reconstruct3D.hpp"
 #include "camera/CameraCalibParser.hpp"
 #include "config/ConfigParser.hpp"
+#include "pipeline/ReconstructionPipeline.hpp"
 
 // test file names
 #define LOCALIZATION_DATA_FILE "localization_data.txt"
@@ -37,7 +38,7 @@ struct LocalizationData {
 };
 
 Eigen::Matrix3f RotationMatrixFromEuler(float pitch, float yaw, float roll);
-Reconstruct::StereoFrame ConvertToFrame(const LocalizationData& data);
+Pipeline::StereoFrame ConvertToFrame(const LocalizationData& data);
 pcl::visualization::PCLVisualizer::Ptr rgbVis (pcl::PointCloud<pcl::PointXYZRGB>::ConstPtr cloud);
 void AddXYZPattern(pcl::PointCloud<pcl::PointXYZRGB>::Ptr cloud);
 void PointClicked(const pcl::visualization::PointPickingEvent& event);
@@ -50,7 +51,7 @@ int main(int argc, char** argv)
 
     LocalizationData data{};
 
-    std::vector<Reconstruct::StereoFrame> frames;
+    std::vector<Pipeline::StereoFrame> frames;
     std::vector<LocalizationData> localizationData;
 
     // read in localization data from test flat file
@@ -65,7 +66,7 @@ int main(int argc, char** argv)
     // convert to vector of frames
     int i = 0;
     std::transform(localizationData.begin(), localizationData.end(), std::back_inserter(frames), ConvertToFrame);
-    for (Reconstruct::StereoFrame& frame : frames)
+    for (Pipeline::StereoFrame& frame : frames)
     {
         frame.ID = i++;
         frame.LeftImage = cv::imread(std::to_string(frame.ID) + "l.png", cv::IMREAD_COLOR);
@@ -84,11 +85,8 @@ int main(int argc, char** argv)
     Config::ConfigParser configParser;
     Config::Config config = configParser.ParseConfig();
 
-    // prepare reconstruction module
-    Reconstruct::Reconstruct3D reconstructor(stereoCalib, false);
-    reconstructor.SetBlockMatcherType(Reconstruct::STEREO_BLOCK_MATCHER);
-    reconstructor.SetStereoBMWindowSize(config.WindowSize);
-    reconstructor.SetStereoBMNumDisparities(config.NumDisparities);
+    // prepare pipeline processor
+    Pipeline::ReconstructionPipeline pipeline(config, stereoCalib, true);
 
     // prepare localization module
     Reconstruct::Localizer localizer;
@@ -107,7 +105,7 @@ int main(int argc, char** argv)
 
     for (const auto& frame : frames)
     {
-        reconstructor.ProcessFrame(frame, *temp);
+        pipeline.ProcessFrame(frame, temp);
         *pointCloud += *temp;
         temp->clear();
 
@@ -144,9 +142,9 @@ int main(int argc, char** argv)
 }
 
 // Convert to stereo frame
-Reconstruct::StereoFrame ConvertToFrame(const LocalizationData& data)
+Pipeline::StereoFrame ConvertToFrame(const LocalizationData& data)
 {
-    Reconstruct::StereoFrame frame{};
+    Pipeline::StereoFrame frame{};
     frame.Translation = Eigen::Vector3f(data.lat, data.lon, data.alt);
     frame.Rotation = RotationMatrixFromEuler(data.pitch, data.yaw, data.roll);
     return std::move(frame);

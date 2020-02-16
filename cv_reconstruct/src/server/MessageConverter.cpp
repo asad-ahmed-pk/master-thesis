@@ -58,9 +58,9 @@ namespace Utility
         return calib;
     }
 
-    Reconstruct::StereoFrame MessageConverter::ConvertStereoMessage(const CVNetwork::Message::StereoMessage &stereoMessage)
+    Pipeline::StereoFrame MessageConverter::ConvertStereoMessage(const CVNetwork::Message::StereoMessage &stereoMessage)
     {
-        Reconstruct::StereoFrame frame{};
+        Pipeline::StereoFrame frame{};
 
         cv::imdecode(stereoMessage.LeftImageData, cv::IMREAD_COLOR, &frame.LeftImage);
         cv::imdecode(stereoMessage.RightImageData, cv::IMREAD_COLOR, &frame.RightImage);

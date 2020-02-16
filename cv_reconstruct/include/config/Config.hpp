@@ -15,13 +15,29 @@ namespace Config
     struct Config
     {
         // Server
-        int ServerPort;
+        struct Server
+        {
+            int ServerPort;
 
-        // Reconstruction
-        bool ShouldRectifyImages { true };
-        Reconstruct::StereoBlockMatcherType BlockMatcherType { Reconstruct::StereoBlockMatcherType::STEREO_BLOCK_MATCHER };
-        int NumDisparities { 16 };
-        int WindowSize { 21 };
+        } Server;
+
+        // 3D Reconstruction
+        struct Reconstruction
+        {
+            bool ShouldRectifyImages{true};
+            Reconstruct::StereoBlockMatcherType BlockMatcherType{ Reconstruct::StereoBlockMatcherType::STEREO_BLOCK_MATCHER };
+            int NumDisparities{16};
+            int WindowSize{21};
+
+        } Reconstruction;
+
+        // Point cloud post processing
+        struct PointCloudPostProcess
+        {
+            double OutlierStdDevThreshold { 1.0 };
+            int OutlierMinK { 50 };
+
+        } PointCloudPostProcess;
     };
 }
 

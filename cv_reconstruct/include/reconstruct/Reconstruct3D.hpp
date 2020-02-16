@@ -7,7 +7,7 @@
 #define CV_RECONSTRUCT_RECONSTRUCT3D_HPP
 
 #include "camera/CameraCalib.hpp"
-#include "StereoFrame.hpp"
+#include "pipeline/StereoFrame.hpp"
 #include "Localizer.hpp"
 
 #include <opencv2/core/core.hpp>
@@ -31,8 +31,8 @@ namespace Reconstruct
     public:
         /// Create a 3D reconstructor for the given stereo rig
         /// \param stereoSetup The calibrated, stereo rig setup with stereo rectification already applied
-        /// \param shouldRectify Set to true if reconstruction will require stereo rectification of the images that will be received
-        Reconstruct3D(const Camera::Calib::StereoCalib& stereoSetup, bool shouldRectify);
+        explicit Reconstruct3D(const Camera::Calib::StereoCalib& stereoSetup);
+
 
         /// Generate the disparity map for the given stereo images
         /// \param leftImage The left camera image
@@ -60,11 +60,6 @@ namespace Reconstruct
         /// \param rectRightImage Will be updated with the rectified image for the right camera
         void RectifyImages(const cv::Mat& leftImage, const cv::Mat& rightImage, cv::Mat& rectLeftImage, cv::Mat& rectRightImage) const;
 
-        /// Process the given stereo frame and compute the point cloud
-        /// \param frame The stereo frame
-        /// \param pointCloud Will be loaded with the computed 3D points in world space
-        void ProcessFrame(const StereoFrame& frame, pcl::PointCloud<pcl::PointXYZRGB>& pointCloud);
-
         /// Set the window size for the block matcher for computing disparity
         /// \param size The window size (odd number)
         void SetStereoBMWindowSize(int size);
@@ -82,9 +77,7 @@ namespace Reconstruct
 
     private:
         Camera::Calib::StereoCalib m_StereoCameraSetup;
-        Localizer m_Localizer;
         cv::Ptr<cv::StereoMatcher> m_StereoMatcher { nullptr };
-        bool m_ShouldRectifyImages;
         StereoBlockMatcherType m_StereoBlockMatcherType { STEREO_BLOCK_MATCHER };
     };
 }

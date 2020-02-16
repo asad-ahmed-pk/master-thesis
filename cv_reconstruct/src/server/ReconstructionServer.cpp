@@ -39,7 +39,7 @@ namespace Reconstruct
         }
 
         // create the networking server instance from cv_networking lib
-        m_ReconstructionServer = std::make_unique<CVNetwork::Servers::ReconstructionServer>(m_Config.ServerPort, m_Calib == nullptr);
+        m_ReconstructionServer = std::make_unique<CVNetwork::Servers::ReconstructionServer>(m_Config.Server.ServerPort, m_Calib == nullptr);
     }
 
     // Destructor
@@ -75,16 +75,16 @@ namespace Reconstruct
         Camera::CameraCompute cameraCompute(*m_Calib);
         stereoSetup = std::move(cameraCompute.GetRectifiedStereoSettings());
 
-        // construct the reconstruction module with the calib information
-        m_Reconstruction = std::make_unique<Reconstruct3D>(stereoSetup, m_Config.ShouldRectifyImages);
+        // construct the pipeline with the calib information
+        m_ReconstructionPipeline = std::make_unique<Pipeline::ReconstructionPipeline>(m_Config, stereoSetup, !m_Config.Reconstruction.ShouldRectifyImages);
 
         // calib data will be loaded by now - expecting a constant stream of stereo messages at this point
         // these are in the server's data queue
         CVNetwork::Message::StereoMessage message;
-        Reconstruct::StereoFrame frame;
+        Pipeline::StereoFrame frame;
 
-        pcl::PointCloud<pcl::PointXYZRGB> pointCloud;
-        pcl::PointCloud<pcl::PointXYZRGB> finalPointCloud;
+        pcl::PointCloud<pcl::PointXYZRGB>::Ptr pointCloud(new pcl::PointCloud<pcl::PointXYZRGB>());
+        pcl::PointCloud<pcl::PointXYZRGB>::Ptr finalPointCloud(new pcl::PointCloud<pcl::PointXYZRGB>());
 
         long n = 0;
 
@@ -97,19 +97,19 @@ namespace Reconstruct
                 frame.ID = n;
 
                 // clear all points from temp point cloud
-                pointCloud.clear();
+                pointCloud->clear();
 
                 // process this frame
-                m_Reconstruction->ProcessFrame(frame, pointCloud);
+                m_ReconstructionPipeline->ProcessFrame(frame, pointCloud);
 
                 // append all points from this point cloud to final point cloud
-                for (const auto& p : pointCloud) {
-                    finalPointCloud.push_back(p);
+                for (const auto& p : *pointCloud) {
+                    finalPointCloud->push_back(p);
                 }
                 n++;
 
                 // for testing: stop after certain number of frames are processed
-                if (n >= 3) {
+                if (n >= 20) {
                     isRunning = false;
                     break;
                 }
@@ -118,7 +118,7 @@ namespace Reconstruct
 
         // save point cloud to file for now
         std::cout << "\nServer finished receiving stream. Saving point cloud to file" << std::endl;
-        pcl::io::savePCDFileBinary("final_point_cloud.pcd", finalPointCloud);
+        pcl::io::savePCDFileBinary("final_point_cloud.pcd", *finalPointCloud);
 
         return ReconstructServerStatusCode::SERVER_CLIENT_DISCONNECTED;
     }

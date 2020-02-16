@@ -8,7 +8,7 @@
 
 #include "cv_networking/message/StereoStreamMessages.hpp"
 #include "camera/CameraCalib.hpp"
-#include "reconstruct/StereoFrame.hpp"
+#include "pipeline/StereoFrame.hpp"
 
 namespace Utility
 {
@@ -20,7 +20,7 @@ namespace Utility
         /// \return The converted message
         static Camera::Calib::StereoCalib CovertCalibMessage(const CVNetwork::Message::StereoCalibMessage& calibMessage);
 
-        static Reconstruct::StereoFrame ConvertStereoMessage(const CVNetwork::Message::StereoMessage& stereoMessage);
+        static Pipeline::StereoFrame ConvertStereoMessage(const CVNetwork::Message::StereoMessage& stereoMessage);
     };
 }
 

@@ -13,8 +13,7 @@
 #include "reconstruct/ReconstructStatusCode.hpp"
 #include "config/Config.hpp"
 #include "camera/CameraCalib.hpp"
-#include "reconstruct/Reconstruct3D.hpp"
-
+#include "pipeline/ReconstructionPipeline.hpp"
 #include "cv_networking/server/ReconstructionServer.hpp"
 
 namespace Reconstruct
@@ -35,7 +34,7 @@ namespace Reconstruct
 
     private:
         Config::Config m_Config;
-        std::unique_ptr<Reconstruct3D> m_Reconstruction;
+        std::unique_ptr<Pipeline::ReconstructionPipeline> m_ReconstructionPipeline;
         std::unique_ptr<Camera::Calib::StereoCalib> m_Calib { nullptr };
         std::unique_ptr<CVNetwork::Servers::ReconstructionServer> m_ReconstructionServer { nullptr };
     };

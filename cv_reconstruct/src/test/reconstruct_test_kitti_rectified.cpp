@@ -8,6 +8,7 @@
 #include "camera/CameraCalibParser.hpp"
 #include "reconstruct/Reconstruct3D.hpp"
 #include "config/ConfigParser.hpp"
+#include "reconstruct/PointCloudPostProcessor.hpp"
 
 #include <string>
 #include <iostream>
@@ -42,10 +43,10 @@ int main(int argc, char** argv)
     Camera::CameraCompute cameraCompute { stereoCalib };
 
     // create 3d reconstructor and generate disparity map
-    Reconstruct::Reconstruct3D reconstructor(stereoCalib, false);
-    reconstructor.SetBlockMatcherType(config.BlockMatcherType);
-    reconstructor.SetStereoBMNumDisparities(config.NumDisparities);
-    reconstructor.SetStereoBMWindowSize(config.WindowSize);
+    Reconstruct::Reconstruct3D reconstructor(stereoCalib);
+    reconstructor.SetBlockMatcherType(config.Reconstruction.BlockMatcherType);
+    reconstructor.SetStereoBMNumDisparities(config.Reconstruction.NumDisparities);
+    reconstructor.SetStereoBMWindowSize(config.Reconstruction.WindowSize);
 
     // read in test images
     cv::Mat leftImage = cv::imread(LEFT_IMG_NAME, cv::IMREAD_COLOR);
@@ -57,13 +58,17 @@ int main(int argc, char** argv)
     cv::imwrite("disparity_map.png", disparity);
 
     // create point cloud
-    pcl::PointCloud<pcl::PointXYZRGB> pointCloud;
-    pointCloud = reconstructor.GeneratePointCloud(disparity, leftImage);
-    //pointCloud = reconstructor.Triangulate3D(disparity, leftImage, rightImage);
+    pcl::PointCloud<pcl::PointXYZRGB>::Ptr pointCloud(new pcl::PointCloud<pcl::PointXYZRGB>(std::move(reconstructor.GeneratePointCloud(disparity, leftImage))));
+
+    // remove outliers
+    Reconstruct::PointCloudPostProcessor pointCloudPostProcessor;
+    pointCloudPostProcessor.SetMinimumNeighboursOutlierRemoval(config.PointCloudPostProcess.OutlierMinK);
+    pointCloudPostProcessor.SetStdDevOutlierRemoval(config.PointCloudPostProcess.OutlierStdDevThreshold);
+    pointCloudPostProcessor.RemoveOutliers(pointCloud, pointCloud);
 
     // save point cloud file
     std::cout << "\nSaving point cloud file..." << std::endl;
-    pcl::io::savePCDFileBinary("generated_point_cloud.pcd", pointCloud);
+    pcl::io::savePCDFileBinary("generated_point_cloud.pcd", *pointCloud);
 
     std::cout << "Done";
     std::cout << std::endl;

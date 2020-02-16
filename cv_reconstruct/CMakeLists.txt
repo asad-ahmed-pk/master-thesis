@@ -21,7 +21,7 @@ include_directories(${Boost_INCLUDE_DIR})
 find_package(Eigen3 3.3 REQUIRED NO_MODULE)
 
 # PCL
-find_package(PCL 1.8 REQUIRED COMPONENTS common io visualization)
+find_package(PCL 1.8 REQUIRED COMPONENTS common io visualization filters)
 include_directories(${PCL_INCLUDE_DIRS})
 link_directories(${PCL_LIBRARY_DIRS})
 add_definitions(${PCL_DEFINITIONS})
@@ -44,6 +44,7 @@ list(APPEND CAMERA_SOURCES
 list(APPEND RECONSTRUCT_3D_SOURCES
         src/reconstruct/Reconstruct3D.cpp
         src/reconstruct/Localizer.cpp
+        src/reconstruct/PointCloudPostProcessor.cpp
 )
 
 list(APPEND SERVER_SOURCES
@@ -53,6 +54,10 @@ list(APPEND SERVER_SOURCES
 
 list(APPEND CONFIG_SOURCES
         src/config/ConfigParser.cpp
+)
+
+list (APPEND PIPELINE_SOURCES
+        src/pipeline/ReconstructionPipeline.cpp
 )
 
 # External sources
@@ -68,15 +73,15 @@ list(APPEND TESTING_SOURCES
 # Executables
 
 # Main reconstruction server executable
-add_executable(cv_server src/main.cpp ${CAMERA_SOURCES} ${RECONSTRUCT_3D_SOURCES} ${SERVER_SOURCES} ${CONFIG_SOURCES} ${EXTERN_SOURCES})
+add_executable(cv_server src/main.cpp ${CAMERA_SOURCES} ${RECONSTRUCT_3D_SOURCES} ${SERVER_SOURCES} ${CONFIG_SOURCES} ${PIPELINE_SOURCES} ${EXTERN_SOURCES})
 target_link_libraries(cv_server ${OpenCV_LIBS} ${Boost_LIBRARIES} ${PCL_LIBRARIES} reconstruction::networking)
 
 # Reconstruct module test program
-add_executable(reconstruct_test src/test/reconstruct_test_kitti_rectified.cpp ${CAMERA_SOURCES} ${RECONSTRUCT_3D_SOURCES} ${CONFIG_SOURCES} ${EXTERN_SOURCES})
+add_executable(reconstruct_test src/test/reconstruct_test_kitti_rectified.cpp ${CAMERA_SOURCES} ${RECONSTRUCT_3D_SOURCES} ${CONFIG_SOURCES} ${PIPELINE_SOURCES} ${EXTERN_SOURCES})
 target_link_libraries(reconstruct_test ${OpenCV_LIBS} ${Boost_LIBRARIES} ${PCL_LIBRARIES})
 
 # Localization module test program
-add_executable(localization_test src/test/localization_test_kitti.cpp ${CAMERA_SOURCES} ${RECONSTRUCT_3D_SOURCES} ${CONFIG_SOURCES} ${EXTERN_SOURCES})
+add_executable(localization_test src/test/localization_test_kitti.cpp ${CAMERA_SOURCES} ${RECONSTRUCT_3D_SOURCES} ${CONFIG_SOURCES} ${PIPELINE_SOURCES} ${EXTERN_SOURCES})
 target_link_libraries(localization_test ${OpenCV_LIBS} ${Boost_LIBRARIES} ${PCL_LIBRARIES})
 
 # Catch2 Tests

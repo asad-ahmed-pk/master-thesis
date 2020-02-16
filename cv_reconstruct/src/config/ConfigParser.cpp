@@ -32,25 +32,30 @@ namespace Config
         nlohmann::json serverConfig = json["config"]["server"];
 
         // server config
-        config.ServerPort = serverConfig["port"];
+        config.Server.ServerPort = serverConfig["port"];
 
         // reconstruction config
         nlohmann::json reconstructionConfig = json["config"]["reconstruction"];
-        config.ShouldRectifyImages = reconstructionConfig["requires_rectification"];
+        config.Reconstruction.ShouldRectifyImages = reconstructionConfig["requires_rectification"];
 
         std::string bmTypeString = reconstructionConfig["block_matcher"];
         if (bmTypeString == "stereo_bm") {
-            config.BlockMatcherType = Reconstruct::StereoBlockMatcherType::STEREO_BLOCK_MATCHER;
+            config.Reconstruction.BlockMatcherType = Reconstruct::StereoBlockMatcherType::STEREO_BLOCK_MATCHER;
         }
         else if (bmTypeString == "stereo_sgbm") {
-            config.BlockMatcherType = Reconstruct::StereoBlockMatcherType::STEREO_SEMI_GLOBAL_BLOCK_MATCHER;
+            config.Reconstruction.BlockMatcherType = Reconstruct::StereoBlockMatcherType::STEREO_SEMI_GLOBAL_BLOCK_MATCHER;
         }
         else {
-            config.BlockMatcherType = Reconstruct::StereoBlockMatcherType::STEREO_BLOCK_MATCHER;
+            config.Reconstruction.BlockMatcherType = Reconstruct::StereoBlockMatcherType::STEREO_BLOCK_MATCHER;
         }
 
-        config.WindowSize = reconstructionConfig["window_size"];
-        config.NumDisparities = reconstructionConfig["num_disparities"];
+        config.Reconstruction.WindowSize = reconstructionConfig["window_size"];
+        config.Reconstruction.NumDisparities = reconstructionConfig["num_disparities"];
+
+        // point cloud post processing config
+        nlohmann::json pointCloudPostProcessConfig = json["config"]["point_cloud_post_processing"];
+        config.PointCloudPostProcess.OutlierMinK = pointCloudPostProcessConfig["outlier_min_k"];
+        config.PointCloudPostProcess.OutlierStdDevThreshold = pointCloudPostProcessConfig["outlier_std_threshold"];
 
         return config;
     }

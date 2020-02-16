@@ -9,7 +9,7 @@
 #include <opencv2/core/core.hpp>
 #include <eigen3/Eigen/Eigen>
 
-namespace Reconstruct
+namespace Pipeline
 {
     struct StereoFrame
     {
