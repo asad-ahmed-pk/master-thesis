@@ -37,11 +37,14 @@ namespace Pipeline
 
     private:
         Config::Config m_Config;
+
         bool m_ShouldRectifyImages;
 
         std::unique_ptr<Reconstruct::Reconstruct3D> m_Reconstructor;
         std::unique_ptr<Reconstruct::PointCloudPostProcessor> m_PointCloudPostProcessor;
         std::unique_ptr<Reconstruct::Localizer> m_Localizer;
+
+        pcl::PointCloud<pcl::PointXYZRGB>::Ptr m_LastFramePointCloud { nullptr };
     };
 }
 

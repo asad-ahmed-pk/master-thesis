@@ -21,7 +21,7 @@ include_directories(${Boost_INCLUDE_DIR})
 find_package(Eigen3 3.3 REQUIRED NO_MODULE)
 
 # PCL
-find_package(PCL 1.8 REQUIRED COMPONENTS common io visualization filters)
+find_package(PCL 1.8 REQUIRED COMPONENTS common io visualization filters registration)
 include_directories(${PCL_INCLUDE_DIRS})
 link_directories(${PCL_LIBRARY_DIRS})
 add_definitions(${PCL_DEFINITIONS})

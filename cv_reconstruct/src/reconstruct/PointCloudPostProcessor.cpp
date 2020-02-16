@@ -21,6 +21,16 @@ namespace Reconstruct
         m_OutlierRemover.filter(*output);
     }
 
+    // ICP alignment
+    bool PointCloudPostProcessor::AlignPointCloud(pcl::PointCloud<pcl::PointXYZRGB>::ConstPtr source, pcl::PointCloud<pcl::PointXYZRGB>::ConstPtr target, pcl::PointCloud<pcl::PointXYZRGB>::Ptr result)
+    {
+        m_ICP.setInputSource(source);
+        m_ICP.setInputTarget(target);
+        m_ICP.align(*result);
+
+        return m_ICP.hasConverged();
+    }
+
     // Setters
     void PointCloudPostProcessor::SetMinimumNeighboursOutlierRemoval(int k) {
         m_OutlierRemover.setMeanK(k);

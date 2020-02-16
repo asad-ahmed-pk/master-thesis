@@ -45,12 +45,20 @@ namespace Pipeline
 
         // triangulation
         pcl::PointCloud<pcl::PointXYZRGB>::Ptr temp(new pcl::PointCloud<pcl::PointXYZRGB>(std::move(m_Reconstructor->GeneratePointCloud(disparity, frame.LeftImage))));
-        //pcl::PointCloud<pcl::PointXYZRGB> temp = Triangulate3D(disparity, frame.LeftImage, frame.RightImage);
 
         // remove outliers
         m_PointCloudPostProcessor->RemoveOutliers(temp, temp);
 
         // transform point cloud
         m_Localizer->TransformPointCloud(frame, *temp, *pointCloud);
+
+        // attempt to align with last point cloud
+        if (m_LastFramePointCloud != nullptr) {
+           if (!m_PointCloudPostProcessor->AlignPointCloud(pointCloud, m_LastFramePointCloud, pointCloud)) {
+               std::cout << "\nFailed to align point clouds!" << std::endl;
+           }
+        }
+
+        m_LastFramePointCloud = pointCloud;
     }
 }
