@@ -14,7 +14,7 @@
 #include "pipeline/ReconstructionPipeline.hpp"
 #include "tests_common.hpp"
 
-#define LOCALIZATION_DATA_FILE "localization_data.txt"
+#define LOCALIZATION_DATA_FILE "pipeline_localization_data.txt"
 
 int main(int argc, char** argv)
 {

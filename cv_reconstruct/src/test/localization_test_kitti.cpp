@@ -77,8 +77,19 @@ int main(int argc, char** argv)
         i++;
     }
 
+    // add origin point to point cloud
+    pcl::PointXYZRGB origin = CreatePoint(0, 0, 0, 255, 255, 255);
+
     // visualise using PCL
     pcl::visualization::PCLVisualizer::Ptr viewer = rgbVis(pointCloud);
+    viewer->setBackgroundColor(255, 255, 255);
+
+    // add arrows and text to points that were transformed
+    for (int i = 0; i < pointCloud->points.size(); i++) {
+        viewer->addArrow(origin, pointCloud->points[i], 0, 0, 0, "arrow_" + std::to_string(i));
+        viewer->addText3D(PointCoordsToString(pointCloud->points[i]), pointCloud->points[i], 0.10, 0, 0, 0, "text_" + std::to_string(i));
+    }
+
     while (!viewer->wasStopped ()) {
         viewer->spinOnce (100);
         std::this_thread::sleep_for(std::chrono::milliseconds(100));

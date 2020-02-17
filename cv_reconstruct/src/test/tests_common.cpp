@@ -24,6 +24,17 @@ bool GetCalibAndConfig(Camera::Calib::StereoCalib& calib, Config::Config& config
     return true;
 }
 
+// Create a point with RGB and XYZ
+pcl::PointXYZRGB CreatePoint(float x, float y, float z, int r, int g, int b)
+{
+    pcl::PointXYZRGB p{};
+
+    p.x = x; p.y = y; p.z = z;
+    p.r = r; p.g = g; p.b = b;
+
+    return p;
+}
+
 // Convert to stereo frame
 Pipeline::StereoFrame ConvertToFrame(const LocalizationData& data)
 {
@@ -62,6 +73,11 @@ pcl::visualization::PCLVisualizer::Ptr rgbVis (pcl::PointCloud<pcl::PointXYZRGB>
     viewer->registerPointPickingCallback(PointClicked);
 
     return (viewer);
+}
+
+// Convert point to text coords
+std::string PointCoordsToString(const pcl::PointXYZRGB& point) {
+    return ("(" + std::to_string(point.x) + ", " + std::to_string(point.y) + ", " + std::to_string(point.z) + ")");
 }
 
 // Mouse click event

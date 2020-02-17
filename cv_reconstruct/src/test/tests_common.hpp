@@ -39,6 +39,12 @@ void ConvertLocalizationsToStereoFrames(const std::vector<LocalizationData>& dat
 // Get calib and config file
 bool GetCalibAndConfig(Camera::Calib::StereoCalib& calib, Config::Config& config);
 
+// Create a point with RGB and XYZ
+pcl::PointXYZRGB CreatePoint(float x, float y, float z, int r, int g, int b);
+
+// Convert point to text coords
+std::string PointCoordsToString(const pcl::PointXYZRGB& point);
+
 // Create rotation matrix from euler angles
 Eigen::Matrix3f RotationMatrixFromEuler(float pitch, float yaw, float roll);
 
