@@ -49,13 +49,14 @@ namespace Reconstruct
         transform.block(0, 0, 3, 3) = R;
         transform.block(0, 3, 3, 1) = T;
 
+        /*
         std::cout << "\n\nLocalization\n";
         std::cout << "\nT:\n" << T;
         std::cout << "\nR:\n" << R;
         std::cout << "\n\n";
-        //std::cout << "\nTransform:" << transform;
-
+        std::cout << "\nTransform:" << transform;
         std::cout << std::endl;
+        */
 
         return std::move(transform);
     }

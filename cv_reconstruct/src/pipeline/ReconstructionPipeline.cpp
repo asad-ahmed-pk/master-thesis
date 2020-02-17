@@ -53,9 +53,17 @@ namespace Pipeline
         m_Localizer->TransformPointCloud(frame, *temp, *pointCloud);
 
         // attempt to align with last point cloud
-        if (m_LastFramePointCloud != nullptr) {
-           if (!m_PointCloudPostProcessor->AlignPointCloud(pointCloud, m_LastFramePointCloud, pointCloud)) {
+        auto alignedPointCloudOutput = pcl::PointCloud<pcl::PointXYZRGB>::Ptr(new pcl::PointCloud<pcl::PointXYZRGB>());
+        if (m_LastFramePointCloud != nullptr)
+        {
+           if (!m_PointCloudPostProcessor->AlignPointCloud(pointCloud, m_LastFramePointCloud, alignedPointCloudOutput)) {
                std::cout << "\nFailed to align point clouds!" << std::endl;
+           }
+           else
+           {
+               std::cout << "\nPoint cloud aligned to previous point cloud" << std::endl;
+               pointCloud->clear();
+               *pointCloud += *alignedPointCloudOutput;
            }
         }
 

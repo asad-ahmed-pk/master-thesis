@@ -47,6 +47,21 @@ int main(int argc, char** argv)
     {
         std::cout << "\nProcessing frame #" << frame.ID << std::endl;
         pipeline.ProcessFrame(frame, temp);
+
+        // add colour
+        /*
+        for (int i = 0; i < temp->points.size(); i++)
+        {
+            temp->points[i].r = temp->points[i].g = temp->points[i].b = 0;
+            if (frame.ID == 0) {
+                temp->points[i].r = 255;
+            }
+            else {
+                temp->points[i].b = 255;
+            }
+        }
+        */
+
         *pointCloud += *temp;
         temp->clear();
     }

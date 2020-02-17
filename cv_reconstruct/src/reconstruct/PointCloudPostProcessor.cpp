@@ -3,6 +3,8 @@
 // Post processes generated point clouds (registration, outlier removal, etc...)
 //
 
+#include <pcl/registration/correspondence_rejection_sample_consensus.h>
+
 #include "reconstruct/PointCloudPostProcessor.hpp"
 
 namespace Reconstruct
@@ -12,6 +14,11 @@ namespace Reconstruct
         // setup outlier remover with default values
         m_OutlierRemover.setMeanK(50);
         m_OutlierRemover.setStddevMulThresh(1.0);
+
+        // setup ICP alignment
+        m_ICP.setMaximumIterations(25);
+        m_ICP.setRANSACIterations(25);
+        m_ICP.setMaxCorrespondenceDistance(100);
     }
 
     // Outlier removal
