@@ -109,7 +109,7 @@ namespace Reconstruct
                 n++;
 
                 // for testing: stop after certain number of frames are processed
-                if (n >= 20) {
+                if (n >= 3) {
                     isRunning = false;
                     break;
                 }

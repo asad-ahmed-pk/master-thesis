@@ -5,7 +5,6 @@
 
 #include "reconstruct/Reconstruct3D.hpp"
 
-#include <cmath>
 #include <opencv2/imgproc/imgproc.hpp>
 #include <opencv2/core/eigen.hpp>
 
