@@ -61,8 +61,8 @@ namespace Reconstruct
         pcl::PointCloud<pcl::PointXYZRGB>::Ptr targetKeypoints(new pcl::PointCloud<pcl::PointXYZRGB>());
 
         pcl::SIFTKeypoint<pcl::PointXYZRGB, pcl::PointXYZRGB>::Ptr siftKeypoint(new pcl::SIFTKeypoint<pcl::PointXYZRGB, pcl::PointXYZRGB>());
-        siftKeypoint->setScales(2.0, 8, 8);
-        siftKeypoint->setMinimumContrast(0.8);
+        siftKeypoint->setScales(2.0, 16, 8);
+        siftKeypoint->setMinimumContrast(0.0);
 
         siftKeypoint->setInputCloud(source);
         siftKeypoint->compute(*sourceKeypoints);
@@ -131,7 +131,7 @@ namespace Reconstruct
 
         pcl::search::KdTree<pcl::PointXYZRGB>::Ptr tree(new pcl::search::KdTree<pcl::PointXYZRGB>());
         m_FeatureDescriptor->setSearchMethod(tree);
-        m_FeatureDescriptor->setRadiusSearch(250);
+        m_FeatureDescriptor->setRadiusSearch(300);
         m_FeatureDescriptor->compute(*features);
 
         // compute persistent features at multiple scales
@@ -156,7 +156,7 @@ namespace Reconstruct
         pcl::search::KdTree<pcl::PointXYZRGB>::Ptr tree(new pcl::search::KdTree<pcl::PointXYZRGB>());
 
         normalEstimation.setSearchMethod(tree);
-        normalEstimation.setRadiusSearch(220);
+        normalEstimation.setRadiusSearch(250);
         normalEstimation.compute(*normals);
     }
 
