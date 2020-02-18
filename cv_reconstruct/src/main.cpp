@@ -4,11 +4,12 @@
 //
 
 #include "server/ReconstructionServer.hpp"
+#include "server/ServerUserInterface.hpp"
 
 int main(int argc, char** argv)
 {
-    Reconstruct::ReconstructServerStatusCode status;
-    Reconstruct::ReconstructionServer server;
+    Server::ReconstructServerStatusCode status;
+    Server::ReconstructionServer server;
 
     status = server.Run();
 

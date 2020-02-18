@@ -50,6 +50,7 @@ list(APPEND RECONSTRUCT_3D_SOURCES
 list(APPEND SERVER_SOURCES
         src/server/ReconstructionServer.cpp
         src/server/MessageConverter.cpp
+        src/server/ServerUserInterface.cpp
 )
 
 list(APPEND CONFIG_SOURCES

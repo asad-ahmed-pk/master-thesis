@@ -57,11 +57,11 @@ namespace Pipeline
         if (m_LastFramePointCloud != nullptr)
         {
            if (!m_PointCloudPostProcessor->AlignPointCloud(pointCloud, m_LastFramePointCloud, alignedPointCloudOutput)) {
-               std::cout << "\nFailed to align point clouds!" << std::endl;
+               //std::cout << "\nFailed to align point clouds!" << std::endl;
            }
            else
            {
-               std::cout << "\nPoint cloud aligned to previous point cloud" << std::endl;
+               //std::cout << "\nPoint cloud aligned to previous point cloud" << std::endl;
                pointCloud->clear();
                *pointCloud += *alignedPointCloudOutput;
            }

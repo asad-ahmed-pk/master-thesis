@@ -62,6 +62,8 @@ int main(int argc, char** argv)
         }
         */
 
+        pcl::io::savePCDFileBinary("cloud_" + std::to_string(frame.ID) + ".pcd", *temp);
+
         *pointCloud += *temp;
         temp->clear();
     }

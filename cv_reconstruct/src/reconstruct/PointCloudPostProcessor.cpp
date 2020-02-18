@@ -101,7 +101,7 @@ namespace Reconstruct
         pcl::registration::TransformationEstimationSVD<pcl::PointXYZRGB, pcl::PointXYZRGB> transformationEstimator;
         transformationEstimator.estimateRigidTransformation(*source, *target, *validCorrespondences, T);
 
-        std::cout << "\nEstimated transform: \n" << T << std::endl;
+        //std::cout << "\nEstimated transform: \n" << T << std::endl;
 
         // apply transform to source
         pcl::transformPointCloud(*source, *result, T);

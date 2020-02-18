@@ -126,6 +126,9 @@ namespace CVNetwork
                             break;
                     }
                 }
+
+                // sleep so client thread can process
+                std::this_thread::sleep_for(std::chrono::milliseconds (100));
             }
         }
 

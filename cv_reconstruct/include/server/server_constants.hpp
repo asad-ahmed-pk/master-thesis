@@ -1,0 +1,20 @@
+//
+// server_constants.hpp
+// Constants, Enums for server functionality
+//
+
+#ifndef MASTER_THESIS_SERVER_CONSTANTS_HPP
+#define MASTER_THESIS_SERVER_CONSTANTS_HPP
+
+enum UserOption {
+    USER_OPTION_PRINT_STATUS,
+    USER_OPTION_QUIT,
+    USER_OPTION_COMMAND_HELP
+};
+
+enum UserInterfaceMessage {
+    MESSAGE_SERVER_CONNECTED_TO_CLIENT,
+    MESSAGE_CLIENT_DISCONNECTED
+};
+
+#endif //MASTER_THESIS_SERVER_CONSTANTS_HPP

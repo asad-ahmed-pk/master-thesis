@@ -6,7 +6,7 @@
 #ifndef MASTER_THESIS_RECONSTRUCTSTATUSCODE_HPP
 #define MASTER_THESIS_RECONSTRUCTSTATUSCODE_HPP
 
-namespace Reconstruct
+namespace Server
 {
     enum ReconstructServerStatusCode
     {
