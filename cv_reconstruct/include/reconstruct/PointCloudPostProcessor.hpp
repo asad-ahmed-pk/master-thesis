@@ -6,9 +6,14 @@
 #ifndef MASTER_THESIS_POINTCLOUDPOSTPROCESSOR_HPP
 #define MASTER_THESIS_POINTCLOUDPOSTPROCESSOR_HPP
 
+#include <memory>
+#include <vector>
+
 #include <pcl/point_cloud.h>
 #include <pcl/point_types.h>
 #include <pcl/registration/icp.h>
+#include <pcl/features/fpfh.h>
+#include <pcl/features/feature.h>
 #include <pcl/filters/statistical_outlier_removal.h>
 
 namespace Reconstruct
@@ -42,8 +47,13 @@ namespace Reconstruct
         void SetStdDevOutlierRemoval(double std);
 
     private:
+        void EstimateNormals(pcl::PointCloud<pcl::PointXYZRGB>::ConstPtr cloud, pcl::PointCloud<pcl::Normal>::Ptr normals) const;
+        void ComputeFPFHFeatures(pcl::PointCloud<pcl::PointXYZRGB>::ConstPtr keypoints, pcl::PointCloud<pcl::FPFHSignature33>::Ptr features) const;
+
+    private:
         pcl::StatisticalOutlierRemoval<pcl::PointXYZRGB> m_OutlierRemover;
         pcl::IterativeClosestPoint<pcl::PointXYZRGB, pcl::PointXYZRGB> m_ICP;
+        pcl::FPFHEstimation<pcl::PointXYZRGB, pcl::Normal, pcl::FPFHSignature33>::Ptr m_FeatureDescriptor;
     };
 }
 
