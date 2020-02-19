@@ -11,11 +11,11 @@
 #include <pcl/registration/correspondence_estimation.h>
 #include <pcl/registration/transformation_estimation_svd.h>
 
-#include "reconstruct/PointCloudPostProcessor.hpp"
+#include "point_cloud/PointCloudPostProcessor.hpp"
 
 typedef pcl::FPFHEstimation<pcl::PointXYZRGB, pcl::Normal, pcl::FPFHSignature33> FPFH;
 
-namespace Reconstruct
+namespace PointCloud
 {
     PointCloudPostProcessor::PointCloudPostProcessor()
     {
@@ -26,7 +26,7 @@ namespace Reconstruct
         // setup ICP alignment
         m_ICP.setMaximumIterations(25);
         m_ICP.setRANSACIterations(25);
-        m_ICP.setMaxCorrespondenceDistance(100);
+        m_ICP.setMaxCorrespondenceDistance(500);
 
         // setup feature descriptor
         m_FeatureDescriptor = FPFH::Ptr(new FPFH());
@@ -42,26 +42,12 @@ namespace Reconstruct
     // ICP alignment
     bool PointCloudPostProcessor::AlignPointCloud(pcl::PointCloud<pcl::PointXYZRGB>::ConstPtr source, pcl::PointCloud<pcl::PointXYZRGB>::ConstPtr target, pcl::PointCloud<pcl::PointXYZRGB>::Ptr result)
     {
-        // downsample point clouds
-        /*
-        pcl::PointCloud<pcl::PointXYZRGB>::Ptr sourceDownsampled(new pcl::PointCloud<pcl::PointXYZRGB>());
-        pcl::PointCloud<pcl::PointXYZRGB>::Ptr targetDownsampled(new pcl::PointCloud<pcl::PointXYZRGB>());
-
-        pcl::UniformSampling<pcl::PointXYZRGB> uniformSampling;
-        uniformSampling.setInputCloud(source);
-        uniformSampling.setRadiusSearch(10);
-        uniformSampling.filter(*sourceDownsampled);
-
-        uniformSampling.setInputCloud(target);
-        uniformSampling.filter(*targetDownsampled);
-        */
-
         // compute keypoints
         pcl::PointCloud<pcl::PointXYZRGB>::Ptr sourceKeypoints(new pcl::PointCloud<pcl::PointXYZRGB>());
         pcl::PointCloud<pcl::PointXYZRGB>::Ptr targetKeypoints(new pcl::PointCloud<pcl::PointXYZRGB>());
 
         pcl::SIFTKeypoint<pcl::PointXYZRGB, pcl::PointXYZRGB>::Ptr siftKeypoint(new pcl::SIFTKeypoint<pcl::PointXYZRGB, pcl::PointXYZRGB>());
-        siftKeypoint->setScales(2.0, 16, 8);
+        siftKeypoint->setScales(2.0, 8, 6);
         siftKeypoint->setMinimumContrast(0.0);
 
         siftKeypoint->setInputCloud(source);
@@ -91,7 +77,7 @@ namespace Reconstruct
         rejector.setInputSource(source);
         rejector.setInputTarget(target);
         rejector.setInlierThreshold(2.5);
-        rejector.setMaximumIterations(20);
+        rejector.setMaximumIterations(10);
         rejector.setRefineModel(false);
         rejector.setInputCorrespondences(correspondences);
         rejector.getCorrespondences(*validCorrespondences);
@@ -101,19 +87,10 @@ namespace Reconstruct
         pcl::registration::TransformationEstimationSVD<pcl::PointXYZRGB, pcl::PointXYZRGB> transformationEstimator;
         transformationEstimator.estimateRigidTransformation(*source, *target, *validCorrespondences, T);
 
-        //std::cout << "\nEstimated transform: \n" << T << std::endl;
+        std::cout << "\nEstimated transform: \n" << T << std::endl;
 
         // apply transform to source
         pcl::transformPointCloud(*source, *result, T);
-
-        // ICP as last step for final refinement
-        /*
-        m_ICP.setInputSource(source);
-        m_ICP.setInputTarget(target);
-        m_ICP.align(*result);
-
-        return m_ICP.hasConverged();
-         */
 
         return true;
     }
@@ -131,7 +108,7 @@ namespace Reconstruct
 
         pcl::search::KdTree<pcl::PointXYZRGB>::Ptr tree(new pcl::search::KdTree<pcl::PointXYZRGB>());
         m_FeatureDescriptor->setSearchMethod(tree);
-        m_FeatureDescriptor->setRadiusSearch(300);
+        m_FeatureDescriptor->setRadiusSearch(25);
         m_FeatureDescriptor->compute(*features);
 
         // compute persistent features at multiple scales
@@ -156,7 +133,7 @@ namespace Reconstruct
         pcl::search::KdTree<pcl::PointXYZRGB>::Ptr tree(new pcl::search::KdTree<pcl::PointXYZRGB>());
 
         normalEstimation.setSearchMethod(tree);
-        normalEstimation.setRadiusSearch(250);
+        normalEstimation.setRadiusSearch(20);
         normalEstimation.compute(*normals);
     }
 

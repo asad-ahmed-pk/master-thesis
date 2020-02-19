@@ -44,7 +44,12 @@ list(APPEND CAMERA_SOURCES
 list(APPEND RECONSTRUCT_3D_SOURCES
         src/reconstruct/Reconstruct3D.cpp
         src/reconstruct/Localizer.cpp
-        src/reconstruct/PointCloudPostProcessor.cpp
+)
+
+list(APPEND POINT_CLOUD_SOURCES
+        src/point_cloud/PointCloudPostProcessor.cpp
+        src/point_cloud/FeatureExtractionConfig.cpp
+        src/point_cloud/FeatureExtractor.cpp
 )
 
 list(APPEND SERVER_SOURCES
@@ -74,19 +79,47 @@ list(APPEND TESTING_SOURCES
 # Executables
 
 # Main reconstruction server executable
-add_executable(cv_server src/main.cpp ${CAMERA_SOURCES} ${RECONSTRUCT_3D_SOURCES} ${SERVER_SOURCES} ${CONFIG_SOURCES} ${PIPELINE_SOURCES} ${EXTERN_SOURCES})
+add_executable(cv_server src/main.cpp ${CAMERA_SOURCES}
+        ${RECONSTRUCT_3D_SOURCES}
+        ${SERVER_SOURCES}
+        ${CONFIG_SOURCES}
+        ${PIPELINE_SOURCES}
+        ${POINT_CLOUD_SOURCES}
+        ${EXTERN_SOURCES}
+)
 target_link_libraries(cv_server ${OpenCV_LIBS} ${Boost_LIBRARIES} ${PCL_LIBRARIES} reconstruction::networking)
 
 # Reconstruct module test program
-add_executable(reconstruct_test src/test/reconstruct_test_kitti_rectified.cpp src/test/tests_common.cpp ${CAMERA_SOURCES} ${RECONSTRUCT_3D_SOURCES} ${CONFIG_SOURCES} ${PIPELINE_SOURCES} ${EXTERN_SOURCES})
+add_executable(reconstruct_test src/test/reconstruct_test_kitti_rectified.cpp src/test/tests_common.cpp
+        ${CAMERA_SOURCES}
+        ${RECONSTRUCT_3D_SOURCES}
+        ${CONFIG_SOURCES}
+        ${PIPELINE_SOURCES}
+        ${POINT_CLOUD_SOURCES}
+        ${EXTERN_SOURCES}
+)
 target_link_libraries(reconstruct_test ${OpenCV_LIBS} ${Boost_LIBRARIES} ${PCL_LIBRARIES})
 
 # Localization module test program
-add_executable(localization_test src/test/localization_test_kitti.cpp src/test/tests_common.cpp ${CAMERA_SOURCES} ${RECONSTRUCT_3D_SOURCES} ${CONFIG_SOURCES} ${PIPELINE_SOURCES} ${EXTERN_SOURCES})
+add_executable(localization_test src/test/localization_test_kitti.cpp src/test/tests_common.cpp
+        ${CAMERA_SOURCES}
+        ${RECONSTRUCT_3D_SOURCES}
+        ${CONFIG_SOURCES}
+        ${PIPELINE_SOURCES}
+        ${POINT_CLOUD_SOURCES}
+        ${EXTERN_SOURCES}
+)
 target_link_libraries(localization_test ${OpenCV_LIBS} ${Boost_LIBRARIES} ${PCL_LIBRARIES})
 
 # Pipeline module test program
-add_executable(pipeline_test src/test/pipeline_test.cpp ${CAMERA_SOURCES} src/test/tests_common.cpp ${RECONSTRUCT_3D_SOURCES} ${CONFIG_SOURCES} ${PIPELINE_SOURCES} ${EXTERN_SOURCES})
+add_executable(pipeline_test src/test/pipeline_test.cpp src/test/tests_common.cpp
+        ${CAMERA_SOURCES}
+        ${RECONSTRUCT_3D_SOURCES}
+        ${CONFIG_SOURCES}
+        ${PIPELINE_SOURCES}
+        ${POINT_CLOUD_SOURCES}
+        ${EXTERN_SOURCES}
+)
 target_link_libraries(pipeline_test ${OpenCV_LIBS} ${Boost_LIBRARIES} ${PCL_LIBRARIES})
 
 # Catch2 Tests

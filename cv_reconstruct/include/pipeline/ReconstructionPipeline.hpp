@@ -15,7 +15,7 @@
 #include "StereoFrame.hpp"
 #include "config/Config.hpp"
 #include "reconstruct/Reconstruct3D.hpp"
-#include "reconstruct/PointCloudPostProcessor.hpp"
+#include "point_cloud/PointCloudPostProcessor.hpp"
 
 namespace Pipeline
 {
@@ -41,7 +41,7 @@ namespace Pipeline
         bool m_ShouldRectifyImages;
 
         std::unique_ptr<Reconstruct::Reconstruct3D> m_Reconstructor;
-        std::unique_ptr<Reconstruct::PointCloudPostProcessor> m_PointCloudPostProcessor;
+        std::unique_ptr<PointCloud::PointCloudPostProcessor> m_PointCloudPostProcessor;
         std::unique_ptr<Reconstruct::Localizer> m_Localizer;
 
         pcl::PointCloud<pcl::PointXYZRGB>::Ptr m_LastFramePointCloud { nullptr };

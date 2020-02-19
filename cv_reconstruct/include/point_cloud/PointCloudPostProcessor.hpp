@@ -12,11 +12,12 @@
 #include <pcl/point_cloud.h>
 #include <pcl/point_types.h>
 #include <pcl/registration/icp.h>
+#include <pcl/keypoints/keypoint.h>
 #include <pcl/features/fpfh.h>
 #include <pcl/features/feature.h>
 #include <pcl/filters/statistical_outlier_removal.h>
 
-namespace Reconstruct
+namespace PointCloud
 {
     class PointCloudPostProcessor
     {
@@ -53,6 +54,7 @@ namespace Reconstruct
     private:
         pcl::StatisticalOutlierRemoval<pcl::PointXYZRGB> m_OutlierRemover;
         pcl::IterativeClosestPoint<pcl::PointXYZRGB, pcl::PointXYZRGB> m_ICP;
+        pcl::Keypoint<pcl::PointXYZRGB, pcl::PointXYZRGB>::Ptr m_KeypointDetector;
         pcl::FPFHEstimation<pcl::PointXYZRGB, pcl::Normal, pcl::FPFHSignature33>::Ptr m_FeatureDescriptor;
     };
 }
