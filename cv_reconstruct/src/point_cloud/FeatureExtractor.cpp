@@ -86,7 +86,10 @@ namespace PointCloud
     }
 
     // Compute keypoints based on type
-    void FeatureExtractor::ComputeKeypoints(PointCloudConstPtr cloud, NormalsPtr normals, PointCloudPtr computedKeypoints) const {
+    void FeatureExtractor::ComputeKeypoints(PointCloudConstPtr cloud, NormalsPtr normals, PointCloudPtr computedKeypoints) const
+    {
+        pcl::search::KdTree<PointType>::Ptr tree(new pcl::search::KdTree<PointType>());
+        m_KeypointDetector->setSearchMethod(tree);
         m_KeypointDetector->setInputCloud(cloud);
         m_KeypointDetector->compute(*computedKeypoints);
     }
