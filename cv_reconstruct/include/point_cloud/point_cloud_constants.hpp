@@ -13,6 +13,10 @@ namespace PointCloud
 {
     // General point cloud pointer used throughout the pipeline
     typedef pcl::PointCloud<pcl::PointXYZRGB>::Ptr PointCloudPtr;
+    typedef pcl::PointCloud<pcl::PointXYZRGB>::ConstPtr PointCloudConstPtr;
+
+    // Normals
+    typedef pcl::PointCloud<pcl::Normal>::Ptr NormalsPtr;
 
     // The point type this pipeline operates on
     typedef pcl::PointXYZRGB PointType;
@@ -21,8 +25,7 @@ namespace PointCloud
     enum KeypointType
     {
         KEYPOINT_SIFT,
-        KEYPOINT_HARRIS3D,
-        KEYPOINT_HARRIS6D
+        KEYPOINT_ISS_3D
     };
 
     /// The supported feature detectors for point cloud processing

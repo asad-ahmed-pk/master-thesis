@@ -17,13 +17,18 @@
 #include <pcl/features/feature.h>
 #include <pcl/filters/statistical_outlier_removal.h>
 
+#include "point_cloud_constants.hpp"
+#include "FeatureExtractor.hpp"
+#include "config/Config.hpp"
+
 namespace PointCloud
 {
     class PointCloudPostProcessor
     {
     public:
-        /// Create default instance of a point cloud post processor
-        PointCloudPostProcessor();
+        /// Create default instance of a point cloud post processor with the config
+        /// \param config The config file with params set for point cloud processing
+        PointCloudPostProcessor(const Config::Config& config);
 
         ~PointCloudPostProcessor() = default;
 
@@ -37,7 +42,7 @@ namespace PointCloud
         /// \param target The point cloud that source should look like or approximate to
         /// \param result The result point cloud after the alignment is done
         /// \return True if a solution was found by ICP. Result is valid if returns true.
-        bool AlignPointCloud(pcl::PointCloud<pcl::PointXYZRGB>::ConstPtr source, pcl::PointCloud<pcl::PointXYZRGB>::ConstPtr target, pcl::PointCloud<pcl::PointXYZRGB>::Ptr result);
+        bool AlignPointCloud(PointCloudConstPtr source, PointCloudConstPtr target, PointCloudPtr result);
 
         /// Set the minimum number of neighbours for outlier removal
         /// \param k The minimum number of k neighbours
@@ -48,14 +53,18 @@ namespace PointCloud
         void SetStdDevOutlierRemoval(double std);
 
     private:
-        void EstimateNormals(pcl::PointCloud<pcl::PointXYZRGB>::ConstPtr cloud, pcl::PointCloud<pcl::Normal>::Ptr normals) const;
-        void ComputeFPFHFeatures(pcl::PointCloud<pcl::PointXYZRGB>::ConstPtr keypoints, pcl::PointCloud<pcl::FPFHSignature33>::Ptr features) const;
+        void ExtractFeatures(PointCloudConstPtr cloud, FeatureDetectionResult& result) const;
 
     private:
         pcl::StatisticalOutlierRemoval<pcl::PointXYZRGB> m_OutlierRemover;
         pcl::IterativeClosestPoint<pcl::PointXYZRGB, pcl::PointXYZRGB> m_ICP;
+
         pcl::Keypoint<pcl::PointXYZRGB, pcl::PointXYZRGB>::Ptr m_KeypointDetector;
         pcl::FPFHEstimation<pcl::PointXYZRGB, pcl::Normal, pcl::FPFHSignature33>::Ptr m_FeatureDescriptor;
+
+    private:
+        std::unique_ptr<FeatureExtractor> m_FeatureExtractor;
+        Config::Config m_Config;
     };
 }
 

@@ -20,7 +20,7 @@ namespace Pipeline
         m_Reconstructor->SetStereoBMWindowSize(m_Config.Reconstruction.WindowSize);
 
         // point cloud post processor
-        m_PointCloudPostProcessor = std::make_unique<PointCloud::PointCloudPostProcessor>();
+        m_PointCloudPostProcessor = std::make_unique<PointCloud::PointCloudPostProcessor>(m_Config);
         m_PointCloudPostProcessor->SetMinimumNeighboursOutlierRemoval(m_Config.PointCloudPostProcess.OutlierMinK);
         m_PointCloudPostProcessor->SetStdDevOutlierRemoval(m_Config.PointCloudPostProcess.OutlierStdDevThreshold);
 

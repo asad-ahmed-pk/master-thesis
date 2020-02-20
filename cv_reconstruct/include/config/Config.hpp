@@ -8,6 +8,7 @@
 
 #include <string>
 
+#include "point_cloud/point_cloud_constants.hpp"
 #include "reconstruct/Reconstruct3D.hpp"
 
 namespace Config
@@ -36,8 +37,37 @@ namespace Config
         {
             double OutlierStdDevThreshold { 1.0 };
             int OutlierMinK { 50 };
+            PointCloud::KeypointType KeypointDetector;
+            PointCloud::FeatureDetectorType FeatureDetector;
 
         } PointCloudPostProcess;
+
+        // Point cloud feature detection
+        struct PointCloudFeatureDetection
+        {
+            struct Normals {
+                float Radius { 0.0 };
+            } Normals;
+            struct FPFH {
+                float MinRadius { 0.0 };
+            } FPFH;
+            struct SHOTColor {
+
+            } SHOTColor;
+
+        } PointCloudFeatureDetection;
+
+        // Point cloud keypoint detection
+        struct PointCloudKeypointDetection
+        {
+            struct SIFT {
+                float MinScale { 1.0 };
+                int NumOctaves { 0 };
+                int NumScalesPerOctave { 0 };
+                float MinContrast { 0.0 };
+            } SIFT;
+
+        } PointCloudKeypointDetection;
     };
 }
 

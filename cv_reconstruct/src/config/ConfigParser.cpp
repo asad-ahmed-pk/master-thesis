@@ -38,6 +38,7 @@ namespace Config
         nlohmann::json reconstructionConfig = json["config"]["reconstruction"];
         config.Reconstruction.ShouldRectifyImages = reconstructionConfig["requires_rectification"];
 
+        // block matcher parsed into enum
         std::string bmTypeString = reconstructionConfig["block_matcher"];
         if (bmTypeString == "stereo_bm") {
             config.Reconstruction.BlockMatcherType = Reconstruct::StereoBlockMatcherType::STEREO_BLOCK_MATCHER;
@@ -56,6 +57,40 @@ namespace Config
         nlohmann::json pointCloudPostProcessConfig = json["config"]["point_cloud_post_processing"];
         config.PointCloudPostProcess.OutlierMinK = pointCloudPostProcessConfig["outlier_min_k"];
         config.PointCloudPostProcess.OutlierStdDevThreshold = pointCloudPostProcessConfig["outlier_std_threshold"];
+
+        // keypoint detector parsed into enum
+        const std::string keypointDetector = pointCloudPostProcessConfig["keypoint_detector"];
+        config.PointCloudPostProcess.KeypointDetector = PointCloud::KEYPOINT_SIFT;
+        if (keypointDetector == "SIFT") {
+            config.PointCloudPostProcess.KeypointDetector = PointCloud::KEYPOINT_SIFT;
+        }
+        else if (keypointDetector == "ISS_3D") {
+            config.PointCloudPostProcess.KeypointDetector = PointCloud::KEYPOINT_ISS_3D;
+        }
+
+        // feature detector parsed into enum
+        const std::string featureDetector = pointCloudPostProcessConfig["feature_detector"];
+        config.PointCloudPostProcess.FeatureDetector = PointCloud::FEATURE_DETECTOR_FPFH;
+        if (featureDetector == "FPFH") {
+            config.PointCloudPostProcess.FeatureDetector = PointCloud::FEATURE_DETECTOR_FPFH;
+        }
+        else if (featureDetector == "SHOT_COLOR") {
+            config.PointCloudPostProcess.FeatureDetector = PointCloud::FEATURE_DETECTOR_SHOT_COLOR;
+        }
+
+        // point cloud feature detection
+        nlohmann::json featureDetectionConfig = json["config"]["point_cloud_feature_detection"];
+        config.PointCloudFeatureDetection.Normals.Radius = featureDetectionConfig["normals"]["radius"];
+        config.PointCloudFeatureDetection.FPFH.MinRadius = featureDetectionConfig["FPFH"]["min_radius"];
+
+        // Point cloud keypoint detection
+        nlohmann::json keypointDetectionConfig = json["config"]["point_cloud_keypoint_detection"];
+        config.PointCloudKeypointDetection.SIFT.MinScale = keypointDetectionConfig["SIFT"]["min_scale"];
+        config.PointCloudKeypointDetection.SIFT.NumOctaves = keypointDetectionConfig["SIFT"]["num_octaves"];
+        config.PointCloudKeypointDetection.SIFT.NumScalesPerOctave = keypointDetectionConfig["SIFT"]["num_scales_per_octave"];
+        config.PointCloudKeypointDetection.SIFT.MinContrast = keypointDetectionConfig["SIFT"]["min_contrast"];
+
+        // TODO: Parse SHOT and ISS-3D after adding config file support
 
         return config;
     }
