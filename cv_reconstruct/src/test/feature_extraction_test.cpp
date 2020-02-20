@@ -7,6 +7,7 @@
 #include <iostream>
 
 #include <pcl/io/pcd_io.h>
+#include <pcl/common/common.h>
 #include <pcl/registration/correspondence_estimation.h>
 #include <pcl/registration/correspondence_rejection_sample_consensus.h>
 #include <pcl/keypoints/uniform_sampling.h>
@@ -38,17 +39,29 @@ int main(int argc, char** argv)
     // compute keypoints
     PointCloud::PointCloudPtr keypoints1 { new pcl::PointCloud<PointCloud::PointType>() };
     PointCloud::PointCloudPtr keypoints2 { new pcl::PointCloud<PointCloud::PointType>() };
-    //featureExtractor.ComputeKeypoints(cloud1, nullptr, keypoints1);
-    //featureExtractor.ComputeKeypoints(cloud2, nullptr, keypoints2);
-    pcl::UniformSampling<PointCloud::PointType> us;
-    us.setRadiusSearch(30);
+    PointCloud::KeypointDetectionResult keypoints1Result;
+    PointCloud::KeypointDetectionResult keypoints2Result;
+    featureExtractor.ComputeKeypoints(cloud1, nullptr, keypoints1Result);
+    featureExtractor.ComputeKeypoints(cloud2, nullptr, keypoints2Result);
 
-    us.setInputCloud(cloud1);
-    us.filter(*keypoints1);
-    us.setInputCloud(cloud2);
-    us.filter(*keypoints2);
+    // copy SIFT result to point cloud
+    pcl::copyPointCloud(*keypoints1Result.SIFTKeypoints, *keypoints1);
+    pcl::copyPointCloud(*keypoints2Result.SIFTKeypoints, *keypoints2);
 
-    std::cout << "\nComputed keypoints";
+    // save keypoints to disk with colour
+    for (int i = 0; i < keypoints1->points.size(); i++) {
+        keypoints1->points[i].b = 255;
+    }
+    for (int i = 0; i < keypoints2->points.size(); i++) {
+        keypoints2->points[i].r = 255;
+    }
+
+    PointCloud::PointCloudPtr combinedKeypoints { new pcl::PointCloud<pcl::PointXYZRGB>() };
+    *combinedKeypoints += *keypoints1;
+    *combinedKeypoints += *keypoints2;
+    pcl::io::savePCDFileBinary("keypoints.pcd", *combinedKeypoints);
+
+    std::cout << "\nComputed SIFT keypoints";
 
     // compute the normals for these keypoints
     PointCloud::NormalsPtr normals1 { new pcl::PointCloud<pcl::Normal>() };

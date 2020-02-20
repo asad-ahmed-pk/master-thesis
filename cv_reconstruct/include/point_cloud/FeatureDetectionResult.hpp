@@ -1,6 +1,6 @@
 //
 // FeatureDetectionResult.hpp
-// Holds the results of a feature detection based on a selected type of feature detector
+// Holds the results of a feature detection based on a selected type of feature detector / keypoint detector
 //
 
 #ifndef MASTER_THESIS_FEATUREDETECTIONRESULT_HPP
@@ -10,11 +10,20 @@
 
 namespace PointCloud
 {
+    /// The result of extracting feature descriptors
     struct FeatureDetectionResult
     {
-        FeatureDetectorType type;
+        FeatureDetectorType Type;
         pcl::PointCloud<pcl::FPFHSignature33>::Ptr FPFHFeatures;
         pcl::PointCloud<pcl::SHOT352>::Ptr SHOTFeatures;
+    };
+
+    /// The result of extracting keypoints
+    struct KeypointDetectionResult
+    {
+        KeypointType Type;
+        PointCloudPtr Keypoints;
+        pcl::PointCloud<pcl::PointWithScale>::Ptr SIFTKeypoints;
     };
 }
 

@@ -33,8 +33,8 @@ namespace PointCloud
         /// Compute the keypoints for the point cloud
         /// \param cloud The point cloud for which keypoints will be computed
         /// \param normals The computed normals for the point cloud
-        /// \param computedKeypoints The point cloud that will be computed with keypoints
-        void ComputeKeypoints(PointCloudConstPtr cloud, NormalsPtr normals, PointCloudPtr computedKeypoints) const;
+        /// \param detectedKeypoints Will contain the result in one of the fields based on the type of keypoint detector used
+        void ComputeKeypoints(PointCloudConstPtr cloud, NormalsPtr normals, KeypointDetectionResult& detectedKeypoints) const;
 
         /// Detect the features for the point cloud keypoints
         /// \param keypoints The keypoints of the point cloud
@@ -60,7 +60,7 @@ namespace PointCloud
 
         Config::Config m_Config;
 
-        pcl::Keypoint<PointType, PointType>::Ptr m_KeypointDetector;
+        boost::shared_ptr<void> m_KeypointDetector;
         boost::shared_ptr<void> m_FeatureDetector;
     };
 }

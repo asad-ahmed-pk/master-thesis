@@ -10,6 +10,7 @@
 #include <pcl/features/shot.h>
 #include <pcl/keypoints/sift_keypoint.h>
 #include <pcl/keypoints/iss_3d.h>
+
 #include "point_cloud/FeatureExtractor.hpp"
 
 namespace PointCloud
@@ -20,7 +21,7 @@ namespace PointCloud
         switch (keypointDetector)
         {
             case KEYPOINT_SIFT:
-                m_KeypointDetector = pcl::SIFTKeypoint<PointType, PointType>::Ptr(new pcl::SIFTKeypoint<PointType, PointType>());
+                m_KeypointDetector = pcl::SIFTKeypoint<PointType, pcl::PointWithScale>::Ptr(new pcl::SIFTKeypoint<PointType, pcl::PointWithScale>());
                 break;
 
             case KEYPOINT_ISS_3D:
@@ -52,7 +53,7 @@ namespace PointCloud
         {
             case KEYPOINT_SIFT:
             {
-                auto sift = boost::static_pointer_cast<pcl::SIFTKeypoint<PointType, PointType>>(m_KeypointDetector);
+                auto sift = boost::static_pointer_cast<pcl::SIFTKeypoint<PointType, pcl::PointWithScale>>(m_KeypointDetector);
                 sift->setScales(m_Config.PointCloudKeypointDetection.SIFT.MinScale, m_Config.PointCloudKeypointDetection.SIFT.NumOctaves, m_Config.PointCloudKeypointDetection.SIFT.NumScalesPerOctave);
                 sift->setMinimumContrast(m_Config.PointCloudKeypointDetection.SIFT.MinContrast);
                 break;
@@ -86,12 +87,35 @@ namespace PointCloud
     }
 
     // Compute keypoints based on type
-    void FeatureExtractor::ComputeKeypoints(PointCloudConstPtr cloud, NormalsPtr normals, PointCloudPtr computedKeypoints) const
+    void FeatureExtractor::ComputeKeypoints(PointCloudConstPtr cloud, NormalsPtr normals, KeypointDetectionResult& detectedKeypoints) const
     {
-        pcl::search::KdTree<PointType>::Ptr tree(new pcl::search::KdTree<PointType>());
-        m_KeypointDetector->setSearchMethod(tree);
-        m_KeypointDetector->setInputCloud(cloud);
-        m_KeypointDetector->compute(*computedKeypoints);
+        // keypoints will be copied here from the specific keypoint detector output
+        detectedKeypoints.Keypoints = PointCloudPtr(new pcl::PointCloud<PointType>());
+
+        switch (m_KeypointDetectorType)
+        {
+            case KEYPOINT_SIFT:
+            {
+                auto sift = boost::static_pointer_cast<pcl::SIFTKeypoint<PointType, pcl::PointWithScale>>(m_KeypointDetector);
+                pcl::search::KdTree<PointType>::Ptr tree(new pcl::search::KdTree<PointType>());
+
+                detectedKeypoints.SIFTKeypoints = pcl::PointCloud<pcl::PointWithScale>::Ptr(new pcl::PointCloud<pcl::PointWithScale>());
+
+                sift->setSearchMethod(tree);
+                sift->setSearchSurface(cloud);
+                sift->setInputCloud(cloud);
+                sift->compute(*detectedKeypoints.SIFTKeypoints);
+
+                pcl::copyPointCloud(*detectedKeypoints.SIFTKeypoints, *detectedKeypoints.Keypoints);
+
+                break;
+            }
+            case KEYPOINT_ISS_3D:
+            {
+                // TODO: Implement ISS_3D
+                break;
+            }
+        }
     }
 
     // Compute features based on type
@@ -134,7 +158,7 @@ namespace PointCloud
         auto fpfh = boost::static_pointer_cast<pcl::FPFHEstimation<PointType, pcl::Normal, pcl::FPFHSignature33>>(m_FeatureDetector);
         pcl::search::KdTree<pcl::PointXYZRGB>::Ptr tree(new pcl::search::KdTree<pcl::PointXYZRGB>());
 
-        detectedFeatures.type = FEATURE_DETECTOR_FPFH;
+        detectedFeatures.Type = FEATURE_DETECTOR_FPFH;
         detectedFeatures.FPFHFeatures = pcl::PointCloud<pcl::FPFHSignature33>::Ptr(new pcl::PointCloud<pcl::FPFHSignature33>());
 
         fpfh->setInputNormals(normals);

@@ -4,6 +4,7 @@
 //
 
 #include <pcl/common/transforms.h>
+#include <pcl/common/common.h>
 #include <pcl/features/multiscale_feature_persistence.h>
 #include <pcl/registration/correspondence_rejection_sample_consensus.h>
 #include <pcl/registration/correspondence_estimation.h>
@@ -85,7 +86,7 @@ namespace PointCloud
         pcl::registration::TransformationEstimationSVD<pcl::PointXYZRGB, pcl::PointXYZRGB> transformationEstimator;
         transformationEstimator.estimateRigidTransformation(*source, *target, *validCorrespondences, T);
 
-        //std::cout << "\nEstimated transform: \n" << T << std::endl;
+        std::cout << "\nEstimated transform: \n" << T << std::endl;
 
         // apply transform to source
         pcl::transformPointCloud(*source, *result, T);
@@ -101,15 +102,15 @@ namespace PointCloud
         //m_FeatureExtractor->ComputeNormals(cloud, normals);
 
         // compute keypoints
-        PointCloudPtr keypoints = PointCloudPtr(new pcl::PointCloud<PointType>());
-        m_FeatureExtractor->ComputeKeypoints(cloud, normals, keypoints);
+        KeypointDetectionResult keypointsResult;
+        m_FeatureExtractor->ComputeKeypoints(cloud, normals, keypointsResult);
 
         // compute keypoint normals
         NormalsPtr keypointNormals = NormalsPtr(new pcl::PointCloud<pcl::Normal>());
-        m_FeatureExtractor->ComputeNormals(keypoints, keypointNormals);
+        m_FeatureExtractor->ComputeNormals(keypointsResult.Keypoints, keypointNormals);
 
         // compute features using keypoints
-        m_FeatureExtractor->ComputeFeatures(keypoints, keypointNormals, result);
+        m_FeatureExtractor->ComputeFeatures(keypointsResult.Keypoints, keypointNormals, result);
     }
 
     // Setters
