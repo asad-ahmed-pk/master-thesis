@@ -6,12 +6,30 @@
     "reconstruction": {
       "requires_rectification": false,
       "block_matcher": "stereo_bm",
-      "window_size": 21,
-      "num_disparities": 64
+      "window_size": 27,
+      "num_disparities": 128
     },
     "point_cloud_post_processing": {
       "outlier_min_k": 30,
-      "outlier_std_threshold": 0.5
+      "outlier_std_threshold": 0.5,
+      "keypoint_detector": "SIFT",
+      "feature_detector": "FPFH"
+    },
+    "point_cloud_feature_detection": {
+      "normals": {
+        "radius": 20.0
+      },
+      "FPFH": {
+        "min_radius": 25.0
+      }
+    },
+    "point_cloud_keypoint_detection": {
+      "SIFT": {
+        "min_scale": 2.0,
+        "num_octaves": 8,
+        "num_scales_per_octave": 6,
+        "min_contrast": 0.0
+      }
     }
   }
 }
