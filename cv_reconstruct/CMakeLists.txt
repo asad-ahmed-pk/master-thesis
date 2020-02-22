@@ -63,6 +63,7 @@ list(APPEND CONFIG_SOURCES
 
 list (APPEND PIPELINE_SOURCES
         src/pipeline/ReconstructionPipeline.cpp
+        src/pipeline/FrameFeatureExtractor.cpp
 )
 
 # External sources
@@ -131,6 +132,17 @@ add_executable(feature_extract_test src/test/feature_extraction_test.cpp src/tes
         ${EXTERN_SOURCES}
 )
 target_link_libraries(feature_extract_test ${OpenCV_LIBS} ${Boost_LIBRARIES} ${PCL_LIBRARIES})
+
+# Feature extraction module test program
+add_executable(image_feature_test src/test/image_feature_test.cpp
+        ${CAMERA_SOURCES}
+        ${RECONSTRUCT_3D_SOURCES}
+        ${CONFIG_SOURCES}
+        ${PIPELINE_SOURCES}
+        ${POINT_CLOUD_SOURCES}
+        ${EXTERN_SOURCES}
+)
+target_link_libraries(image_feature_test ${OpenCV_LIBS} ${Boost_LIBRARIES} ${PCL_LIBRARIES})
 
 # Alignment test
 add_executable(alignment_test src/test/alignment_test.cpp)
