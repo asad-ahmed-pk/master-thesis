@@ -5,10 +5,10 @@
 
 #include <pcl/common/transforms.h>
 #include <pcl/common/common.h>
-#include <pcl/features/multiscale_feature_persistence.h>
 #include <pcl/registration/correspondence_rejection_sample_consensus.h>
 #include <pcl/registration/correspondence_estimation.h>
 #include <pcl/registration/transformation_estimation_svd.h>
+#include <pcl/io/pcd_io.h>
 
 #include "point_cloud/PointCloudPostProcessor.hpp"
 #include "point_cloud/FeatureExtractor.hpp"
@@ -25,14 +25,13 @@ namespace PointCloud
 
         // setup ICP alignment
         m_ICP.setMaximumIterations(25);
+        m_ICP.setTransformationEpsilon (1e-8);
+        m_ICP.setEuclideanFitnessEpsilon (1);
         m_ICP.setRANSACIterations(25);
-        m_ICP.setMaxCorrespondenceDistance(500);
+        m_ICP.setMaxCorrespondenceDistance(m_Config.PointCloudFeatureDetection.FPFH.MinRadius);
 
-        // setup feature extractor
+        // setup feature extractor (finds both keypoints and feature descriptors for those keypoints)
         m_FeatureExtractor = std::make_unique<FeatureExtractor>(m_Config.PointCloudPostProcess.KeypointDetector, m_Config.PointCloudPostProcess.FeatureDetector, m_Config);
-
-        // setup feature descriptor
-        m_FeatureDescriptor = FPFH::Ptr(new FPFH());
     }
 
     // Outlier removal
@@ -44,6 +43,23 @@ namespace PointCloud
     // ICP alignment
     bool PointCloudPostProcessor::AlignPointCloud(PointCloudConstPtr source, PointCloudConstPtr target, PointCloudPtr result)
     {
+        // get keypoints and perform ICP on keypoints
+        KeypointDetectionResult sourceKeypoints;
+        KeypointDetectionResult targetKeypoints;
+        m_FeatureExtractor->ComputeKeypoints(source, nullptr, sourceKeypoints);
+        m_FeatureExtractor->ComputeKeypoints(target, nullptr, targetKeypoints);
+
+        PointCloudPtr alignmentResult { new pcl::PointCloud<PointType>() };
+
+        // ICP on keypoints
+        m_ICP.setInputCloud(source);
+        m_ICP.setInputTarget(target);
+        m_ICP.align(*alignmentResult);
+
+        // apply the transformation to the complete point cloud
+        Eigen::Matrix4f T = m_ICP.getFinalTransformation();
+
+        /*
         // extract features from both point clouds and get correspondences
         FeatureDetectionResult sourceFeatures;
         FeatureDetectionResult targetFeatures;
@@ -85,8 +101,9 @@ namespace PointCloud
         Eigen::Matrix4f T = Eigen::Matrix4f::Identity();
         pcl::registration::TransformationEstimationSVD<pcl::PointXYZRGB, pcl::PointXYZRGB> transformationEstimator;
         transformationEstimator.estimateRigidTransformation(*source, *target, *validCorrespondences, T);
+        */
 
-        std::cout << "\nEstimated transform: \n" << T << std::endl;
+        //std::cout << "\nEstimated transform: \n" << T << std::endl;
 
         // apply transform to source
         pcl::transformPointCloud(*source, *result, T);

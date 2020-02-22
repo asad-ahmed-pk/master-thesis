@@ -132,6 +132,10 @@ add_executable(feature_extract_test src/test/feature_extraction_test.cpp src/tes
 )
 target_link_libraries(feature_extract_test ${OpenCV_LIBS} ${Boost_LIBRARIES} ${PCL_LIBRARIES})
 
+# Alignment test
+add_executable(alignment_test src/test/alignment_test.cpp)
+target_link_libraries(alignment_test ${OpenCV_LIBS} ${Boost_LIBRARIES} ${PCL_LIBRARIES})
+
 # Catch2 Tests
 add_executable(test_camera_calib_parser test/test_camera_calib_parser.cpp ${CAMERA_SOURCES} ${RECONSTRUCT_3D_SOURCES} ${CONFIG_SOURCES} ${EXTERN_SOURCES} ${TESTING_SOURCES})
 target_link_libraries(test_camera_calib_parser ${OpenCV_LIBS} ${Boost_LIBRARIES} ${PCL_LIBRARIES})

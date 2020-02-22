@@ -6,6 +6,8 @@
 
 #include "pipeline/ReconstructionPipeline.hpp"
 
+#include <pcl/io/pcd_io.h>
+
 namespace Pipeline
 {
     // Constructor
@@ -52,7 +54,10 @@ namespace Pipeline
         // transform point cloud
         m_Localizer->TransformPointCloud(frame, *temp, *pointCloud);
 
+        pcl::io::savePCDFileBinary("frame_" + std::to_string(frame.ID) + ".pcd", *pointCloud);
+
         // attempt to align with last point cloud
+        /*
         auto alignedPointCloudOutput = pcl::PointCloud<pcl::PointXYZRGB>::Ptr(new pcl::PointCloud<pcl::PointXYZRGB>());
         if (m_LastFramePointCloud != nullptr)
         {
@@ -66,6 +71,7 @@ namespace Pipeline
                *pointCloud += *alignedPointCloudOutput;
            }
         }
+         */
 
         m_LastFramePointCloud = pointCloud;
     }
