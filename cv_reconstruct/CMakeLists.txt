@@ -49,6 +49,7 @@ list(APPEND RECONSTRUCT_3D_SOURCES
 list(APPEND POINT_CLOUD_SOURCES
         src/point_cloud/PointCloudPostProcessor.cpp
         src/point_cloud/FeatureExtractor.cpp
+        src/point_cloud/PointCloudRegistration.cpp
 )
 
 list(APPEND SERVER_SOURCES

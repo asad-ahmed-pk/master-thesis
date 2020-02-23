@@ -25,7 +25,8 @@ namespace Reconstruct
         /// \param frame The frame this point cloud is being generated for
         /// \param input The input point cloud in camera space
         /// \param output The output point cloud in world space
-        void TransformPointCloud(const Pipeline::StereoFrame& frame, const pcl::PointCloud<pcl::PointXYZRGB>& input, pcl::PointCloud<pcl::PointXYZRGB>& output);
+        template <typename PointT>
+        void TransformPointCloud(const Pipeline::StereoFrame& frame, const pcl::PointCloud<PointT>& input, pcl::PointCloud<PointT>& output);
 
         /// Convert the given GPS coords to X,Y,Z using the Mercator projection
         /// \param latitude GPS latitude

@@ -104,6 +104,17 @@ namespace Reconstruct
         return pointCloud;
     }
 
+    // Get 3D projected image
+    cv::Mat Reconstruct3D::Project3D(const cv::Mat& disparity, float& missingDisparityValue) const
+    {
+        cv::Mat reprojected3D;
+        cv::reprojectImageTo3D(disparity, reprojected3D, m_Q, true);
+
+        missingDisparityValue = MISSING_DISPARITY_Z;
+
+        return reprojected3D;
+    }
+
     // Generate point cloud by direct calculation from disparity
     pcl::PointCloud<pcl::PointXYZRGB> Reconstruct3D::Triangulate3D(const cv::Mat &disparity, const cv::Mat& leftImage, const cv::Mat& rightImage) const
     {
@@ -118,7 +129,7 @@ namespace Reconstruct
 
         uint32_t count = 0;
         float d;
-        float f = (m_StereoCameraSetup.LeftCameraCalib.K(0, 0) + m_StereoCameraSetup.LeftCameraCalib.K(1, 1)) / 2.0;
+        float f = (m_StereoCameraSetup.LeftCameraCalib.K(0, 0) + m_StereoCameraSetup.LeftCameraCalib.K(1, 1)) / 2.0f;
 
         for (int i = 0; i < disparity.rows; i++)
         {

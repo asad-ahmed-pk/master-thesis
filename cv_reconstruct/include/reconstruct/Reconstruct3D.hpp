@@ -11,6 +11,7 @@
 #include "Localizer.hpp"
 
 #include <opencv2/core/core.hpp>
+#include <opencv2/core/types.hpp>
 #include <opencv2/calib3d/calib3d.hpp>
 
 #include <pcl/point_cloud.h>
@@ -58,6 +59,12 @@ namespace Reconstruct
         /// \param rectLeftImage Will be updated with the rectified image for the left camera
         /// \param rectRightImage Will be updated with the rectified image for the right camera
         void RectifyImages(const cv::Mat& leftImage, const cv::Mat& rightImage, cv::Mat& rectLeftImage, cv::Mat& rectRightImage) const;
+
+        /// Reproject the disparity map to 3D and generate 3D X,Y,Z coords. Note: Y is positive downwards.
+        /// \param disparity The disparity image
+        /// \param missingDisparityValue Will be set with the Z value that indicated missing or invalid disparity (these should be ignored)
+        /// \return The 3D projected image with each row,col containing X,Y,Z coords for the image
+        cv::Mat Project3D(const cv::Mat& disparity, float& missingDisparityValue) const;
 
         /// Set the window size for the block matcher for computing disparity
         /// \param size The window size (odd number)

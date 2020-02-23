@@ -14,7 +14,8 @@ namespace Reconstruct
 {
     // Transform point cloud
     // Assumes frame translation is in GPS coordinates: [lat, lon, alt] => R3
-    void Localizer::TransformPointCloud(const Pipeline::StereoFrame& frame, const pcl::PointCloud<pcl::PointXYZRGB> &input, pcl::PointCloud<pcl::PointXYZRGB> &output)
+    template <typename PointT>
+    void Localizer::TransformPointCloud(const Pipeline::StereoFrame& frame, const pcl::PointCloud<PointT>& input, pcl::PointCloud<PointT>& output)
     {
         // record initial pose and calculate mercator scale
         if (m_InitialPose == nullptr)
@@ -77,4 +78,8 @@ namespace Reconstruct
 
         return std::move(T);
     }
+
+    // Explicit template instantiation
+    template void Localizer::TransformPointCloud<pcl::PointXYZRGB>(const Pipeline::StereoFrame&, const pcl::PointCloud<pcl::PointXYZRGB>&, pcl::PointCloud<pcl::PointXYZRGB>&);
+    template void Localizer::TransformPointCloud<pcl::PointXYZ>(const Pipeline::StereoFrame&, const pcl::PointCloud<pcl::PointXYZ>&, pcl::PointCloud<pcl::PointXYZ>&);
 }
