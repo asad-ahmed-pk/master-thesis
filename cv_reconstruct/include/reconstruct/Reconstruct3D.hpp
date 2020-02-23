@@ -33,7 +33,6 @@ namespace Reconstruct
         /// \param stereoSetup The calibrated, stereo rig setup with stereo rectification already applied
         explicit Reconstruct3D(const Camera::Calib::StereoCalib& stereoSetup);
 
-
         /// Generate the disparity map for the given stereo images
         /// \param leftImage The left camera image
         /// \param rightImage The right camera image
@@ -79,6 +78,9 @@ namespace Reconstruct
         Camera::Calib::StereoCalib m_StereoCameraSetup;
         cv::Ptr<cv::StereoMatcher> m_StereoMatcher { nullptr };
         StereoBlockMatcherType m_StereoBlockMatcherType { STEREO_BLOCK_MATCHER };
+
+    private:
+        cv::Mat m_Q { 4, 4, CV_64F };
     };
 }
 

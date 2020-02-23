@@ -35,6 +35,12 @@ namespace Reconstruct
 
         // set default block matcher
         SetBlockMatcherType(STEREO_BLOCK_MATCHER);
+
+        // calculate and store the Q matrix (3D projection)
+        Eigen::Matrix4f Q = Eigen::Matrix4f::Identity();
+        float averageFocalLength = (m_StereoCameraSetup.LeftCameraCalib.K(0, 0) + m_StereoCameraSetup.RightCameraCalib.K(0, 0)) / 2.0f;
+        Q(2, 2) = 0.005 * averageFocalLength;
+        cv::eigen2cv(Q, m_Q);
     }
 
     // Disparity map
@@ -55,13 +61,8 @@ namespace Reconstruct
     // Point cloud generation
     pcl::PointCloud<pcl::PointXYZRGB> Reconstruct3D::GeneratePointCloud(const cv::Mat& disparity, const cv::Mat& cameraImage) const
     {
-        Eigen::Matrix4f Q = Eigen::Matrix4f::Identity();
-        Q(2, 2) = 0.005 * m_StereoCameraSetup.LeftCameraCalib.K(0, 0);
-        cv::Mat Q_CV(4, 4, CV_64F);
-        cv::eigen2cv(Q, Q_CV);
-
         cv::Mat reprojected3D;
-        cv::reprojectImageTo3D(disparity, reprojected3D, Q_CV, true);
+        cv::reprojectImageTo3D(disparity, reprojected3D, m_Q, true);
 
         pcl::PointCloud<pcl::PointXYZRGB> pointCloud;
 
@@ -117,8 +118,7 @@ namespace Reconstruct
 
         uint32_t count = 0;
         float d;
-        float f = (m_StereoCameraSetup.LeftCameraCalib.K(0, 0) + m_StereoCameraSetup.RightCameraCalib.K(1, 1)) / 2.0;
-        //f *= 0.005;
+        float f = (m_StereoCameraSetup.LeftCameraCalib.K(0, 0) + m_StereoCameraSetup.LeftCameraCalib.K(1, 1)) / 2.0;
 
         for (int i = 0; i < disparity.rows; i++)
         {
