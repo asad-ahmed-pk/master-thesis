@@ -28,11 +28,9 @@ namespace Pipeline
         m_Localizer = std::make_unique<Reconstruct::Localizer>();
     }
 
-    // Process frame and generate processed, localized, point cloud
-    void ReconstructionPipeline::ProcessFrame(const StereoFrame& frame, pcl::PointCloud<pcl::PointXYZRGB>::Ptr pointCloud)
+    // Calculate disparity map
+    void ReconstructionPipeline::CalculateDisparity(const Pipeline::StereoFrame& frame, cv::Mat& disparity) const
     {
-        cv::Mat disparity;
-
         // rectify if image rectification required
         if (m_ShouldRectifyImages) {
             cv::Mat leftImageRectified, rightImageRectified;
@@ -42,31 +40,72 @@ namespace Pipeline
         else {
             disparity = m_Reconstructor->GenerateDisparityMap(frame.LeftImage, frame.RightImage);
         }
+    }
 
-        // triangulation
-        pcl::PointCloud<pcl::PointXYZRGB>::Ptr temp(new pcl::PointCloud<pcl::PointXYZRGB>(std::move(m_Reconstructor->GeneratePointCloud(disparity, frame.LeftImage))));
+    // Process frame and generate processed, localized, point cloud
+    void ReconstructionPipeline::ProcessFrame(const StereoFrame& frame, pcl::PointCloud<pcl::PointXYZRGB>::Ptr& result)
+    {
+        pcl::PointCloud<pcl::PointXYZRGB>::Ptr cloud{ new pcl::PointCloud<pcl::PointXYZRGB>() };
+        PipelineResult pipelineResult{};
 
-        // remove outliers
-        m_PointCloudPostProcessor->RemoveOutliers(temp, temp);
-
-        // transform point cloud
-        m_Localizer->TransformPointCloud(frame, *temp, *pointCloud);
-
-        // attempt to align with last point cloud
-        auto alignedPointCloudOutput = pcl::PointCloud<pcl::PointXYZRGB>::Ptr(new pcl::PointCloud<pcl::PointXYZRGB>());
-        if (m_LastFramePointCloud != nullptr)
-        {
-           if (!m_PointCloudPostProcessor->AlignPointCloud(pointCloud, m_LastFramePointCloud, alignedPointCloudOutput)) {
-               //std::cout << "\nFailed to align point clouds!" << std::endl;
-           }
-           else
-           {
-               //std::cout << "\nPoint cloud aligned to previous point cloud" << std::endl;
-               pointCloud->clear();
-               *pointCloud += *alignedPointCloudOutput;
-           }
+        if (frame.ID == 0) {
+            ProcessFirstFrame(frame, pipelineResult);
+        }
+        else {
+            ProcessSubsequentFrame(frame, pipelineResult);
         }
 
-        m_LastFramePointCloud = pointCloud;
+        result = pipelineResult.PointCloudLocalized;
+
+        // store this frame's results for next frame to use (for alignment)
+        m_LastFrameCameraImage = frame.LeftImage.clone();
+        m_LastPipelineResult.DisparityImage = pipelineResult.DisparityImage.clone();
+        pcl::copyPointCloud(*pipelineResult.PointCloudLocalized, *m_LastPipelineResult.PointCloudLocalized);
+    }
+
+    // Process this as the first frame
+    void ReconstructionPipeline::ProcessFirstFrame(const Pipeline::StereoFrame &frame, PipelineResult& result)
+    {
+        // disparity image
+        CalculateDisparity(frame, result.DisparityImage);
+
+        // triangulation
+        pcl::PointCloud<pcl::PointXYZRGB>::Ptr localPointCloud(new pcl::PointCloud<pcl::PointXYZRGB>(m_Reconstructor->GeneratePointCloud(result.DisparityImage, frame.LeftImage)));
+
+        // remove outliers
+        m_PointCloudPostProcessor->RemoveOutliers(localPointCloud, localPointCloud);
+
+        // transform point cloud
+        pcl::PointCloud<pcl::PointXYZRGB>::Ptr transformedPointCloud { new pcl::PointCloud<pcl::PointXYZRGB>() };
+        m_Localizer->TransformPointCloud(frame, *localPointCloud, *transformedPointCloud);
+
+        result.PointCloudLocalized = transformedPointCloud;
+    }
+
+    // Process a frame that has had a frame processed before it. Assumes m_LastPipelineResult has valid data set.
+    void ReconstructionPipeline::ProcessSubsequentFrame(const Pipeline::StereoFrame &frame, PipelineResult& result)
+    {
+        // disparity image
+        CalculateDisparity(frame, result.DisparityImage);
+
+        // triangulation
+        pcl::PointCloud<pcl::PointXYZRGB>::Ptr localPointCloud(new pcl::PointCloud<pcl::PointXYZRGB>(m_Reconstructor->GeneratePointCloud(result.DisparityImage, frame.LeftImage)));
+
+        // remove outliers
+        m_PointCloudPostProcessor->RemoveOutliers(localPointCloud, localPointCloud);
+
+        // transform point cloud
+        pcl::PointCloud<pcl::PointXYZRGB>::Ptr transformedPointCloud { new pcl::PointCloud<pcl::PointXYZRGB>() };
+        m_Localizer->TransformPointCloud(frame, *localPointCloud, *transformedPointCloud);
+
+        // attempt to align with last transformed point cloud
+        pcl::PointCloud<pcl::PointXYZRGB>::Ptr alignedPointCloud { new pcl::PointCloud<pcl::PointXYZRGB>() };
+        if (!m_PointCloudPostProcessor->AlignPointCloud(transformedPointCloud, m_LastPipelineResult.PointCloudLocalized, alignedPointCloud)) {
+            //std::cout << "\nFailed to align point clouds!" << std::endl;
+            result.PointCloudLocalized = transformedPointCloud;
+        }
+        else {
+            result.PointCloudLocalized = alignedPointCloud;
+        }
     }
 }

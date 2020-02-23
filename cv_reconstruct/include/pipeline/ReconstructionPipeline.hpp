@@ -13,6 +13,7 @@
 #include <pcl/point_types.h>
 
 #include "StereoFrame.hpp"
+#include "PipelineResult.hpp"
 #include "config/Config.hpp"
 #include "reconstruct/Reconstruct3D.hpp"
 #include "point_cloud/PointCloudPostProcessor.hpp"
@@ -32,8 +33,13 @@ namespace Pipeline
 
         /// Process the given stereo frame and compute the point cloud
         /// \param frame The stereo frame
-        /// \param pointCloud Will be loaded with the computed 3D points in world space
-        void ProcessFrame(const StereoFrame& frame, pcl::PointCloud<pcl::PointXYZRGB>::Ptr pointCloud);
+        /// \param result Will be set to point to the computed 3D points in world space
+        void ProcessFrame(const StereoFrame& frame, pcl::PointCloud<pcl::PointXYZRGB>::Ptr& result);
+
+    private:
+        void CalculateDisparity(const StereoFrame& frame, cv::Mat& disparity) const;
+        void ProcessFirstFrame(const StereoFrame& frame, PipelineResult& result);
+        void ProcessSubsequentFrame(const StereoFrame& frame, PipelineResult& result);
 
     private:
         Config::Config m_Config;
@@ -44,7 +50,8 @@ namespace Pipeline
         std::unique_ptr<PointCloud::PointCloudPostProcessor> m_PointCloudPostProcessor;
         std::unique_ptr<Reconstruct::Localizer> m_Localizer;
 
-        pcl::PointCloud<pcl::PointXYZRGB>::Ptr m_LastFramePointCloud { nullptr };
+        cv::Mat m_LastFrameCameraImage;
+        PipelineResult m_LastPipelineResult;
     };
 }
 
