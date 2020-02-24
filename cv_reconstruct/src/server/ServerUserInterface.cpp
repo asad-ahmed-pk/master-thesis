@@ -41,6 +41,11 @@ namespace Server
         std::cout << "\nFrames in queue: " << messagesInQueue << std::endl;
     }
 
+    // Print server started
+    void ServerUserInterface::PrintServerStartedMessage() const {
+        std::cout << "\nServer running. Waiting for a client to connect..." << std::endl;
+    }
+
     // Get user option from prompt
     UserOption ServerUserInterface::GetUserCommandOption() const
     {

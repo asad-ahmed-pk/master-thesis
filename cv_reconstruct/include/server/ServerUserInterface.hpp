@@ -32,6 +32,8 @@ namespace Server
         /// \param messagesInQueue The number of messages still in the queue
         void PrintStatusMessage(long messagesProcessed, long messagesInQueue) const;
 
+        void PrintServerStartedMessage() const;
+
     private:
         void PrintCommandHelp() const;
 

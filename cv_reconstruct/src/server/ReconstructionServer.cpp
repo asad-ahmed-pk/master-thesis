@@ -54,6 +54,9 @@ namespace Server
         // start processing thread
         m_ProcessingThread = std::thread(&ReconstructionServer::RunProcessingThread, this);
 
+        // notify user that server has started
+        m_UserInterface.PrintServerStartedMessage();
+
         // wait until processing begins
         while (!m_ProcessingStarted) {
             std::this_thread::sleep_for(std::chrono::milliseconds(200));
