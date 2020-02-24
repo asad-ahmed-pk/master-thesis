@@ -42,6 +42,19 @@ namespace Config
 
         } PointCloudPostProcess;
 
+        // Point cloud registration
+        struct PointCloudRegistration
+        {
+            // Params for ICP algorithm
+            struct ICP {
+                int NumMaxIterations { 20 };
+                int NumRansacIterations { 20 };
+                double TransformEpsilon { 1e-8 };
+                double EuclideanFitnessEpsilon { 1.0 };
+            } ICP;
+
+        } PointCloudRegistration;
+
         // Point cloud feature detection
         struct PointCloudFeatureDetection
         {

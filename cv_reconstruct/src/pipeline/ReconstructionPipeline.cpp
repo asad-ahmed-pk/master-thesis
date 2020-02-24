@@ -28,7 +28,7 @@ namespace Pipeline
         m_Localizer = std::make_unique<Reconstruct::Localizer>();
 
         // point cloud registration
-        m_PointCloudRegistration = std::make_unique<PointCloud::PointCloudRegistration>();
+        m_PointCloudRegistration = std::make_unique<PointCloud::PointCloudRegistration>(config);
     }
 
     // Calculate disparity map

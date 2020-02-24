@@ -15,6 +15,14 @@
       "keypoint_detector": "SIFT",
       "feature_detector": "FPFH"
     },
+    "point_cloud_registration": {
+      "ICP": {
+        "max_iterations": 20,
+        "ransac_iterations": 20,
+        "transformation_epsilon": 1e-8,
+        "euclidean_fitness_epsilon": 1.0
+      }
+    },
     "point_cloud_feature_detection": {
       "normals": {
         "radius": 20.0

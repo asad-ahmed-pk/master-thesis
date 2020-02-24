@@ -58,6 +58,13 @@ namespace Config
         config.PointCloudPostProcess.OutlierMinK = pointCloudPostProcessConfig["outlier_min_k"];
         config.PointCloudPostProcess.OutlierStdDevThreshold = pointCloudPostProcessConfig["outlier_std_threshold"];
 
+        // point cloud registration config
+        nlohmann::json registrationConfig = json["config"]["point_cloud_registration"];
+        config.PointCloudRegistration.ICP.EuclideanFitnessEpsilon = registrationConfig["ICP"]["euclidean_fitness_epsilon"];
+        config.PointCloudRegistration.ICP.NumMaxIterations = registrationConfig["ICP"]["max_iterations"];
+        config.PointCloudRegistration.ICP.NumRansacIterations = registrationConfig["ICP"]["ransac_iterations"];
+        config.PointCloudRegistration.ICP.TransformEpsilon = registrationConfig["ICP"]["transformation_epsilon"];
+
         // keypoint detector parsed into enum
         const std::string keypointDetector = pointCloudPostProcessConfig["keypoint_detector"];
         config.PointCloudPostProcess.KeypointDetector = PointCloud::KEYPOINT_SIFT;

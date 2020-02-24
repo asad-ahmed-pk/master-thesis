@@ -11,17 +11,21 @@
 
 #include <opencv2/core/types.hpp>
 #include <pcl/correspondence.h>
+#include <pcl/registration/icp.h>
 
 #include "pipeline/FrameFeatureExtractor.hpp"
+#include "config/Config.hpp"
 #include "point_cloud_constants.hpp"
+
 
 namespace PointCloud
 {
     class PointCloudRegistration
     {
     public:
-        /// Create a default instance of the registration pipeline
-        PointCloudRegistration() = default;
+        /// Create a default instance of the registration pipeline with the given config
+        /// \param config The config with params set for ICP
+        PointCloudRegistration(const Config::Config& config);
 
         ~PointCloudRegistration() = default;
 
@@ -43,10 +47,10 @@ namespace PointCloud
         void GeneratePointCloudsFrom2DCorrespondences(const std::vector<cv::KeyPoint>& sourceKeypoints2D, const cv::Mat& source3DReprojection,
                                                       const std::vector<cv::DMatch>& matches2D, const Eigen::Matrix4f& worldTransform,
                                                       pcl::PointCloud<pcl::PointXYZ>::Ptr sourceCloud, pcl::PointCloud<pcl::PointXYZ>::Ptr targetCloud,
-                                                      pcl::CorrespondencesPtr correspondences) const;
+                                                      pcl::CorrespondencesPtr correspondences, float& maxDistance) const;
 
         Eigen::Matrix4f Estimate3DTransform(pcl::PointCloud<pcl::PointXYZ>::Ptr source, pcl::PointCloud<pcl::PointXYZ>::Ptr target,
-                pcl::CorrespondencesConstPtr correspondences) const;
+                pcl::CorrespondencesConstPtr correspondences, float maxDistance);
 
     private:
         struct TempData {
@@ -59,6 +63,7 @@ namespace PointCloud
 
     private:
         Pipeline::FrameFeatureExtractor m_2DFeatureExtractor;
+        pcl::IterativeClosestPoint<pcl::PointXYZ, pcl::PointXYZ> m_ICP;
         TempData m_TargetData;
     };
 }
