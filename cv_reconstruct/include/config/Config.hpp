@@ -9,7 +9,7 @@
 #include <string>
 
 #include "point_cloud/point_cloud_constants.hpp"
-#include "reconstruct/Reconstruct3D.hpp"
+#include "reconstruct/Reconstruct3DTypes.hpp"
 
 namespace Config
 {
@@ -25,10 +25,23 @@ namespace Config
         // 3D Reconstruction
         struct Reconstruction
         {
-            bool ShouldRectifyImages{true};
-            Reconstruct::StereoBlockMatcherType BlockMatcherType{ Reconstruct::StereoBlockMatcherType::STEREO_BLOCK_MATCHER };
-            int NumDisparities{16};
-            int WindowSize{21};
+            bool ShouldRectifyImages { true };
+            Reconstruct::StereoBlockMatcherType BlockMatcherType { Reconstruct::StereoBlockMatcherType::STEREO_BLOCK_MATCHER };
+
+            struct SBM {
+                int NumDisparities { 16 };
+                int WindowSize { 21 };
+            } SBM;
+
+            struct SGBM {
+                int NumDisparities { 16 };
+                int BlockSize { 128 };
+                int UniquenessRatio { 2 };
+                int SpeckleRange { 2 };
+                int SpeckleWindowSize { 100 };
+                int PreFilterCap { 10 };
+                int MinDisparity { 0 };
+            } SGBM;
 
         } Reconstruction;
 

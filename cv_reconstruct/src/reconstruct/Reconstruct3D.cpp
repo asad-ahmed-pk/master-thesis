@@ -4,6 +4,7 @@
 //
 
 #include "reconstruct/Reconstruct3D.hpp"
+#include "reconstruct/Reconstruct3DTypes.hpp"
 
 #include <opencv2/imgproc/imgproc.hpp>
 #include <opencv2/core/eigen.hpp>
@@ -14,33 +15,54 @@
 
 namespace Reconstruct
 {
-    //const int SGM_MIN_DISPARITY = 1;
+    const int SGM_MIN_DISPARITY = 0;
     //constexpr int SGM_P1 = 8 * 3 * SGM_BLOCK_SIZE * SGM_BLOCK_SIZE;
     //constexpr int SGM_P2 = 32 * 3 * SGM_BLOCK_SIZE * SGM_BLOCK_SIZE;
 
     // Constructor
-    Reconstruct3D::Reconstruct3D(const Camera::Calib::StereoCalib& stereoSetup) : m_StereoCameraSetup(stereoSetup)
+    Reconstruct3D::Reconstruct3D(const Camera::Calib::StereoCalib& stereoSetup, const Config::Config& config) : m_StereoCameraSetup(stereoSetup)
     {
         // setup stereo matcher
-
-        /*
-        m_StereoMatcher = cv::StereoSGBM::create(SGM_MIN_DISPARITY, SGM_NUM_DISPARITIES, SGM_BLOCK_SIZE, SGM_P1, SGM_P2);
-
-        m_StereoMatcher->setUniquenessRatio(10);
-        m_StereoMatcher->setSpeckleRange(2);
-        m_StereoMatcher->setSpeckleWindowSize(128);
-        m_StereoMatcher->setDisp12MaxDiff(1);
-        m_StereoMatcher->setPreFilterCap(10);
-         */
-
-        // set default block matcher
-        SetBlockMatcherType(STEREO_BLOCK_MATCHER);
+        ConfigureSteoreoMatcher(config);
 
         // calculate and store the Q matrix (3D projection)
         Eigen::Matrix4f Q = Eigen::Matrix4f::Identity();
         float averageFocalLength = (m_StereoCameraSetup.LeftCameraCalib.K(0, 0) + m_StereoCameraSetup.RightCameraCalib.K(0, 0)) / 2.0f;
         Q(2, 2) = 0.005 * averageFocalLength;
         cv::eigen2cv(Q, m_Q);
+    }
+
+    // Configure stereo matcher from config
+    void Reconstruct3D::ConfigureSteoreoMatcher(const Config::Config& config)
+    {
+        switch (config.Reconstruction.BlockMatcherType)
+        {
+            case STEREO_BLOCK_MATCHER: {
+                SetBlockMatcherType(STEREO_BLOCK_MATCHER);
+                m_StereoMatcher->setBlockSize(config.Reconstruction.SBM.WindowSize);
+                m_StereoMatcher->setNumDisparities(config.Reconstruction.SBM.NumDisparities);
+                break;
+            }
+
+            case STEREO_SEMI_GLOBAL_BLOCK_MATCHER: {
+                SetBlockMatcherType(STEREO_SEMI_GLOBAL_BLOCK_MATCHER);
+                auto sgbm = std::static_pointer_cast<cv::StereoSGBM>(m_StereoMatcher);
+
+                sgbm->setMinDisparity(config.Reconstruction.SGBM.MinDisparity);
+                sgbm->setPreFilterCap(config.Reconstruction.SGBM.PreFilterCap);
+                sgbm->setBlockSize(config.Reconstruction.SGBM.BlockSize);
+                sgbm->setNumDisparities(config.Reconstruction.SGBM.NumDisparities);
+                sgbm->setSpeckleRange(config.Reconstruction.SGBM.SpeckleRange);
+                sgbm->setSpeckleWindowSize(config.Reconstruction.SGBM.SpeckleWindowSize);
+                sgbm->setUniquenessRatio(config.Reconstruction.SGBM.UniquenessRatio);
+
+                // determine P1 and P2 coefficients
+                sgbm->setP1(8 * 3 * sgbm->getBlockSize() * sgbm->getBlockSize());
+                sgbm->setP2(32 * 3 * sgbm->getBlockSize() * sgbm->getBlockSize());
+
+                break;
+            }
+        }
     }
 
     // Getter for invalid Z values
@@ -269,10 +291,6 @@ namespace Reconstruct
 
     void Reconstruct3D::SetBlockMatcherType(StereoBlockMatcherType type)
     {
-        if (m_StereoMatcher != nullptr) {
-            m_StereoMatcher = nullptr;
-        }
-
         // create block matchers with default args
         switch (type)
         {

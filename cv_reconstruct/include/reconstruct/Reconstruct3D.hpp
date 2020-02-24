@@ -8,6 +8,7 @@
 
 #include "camera/CameraCalib.hpp"
 #include "pipeline/StereoFrame.hpp"
+#include "config/Config.hpp"
 #include "Localizer.hpp"
 
 #include <opencv2/core/core.hpp>
@@ -21,18 +22,12 @@
 
 namespace Reconstruct
 {
-    // The type of stereo matcher
-    enum StereoBlockMatcherType {
-        STEREO_BLOCK_MATCHER,
-        STEREO_SEMI_GLOBAL_BLOCK_MATCHER
-    };
-
     class Reconstruct3D
     {
     public:
         /// Create a 3D reconstructor for the given stereo rig
         /// \param stereoSetup The calibrated, stereo rig setup with stereo rectification already applied
-        explicit Reconstruct3D(const Camera::Calib::StereoCalib& stereoSetup);
+        Reconstruct3D(const Camera::Calib::StereoCalib& stereoSetup, const Config::Config& config);
 
         /// Generate the disparity map for the given stereo images
         /// \param leftImage The left camera image
@@ -81,6 +76,7 @@ namespace Reconstruct
         static float GetInvalidDisparityZValue();
 
     private:
+        void ConfigureSteoreoMatcher(const Config::Config& config);
         pcl::PointCloud<pcl::PointXYZRGB> PointCloudMatrixCompute(const cv::Mat& leftImage, const cv::Mat& disparity) const;
 
     private:

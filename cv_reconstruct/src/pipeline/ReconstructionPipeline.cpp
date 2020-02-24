@@ -14,10 +14,7 @@ namespace Pipeline
         // setup pipeline components
 
         // 3D reconstructor
-        m_Reconstructor = std::make_unique<Reconstruct::Reconstruct3D>(calib);
-        m_Reconstructor->SetBlockMatcherType(m_Config.Reconstruction.BlockMatcherType);
-        m_Reconstructor->SetStereoBMNumDisparities(m_Config.Reconstruction.NumDisparities);
-        m_Reconstructor->SetStereoBMWindowSize(m_Config.Reconstruction.WindowSize);
+        m_Reconstructor = std::make_unique<Reconstruct::Reconstruct3D>(calib, config);
 
         // point cloud post processor
         m_PointCloudPostProcessor = std::make_unique<PointCloud::PointCloudPostProcessor>(m_Config);

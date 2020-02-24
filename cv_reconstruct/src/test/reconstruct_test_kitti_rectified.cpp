@@ -8,7 +8,7 @@
 #include "camera/CameraCalibParser.hpp"
 #include "reconstruct/Reconstruct3D.hpp"
 #include "config/ConfigParser.hpp"
-#include "reconstruct/PointCloudPostProcessor.hpp"
+#include "point_cloud/PointCloudPostProcessor.hpp"
 
 #include <string>
 #include <iostream>
@@ -43,10 +43,7 @@ int main(int argc, char** argv)
     Camera::CameraCompute cameraCompute { stereoCalib };
 
     // create 3d reconstructor and generate disparity map
-    Reconstruct::Reconstruct3D reconstructor(stereoCalib);
-    reconstructor.SetBlockMatcherType(config.Reconstruction.BlockMatcherType);
-    reconstructor.SetStereoBMNumDisparities(config.Reconstruction.NumDisparities);
-    reconstructor.SetStereoBMWindowSize(config.Reconstruction.WindowSize);
+    Reconstruct::Reconstruct3D reconstructor(stereoCalib, config);
 
     // read in test images
     cv::Mat leftImage = cv::imread(LEFT_IMG_NAME, cv::IMREAD_COLOR);
@@ -61,7 +58,7 @@ int main(int argc, char** argv)
     pcl::PointCloud<pcl::PointXYZRGB>::Ptr pointCloud(new pcl::PointCloud<pcl::PointXYZRGB>(std::move(reconstructor.GeneratePointCloud(disparity, leftImage))));
 
     // remove outliers
-    Reconstruct::PointCloudPostProcessor pointCloudPostProcessor;
+    PointCloud::PointCloudPostProcessor pointCloudPostProcessor(config);
     pointCloudPostProcessor.SetMinimumNeighboursOutlierRemoval(config.PointCloudPostProcess.OutlierMinK);
     pointCloudPostProcessor.SetStdDevOutlierRemoval(config.PointCloudPostProcess.OutlierStdDevThreshold);
     pointCloudPostProcessor.RemoveOutliers(pointCloud, pointCloud);

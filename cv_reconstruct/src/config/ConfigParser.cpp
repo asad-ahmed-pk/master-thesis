@@ -50,8 +50,18 @@ namespace Config
             config.Reconstruction.BlockMatcherType = Reconstruct::StereoBlockMatcherType::STEREO_BLOCK_MATCHER;
         }
 
-        config.Reconstruction.WindowSize = reconstructionConfig["window_size"];
-        config.Reconstruction.NumDisparities = reconstructionConfig["num_disparities"];
+        // SBM stereo matcher
+        config.Reconstruction.SBM.WindowSize = reconstructionConfig["SBM"]["window_size"];
+        config.Reconstruction.SBM.NumDisparities = reconstructionConfig["SBM"]["num_disparities"];
+
+        // SGBM stereo matcher
+        config.Reconstruction.SGBM.BlockSize = reconstructionConfig["SGBM"]["block_size"];
+        config.Reconstruction.SGBM.PreFilterCap = reconstructionConfig["SGBM"]["pre_filter_cap"];
+        config.Reconstruction.SGBM.SpeckleRange = reconstructionConfig["SGBM"]["speckle_range"];
+        config.Reconstruction.SGBM.SpeckleWindowSize = reconstructionConfig["SGBM"]["speckle_window_size"];
+        config.Reconstruction.SGBM.UniquenessRatio = reconstructionConfig["SGBM"]["uniqueness_ratio"];
+        config.Reconstruction.SGBM.MinDisparity = reconstructionConfig["SGBM"]["min_disparity"];
+        config.Reconstruction.SGBM.NumDisparities = reconstructionConfig["SGBM"]["num_disparities"];
 
         // point cloud post processing config
         nlohmann::json pointCloudPostProcessConfig = json["config"]["point_cloud_post_processing"];
