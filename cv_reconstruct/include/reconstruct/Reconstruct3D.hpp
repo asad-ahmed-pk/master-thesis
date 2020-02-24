@@ -62,9 +62,9 @@ namespace Reconstruct
 
         /// Reproject the disparity map to 3D and generate 3D X,Y,Z coords. Note: Y is positive downwards.
         /// \param disparity The disparity image
-        /// \param missingDisparityValue Will be set with the Z value that indicated missing or invalid disparity (these should be ignored)
+        /// \param projected3D The 3D image with X,Y,Z coords that will be set
         /// \return The 3D projected image with each row,col containing X,Y,Z coords for the image
-        cv::Mat Project3D(const cv::Mat& disparity, float& missingDisparityValue) const;
+        void Project3D(const cv::Mat& disparity, cv::Mat& projected3D) const;
 
         /// Set the window size for the block matcher for computing disparity
         /// \param size The window size (odd number)
@@ -77,6 +77,8 @@ namespace Reconstruct
         /// Set the type of block matcher that will be used to compute the disparity
         /// \param type The type of block matcher to use
         void SetBlockMatcherType(StereoBlockMatcherType type);
+
+        static float GetInvalidDisparityZValue();
 
     private:
         pcl::PointCloud<pcl::PointXYZRGB> PointCloudMatrixCompute(const cv::Mat& leftImage, const cv::Mat& disparity) const;

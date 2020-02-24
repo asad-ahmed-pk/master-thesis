@@ -43,6 +43,11 @@ namespace Reconstruct
         cv::eigen2cv(Q, m_Q);
     }
 
+    // Getter for invalid Z values
+    float Reconstruct3D::GetInvalidDisparityZValue() {
+        return MISSING_DISPARITY_Z;
+    }
+
     // Disparity map
     cv::Mat Reconstruct3D::GenerateDisparityMap(const cv::Mat &leftImage, const cv::Mat &rightImage) const
     {
@@ -105,14 +110,8 @@ namespace Reconstruct
     }
 
     // Get 3D projected image
-    cv::Mat Reconstruct3D::Project3D(const cv::Mat& disparity, float& missingDisparityValue) const
-    {
-        cv::Mat reprojected3D;
-        cv::reprojectImageTo3D(disparity, reprojected3D, m_Q, true);
-
-        missingDisparityValue = MISSING_DISPARITY_Z;
-
-        return reprojected3D;
+    void Reconstruct3D::Project3D(const cv::Mat& disparity, cv::Mat& projected3D) const {
+        cv::reprojectImageTo3D(disparity, projected3D, m_Q, true);
     }
 
     // Generate point cloud by direct calculation from disparity

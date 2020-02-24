@@ -15,20 +15,12 @@
 #include "config/Config.hpp"
 #include "StereoFrame.hpp"
 #include "PipelineResult.hpp"
-#include "FrameFeatureExtractor.hpp"
 #include "reconstruct/Reconstruct3D.hpp"
 #include "point_cloud/PointCloudRegistration.hpp"
 #include "point_cloud/PointCloudPostProcessor.hpp"
 
 namespace Pipeline
 {
-    /// Holds temp data used in processing pipeline frames
-    struct TempData {
-        StereoFrame Frame;
-        cv::Mat Reprojected3DImage;
-        float MissingDisparityValue { 0.0f };
-    };
-
     class ReconstructionPipeline
     {
     public:
@@ -52,17 +44,12 @@ namespace Pipeline
 
     private:
         Config::Config m_Config;
-
         bool m_ShouldRectifyImages;
 
         std::unique_ptr<Reconstruct::Reconstruct3D> m_Reconstructor;
         std::unique_ptr<Reconstruct::Localizer> m_Localizer;
         std::unique_ptr<PointCloud::PointCloudPostProcessor> m_PointCloudPostProcessor;
         std::unique_ptr<PointCloud::PointCloudRegistration> m_PointCloudRegistration;
-        std::unique_ptr<FrameFeatureExtractor> m_FrameFeatureExtractor;
-
-        TempData m_LastFrameData;
-        PipelineResult m_LastPipelineResult;
     };
 }
 

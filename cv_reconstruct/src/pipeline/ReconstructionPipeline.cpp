@@ -29,9 +29,6 @@ namespace Pipeline
 
         // point cloud registration
         m_PointCloudRegistration = std::make_unique<PointCloud::PointCloudRegistration>();
-
-        // frame feature extractor
-        m_FrameFeatureExtractor = std::make_unique<FrameFeatureExtractor>();
     }
 
     // Calculate disparity map
@@ -62,12 +59,6 @@ namespace Pipeline
         }
 
         result = pipelineResult.PointCloudLocalized;
-
-        // store this frame's results for next frame to use (for alignment)
-        m_LastFrameData.Frame = frame;
-        m_LastFrameData.Reprojected3DImage = m_Reconstructor->Project3D(pipelineResult.DisparityImage, m_LastFrameData.MissingDisparityValue).clone();
-        m_LastPipelineResult.DisparityImage = pipelineResult.DisparityImage.clone();
-        pcl::copyPointCloud(*pipelineResult.PointCloudLocalized, *m_LastPipelineResult.PointCloudLocalized);
     }
 
     // Process this as the first frame
@@ -84,7 +75,12 @@ namespace Pipeline
 
         // transform point cloud
         pcl::PointCloud<pcl::PointXYZRGB>::Ptr transformedPointCloud { new pcl::PointCloud<pcl::PointXYZRGB>() };
-        m_Localizer->TransformPointCloud(frame, *localPointCloud, *transformedPointCloud);
+        Eigen::Matrix4f T = m_Localizer->TransformPointCloud(frame, *localPointCloud, *transformedPointCloud);
+
+        // set first frame for registration pipeline
+        cv::Mat projected3D;
+        m_Reconstructor->Project3D(result.DisparityImage, projected3D);
+        m_PointCloudRegistration->SaveFirstFrame(frame.LeftImage, projected3D, T);
 
         result.PointCloudLocalized = transformedPointCloud;
     }
@@ -103,33 +99,14 @@ namespace Pipeline
 
         // transform point cloud
         pcl::PointCloud<pcl::PointXYZRGB>::Ptr transformedPointCloud { new pcl::PointCloud<pcl::PointXYZRGB>() };
-        m_Localizer->TransformPointCloud<pcl::PointXYZRGB>(frame, *localPointCloud, *transformedPointCloud);
+        Eigen::Matrix4f T = m_Localizer->TransformPointCloud<pcl::PointXYZRGB>(frame, *localPointCloud, *transformedPointCloud);
 
         // align with last transformed point cloud
         pcl::PointCloud<pcl::PointXYZRGB>::Ptr alignedPointCloud { new pcl::PointCloud<pcl::PointXYZRGB>() };
+        cv::Mat projected3D;
+        m_Reconstructor->Project3D(result.DisparityImage, projected3D);
+        m_PointCloudRegistration->RegisterFrameWithPreviousFrame(frame.LeftImage, projected3D, T, transformedPointCloud, alignedPointCloud);
 
-        // get keypoint generated point clouds
-        cv::Mat reprojected3D = m_Reconstructor->Project3D(result.DisparityImage, m_LastFrameData.MissingDisparityValue);
-        std::vector<cv::KeyPoint> sourceKeypoints; std::vector<cv::KeyPoint> targetKeypoints;
-        std::vector<cv::DMatch> matches;
-        pcl::PointCloud<pcl::PointXYZ>::Ptr sourceCloud { new pcl::PointCloud<pcl::PointXYZ>() };
-        pcl::PointCloud<pcl::PointXYZ>::Ptr targetCloud { new pcl::PointCloud<pcl::PointXYZ>() };
-        pcl::CorrespondencesPtr correspondences { new pcl::Correspondences() };
-
-        m_FrameFeatureExtractor->ComputeCorrespondences(frame.LeftImage, m_LastFrameData.Frame.LeftImage, sourceKeypoints, targetKeypoints, matches);
-
-        // generate point clouds from 2D keypoints using correspondences
-        m_PointCloudRegistration->GeneratePointCloudWithCorrespondencesFrom2D(sourceKeypoints, targetKeypoints,
-                reprojected3D, m_LastFrameData.Reprojected3DImage, matches, m_LastFrameData.MissingDisparityValue,
-                sourceCloud, targetCloud, correspondences);
-
-        // transform the 2 clouds
-        m_Localizer->TransformPointCloud(frame, *sourceCloud, *sourceCloud);
-        m_Localizer->TransformPointCloud(m_LastFrameData.Frame, *targetCloud, *targetCloud);
-
-        // estimate the 3D transform
-        Eigen::Matrix4f T = m_PointCloudRegistration->Estimate3DTransform(sourceCloud, targetCloud, correspondences);
-        std::cout << "\nEstimated transform: \n" << T << std::endl;
-        pcl::transformPointCloud(*transformedPointCloud, *alignedPointCloud, T);
+        result.PointCloudLocalized = alignedPointCloud;
     }
 }

@@ -38,10 +38,34 @@ namespace Pipeline
         m_BFMatcher->knnMatch(descriptors1, descriptors2, allMatches, 2);
 
         // filter using Lowe ratio test
-        for (size_t i = 0; i < allMatches.size(); i++)
+        FilterForGoodMatches(allMatches, matches);
+    }
+
+    // Find matches with pre-computed descriptors and image
+    void FrameFeatureExtractor::ComputeMatchesWithImage(const cv::Mat& descriptors, const cv::Mat& image, std::vector<cv::KeyPoint>& computedKeypoints, cv::Mat& computedDescriptors, std::vector<cv::DMatch>& matches) const
+    {
+        // detect features in image
+        m_FeatureExtractor->detectAndCompute(image, cv::noArray(), computedKeypoints, computedDescriptors, false);
+
+        std::vector<std::vector<cv::DMatch>> allMatches;
+        m_BFMatcher->knnMatch(descriptors, computedDescriptors, allMatches, 2);
+
+        // Lowe ratio test
+        FilterForGoodMatches(allMatches, matches);
+    }
+
+    // Features from image
+    void FrameFeatureExtractor::ComputeFeaturesFromImage(const cv::Mat& image, std::vector<cv::KeyPoint>& computedKeypoints, cv::Mat& computedDescriptors) const {
+        m_FeatureExtractor->detectAndCompute(image, cv::noArray(), computedKeypoints, computedDescriptors, false);
+    }
+
+    // Lowe match ratio test
+    void FrameFeatureExtractor::FilterForGoodMatches(const std::vector<std::vector<cv::DMatch>>& matches, std::vector<cv::DMatch>& goodMatches) const
+    {
+        for (size_t i = 0; i < matches.size(); i++)
         {
-            if (!allMatches[i].empty() && allMatches[i][0].distance < RATIO_THRESHOLD * allMatches[i][1].distance) {
-                matches.push_back(allMatches[i][0]);
+            if (!matches[i].empty() && matches[i][0].distance < RATIO_THRESHOLD * matches[i][1].distance) {
+                goodMatches.push_back(matches[i][0]);
             }
         }
     }

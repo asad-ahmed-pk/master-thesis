@@ -15,7 +15,7 @@ namespace Reconstruct
     // Transform point cloud
     // Assumes frame translation is in GPS coordinates: [lat, lon, alt] => R3
     template <typename PointT>
-    void Localizer::TransformPointCloud(const Pipeline::StereoFrame& frame, const pcl::PointCloud<PointT>& input, pcl::PointCloud<PointT>& output)
+    Eigen::Matrix4f Localizer::TransformPointCloud(const Pipeline::StereoFrame& frame, const pcl::PointCloud<PointT>& input, pcl::PointCloud<PointT>& output)
     {
         // record initial pose and calculate mercator scale
         if (m_InitialPose == nullptr)
@@ -34,6 +34,8 @@ namespace Reconstruct
 
         Eigen::Matrix4f T = ComputeWorldSpaceTransform(frame);
         pcl::transformPointCloud(input, output, T);
+
+        return T;
     }
 
     // Get 4x4 transformation matrix for GPS location
@@ -80,6 +82,6 @@ namespace Reconstruct
     }
 
     // Explicit template instantiation
-    template void Localizer::TransformPointCloud<pcl::PointXYZRGB>(const Pipeline::StereoFrame&, const pcl::PointCloud<pcl::PointXYZRGB>&, pcl::PointCloud<pcl::PointXYZRGB>&);
-    template void Localizer::TransformPointCloud<pcl::PointXYZ>(const Pipeline::StereoFrame&, const pcl::PointCloud<pcl::PointXYZ>&, pcl::PointCloud<pcl::PointXYZ>&);
+    template Eigen::Matrix4f Localizer::TransformPointCloud<pcl::PointXYZRGB>(const Pipeline::StereoFrame&, const pcl::PointCloud<pcl::PointXYZRGB>&, pcl::PointCloud<pcl::PointXYZRGB>&);
+    template Eigen::Matrix4f Localizer::TransformPointCloud<pcl::PointXYZ>(const Pipeline::StereoFrame&, const pcl::PointCloud<pcl::PointXYZ>&, pcl::PointCloud<pcl::PointXYZ>&);
 }

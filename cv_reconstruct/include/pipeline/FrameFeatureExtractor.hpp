@@ -29,6 +29,22 @@ namespace Pipeline
         /// \param matches Will be populated with matches
         void ComputeCorrespondences(const cv::Mat& image1, const cv::Mat& image2, std::vector<cv::KeyPoint>& keypoints1, std::vector<cv::KeyPoint>& keypoints2, std::vector<cv::DMatch>& matches) const;
 
+        /// Get 2D image correspondences by matching keypoints in the given image with pre-computed descriptors
+        /// \param descriptors Descriptors to match against
+        /// \param image The image to match against the descriptors
+        /// \param computedKeypoints Keypoints that will be computed for the image
+        /// \param computedDescriptors Descriptors that will be computed for the image
+        /// \param matches Will be populated with matches
+        void ComputeMatchesWithImage(const cv::Mat& descriptors, const cv::Mat& image, std::vector<cv::KeyPoint>& computedKeypoints, cv::Mat& computedDescriptors, std::vector<cv::DMatch>& matches) const;
+
+        /// Compute features from the given frame
+        /// \param image The image to compute features from
+        /// \param computedKeypoints Will be populated with computed keypoints in the left cam image
+        /// \param computedDescriptors Will be populated with computed descriptors in the left cam image
+        void ComputeFeaturesFromImage(const cv::Mat& image, std::vector<cv::KeyPoint>& computedKeypoints, cv::Mat& computedDescriptors) const;
+
+    private:
+        void FilterForGoodMatches(const std::vector<std::vector<cv::DMatch>>& matches, std::vector<cv::DMatch>& goodMatches) const;
     private:
         cv::Ptr<cv::Feature2D> m_FeatureExtractor;
         cv::Ptr<cv::BFMatcher> m_BFMatcher;

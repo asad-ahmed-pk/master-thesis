@@ -49,10 +49,10 @@ int main(int argc, char** argv)
         pipeline.ProcessFrame(frame, temp);
 
         // add colour
-        /*
+
         for (int i = 0; i < temp->points.size(); i++)
         {
-            temp->points[i].r = temp->points[i].g = temp->points[i].b = 0;
+            temp->points[i].rgb = 0;
             if (frame.ID == 0) {
                 temp->points[i].r = 255;
             }
@@ -60,9 +60,8 @@ int main(int argc, char** argv)
                 temp->points[i].b = 255;
             }
         }
-        */
 
-        //pcl::io::savePCDFileBinary("cloud_" + std::to_string(frame.ID) + ".pcd", *temp);
+        pcl::io::savePCDFileBinary("cloud_" + std::to_string(frame.ID) + ".pcd", *temp);
 
         *pointCloud += *temp;
         temp->clear();
