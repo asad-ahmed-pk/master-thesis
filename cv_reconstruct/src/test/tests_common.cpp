@@ -120,3 +120,25 @@ void ConvertLocalizationsToStereoFrames(const std::vector<LocalizationData>& dat
         frame.RightImage = cv::imread(std::to_string(frame.ID) + "r.png", cv::IMREAD_COLOR);
     }
 }
+
+// RGB to greyscale
+void ConvertToGreyScale(const pcl::PointCloud<pcl::PointXYZRGB>& input, pcl::PointCloud<pcl::PointXYZI>& result)
+{
+    pcl::PointXYZI p;
+    for (int i = 0; i < input.points.size(); i++)
+    {
+        Eigen::Vector3i rgb = input.points[i].getRGBVector3i();
+        float r = rgb(0) / 255.0f;
+        float g = rgb(1) / 255.0f;
+        float b = rgb(2) / 255.0f;
+
+        float intensity = (0.3f * r + 0.59f * g + 0.11f * b);
+        p = pcl::PointXYZI(intensity);
+
+        p.x = input.points[i].x;
+        p.y = input.points[i].y;
+        p.z = input.points[i].z;
+
+        result.push_back(p);
+    }
+}

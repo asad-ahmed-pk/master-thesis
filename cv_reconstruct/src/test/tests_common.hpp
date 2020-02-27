@@ -57,4 +57,7 @@ pcl::visualization::PCLVisualizer::Ptr rgbVis (pcl::PointCloud<pcl::PointXYZRGB>
 // PCL point clicked event handler
 void PointClicked(const pcl::visualization::PointPickingEvent& event);
 
+// Convert point cloud to greyscale
+void ConvertToGreyScale(const pcl::PointCloud<pcl::PointXYZRGB>& input, pcl::PointCloud<pcl::PointXYZI>& result);
+
 #endif //MASTER_THESIS_TESTS_COMMON_HPP
