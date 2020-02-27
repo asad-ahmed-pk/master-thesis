@@ -10,9 +10,14 @@ Jiaolong Yang <yangjiaolong@gmail.com>
 
 #include <math.h>
 #include <stdio.h>
-#include <malloc.h>
 #include <stdlib.h>
 #include <memory.h>
+
+#ifdef __APPLE__
+#include <malloc/malloc.h>
+#elif
+#include <malloc.h>
+#endif
 
 #include "GoICP/jly_3ddt.h"
 
