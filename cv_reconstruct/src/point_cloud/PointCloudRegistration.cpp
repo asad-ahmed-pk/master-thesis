@@ -43,7 +43,8 @@ namespace PointCloud
         GeneratePointCloudsFrom2DCorrespondences(sourceKeypoints, projected3D, matches, worldTransform, sourceCloud, targetCloud, correspondences, maxDistance);
 
         // estimate 3D rigid-body transform between source and target and apply to final registered cloud
-        Eigen::Matrix4f T = Estimate3DTransform(sourceCloud, targetCloud, correspondences, maxDistance);
+        //Eigen::Matrix4f T = Estimate3DTransform(sourceCloud, targetCloud, correspondences, maxDistance);
+        Eigen::Matrix4f T = AlignPointCloudWithPrevious(sourceCloud, targetCloud);
         pcl::transformPointCloud(*input, *registeredCloud, T);
 
         // set this source data as the target for next frame's processing
@@ -160,48 +161,52 @@ namespace PointCloud
     }
 
     // New alignment method based using GO-ICP
-    void PointCloudRegistration::AlignPointCloudWithPrevious(pcl::PointCloud<pcl::PointXYZRGB>::Ptr source, pcl::PointCloud<pcl::PointXYZRGB>::Ptr result)
+    Eigen::Matrix4f PointCloudRegistration::AlignPointCloudWithPrevious(pcl::PointCloud<pcl::PointXYZ>::Ptr source, pcl::PointCloud<pcl::PointXYZ>::Ptr target)
     {
-        if (m_TargetCloud == nullptr) {
-            m_TargetCloud = pcl::PointCloud<pcl::PointXYZRGB>::Ptr { new pcl::PointCloud<pcl::PointXYZRGB>() };
-            pcl::copyPointCloud(*source, *m_TargetCloud);
-            return;
-        }
-
         // Need to normalize X,Y,Z coords for GoICP. Determine Max X,Y,Z for each cloud
-        float maxXSource = 0.0; float maxXTarget;
-        float maxYSource = 0.0; float maxYTarget;
-        float maxZSource = 0.0; float maxZTarget;
-
-        maxXSource = std::max_element(source->points.begin(), source->points.end(), [](const auto& p1, const auto& p2) -> bool {
+        auto sourceX = std::minmax_element(source->points.begin(), source->points.end(), [](const auto& p1, const auto& p2) -> bool {
             return (p1.x < p2.x);
-        })->x;
-        maxYSource = std::max_element(source->points.begin(), source->points.end(), [](const auto& p1, const auto& p2) -> bool {
+        });
+        auto sourceY = std::minmax_element(source->points.begin(), source->points.end(), [](const auto& p1, const auto& p2) -> bool {
             return (p1.y < p2.y);
-        })->y;
-        maxZSource = std::max_element(source->points.begin(), source->points.end(), [](const auto& p1, const auto& p2) -> bool {
+        });
+        auto sourceZ = std::minmax_element(source->points.begin(), source->points.end(), [](const auto& p1, const auto& p2) -> bool {
             return (p1.z < p2.z);
-        })->z;
+        });
 
-        maxXTarget = std::max_element(m_TargetCloud->points.begin(), m_TargetCloud->points.end(), [](const auto& p1, const auto& p2) -> bool {
+        auto targetX = std::minmax_element(target->points.begin(), target->points.end(), [](const auto& p1, const auto& p2) -> bool {
             return (p1.x < p2.x);
-        })->x;
-        maxYTarget = std::max_element(m_TargetCloud->points.begin(), m_TargetCloud->points.end(), [](const auto& p1, const auto& p2) -> bool {
+        });
+        auto targetY = std::minmax_element(target->points.begin(), target->points.end(), [](const auto& p1, const auto& p2) -> bool {
             return (p1.y < p2.y);
-        })->y;
-        maxZTarget = std::max_element(m_TargetCloud->points.begin(), m_TargetCloud->points.end(), [](const auto& p1, const auto& p2) -> bool {
+        });
+        auto targetZ = std::minmax_element(target->points.begin(), target->points.end(), [](const auto& p1, const auto& p2) -> bool {
             return (p1.z < p2.z);
-        })->z;
+        });
+
+        float sourceMinX = sourceX.first->x;
+        float sourceMinY = sourceY.first->y;
+        float sourceMinZ = sourceZ.first->z;
+        float sourceMaxX = sourceX.second->x;
+        float sourceMaxY = sourceY.second->y;
+        float sourceMaxZ = sourceZ.second->z;
+
+        float targetMinX = targetX.first->x;
+        float targetMinY = targetY.first->y;
+        float targetMinZ = targetZ.first->z;
+        float targetMaxX = targetX.second->x;
+        float targetMaxY = targetY.second->y;
+        float targetMaxZ = targetZ.second->z;
 
         // GoICP as the library
         GoICP::GoICP goICP;
 
-        // read in cofig for GoICP
+        // read in config for GoICP
         const std::string config { "go_icp_config.txt" };
         goICP.ReadConfig(config);
 
         // GoICP source points
-        std::shared_ptr<GoICP::POINT3D> sourcePoints { new GoICP::POINT3D[source->points.size()]};
+        std::shared_ptr<GoICP::POINT3D> sourcePoints { new GoICP::POINT3D[source->points.size()] };
         goICP.pData = sourcePoints.get();
         goICP.Nd = source->points.size();
 
@@ -209,25 +214,25 @@ namespace PointCloud
         {
             GoICP::POINT3D point;
 
-            point.x = source->points[i].x / maxXSource;
-            point.y = source->points[i].y / maxYSource;
-            point.z = source->points[i].z / maxZSource;
+            point.x = (2.0 / (sourceMaxX - sourceMinX)) * (source->points[i].x - sourceMinX) - 1;
+            point.y = (2.0 / (sourceMaxY - sourceMinY)) * (source->points[i].y - sourceMinY) - 1;
+            point.z = (2.0 / (sourceMaxZ - sourceMinZ)) * (source->points[i].z - sourceMinZ) - 1;
 
             goICP.pData[i] = point;
         }
 
         // GoICP target points
-        std::shared_ptr<GoICP::POINT3D> targetPoints { new GoICP::POINT3D[m_TargetCloud->points.size()]};
+        std::shared_ptr<GoICP::POINT3D> targetPoints { new GoICP::POINT3D[target->points.size()]};
         goICP.pModel = targetPoints.get();
-        goICP.Nm = m_TargetCloud->points.size();
+        goICP.Nm = target->points.size();
 
-        for (int i = 0; i < m_TargetCloud->points.size(); i++)
+        for (int i = 0; i < target->points.size(); i++)
         {
             GoICP::POINT3D point;
 
-            point.x = source->points[i].x / maxXTarget;
-            point.y = source->points[i].y / maxYTarget;
-            point.z = source->points[i].z / maxZTarget;
+            point.x = (2.0 / (targetMaxX - targetMinX)) * (target->points[i].x - targetMinX) - 1;
+            point.y = (2.0 / (targetMaxY - targetMinY)) * (target->points[i].y - targetMinY) - 1;
+            point.z = (2.0 / (targetMaxZ - targetMinZ)) * (target->points[i].z - targetMinZ) - 1;
 
             goICP.pModel[i] = point;
         }
@@ -258,7 +263,6 @@ namespace PointCloud
         T.block(0, 0, 3, 3) = R;
         T.block(0, 3, 3, 1) = t;
 
-        // transform point cloud and store in result
-        pcl::transformPointCloud(*source, *result, T);
+        return T;
     }
 }

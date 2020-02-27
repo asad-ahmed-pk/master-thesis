@@ -43,7 +43,7 @@ namespace PointCloud
         /// \param transform The 3D rigid-body transform to apply to the point cloud for this frame
         void SaveFirstFrame(const cv::Mat& image, const cv::Mat& projected3D, const Eigen::Matrix4f& transform);
 
-        void AlignPointCloudWithPrevious(pcl::PointCloud<pcl::PointXYZRGB>::Ptr, pcl::PointCloud<pcl::PointXYZRGB>::Ptr result);
+        Eigen::Matrix4f AlignPointCloudWithPrevious(pcl::PointCloud<pcl::PointXYZ>::Ptr source, pcl::PointCloud<pcl::PointXYZ>::Ptr target);
 
     private:
         void GeneratePointCloudsFrom2DCorrespondences(const std::vector<cv::KeyPoint>& sourceKeypoints2D, const cv::Mat& source3DReprojection,
@@ -67,7 +67,6 @@ namespace PointCloud
         Pipeline::FrameFeatureExtractor m_2DFeatureExtractor;
         pcl::IterativeClosestPoint<pcl::PointXYZ, pcl::PointXYZ> m_ICP;
         TempData m_TargetData;
-        pcl::PointCloud<pcl::PointXYZRGB>::Ptr m_TargetCloud { nullptr };
     };
 }
 

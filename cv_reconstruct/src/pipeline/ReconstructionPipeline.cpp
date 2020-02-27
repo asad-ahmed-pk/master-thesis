@@ -75,12 +75,11 @@ namespace Pipeline
         Eigen::Matrix4f T = m_Localizer->TransformPointCloud(frame, *localPointCloud, *transformedPointCloud);
 
         // set first frame for registration pipeline
-        /*
         cv::Mat projected3D;
         m_Reconstructor->Project3D(result.DisparityImage, projected3D);
         m_PointCloudRegistration->SaveFirstFrame(frame.LeftImage, projected3D, T);
-        */
-        m_PointCloudRegistration->AlignPointCloudWithPrevious(transformedPointCloud, nullptr);
+
+        //m_PointCloudRegistration->AlignPointCloudWithPrevious(transformedPointCloud, nullptr);
 
         result.PointCloudLocalized = transformedPointCloud;
     }
@@ -101,16 +100,14 @@ namespace Pipeline
         pcl::PointCloud<pcl::PointXYZRGB>::Ptr transformedPointCloud { new pcl::PointCloud<pcl::PointXYZRGB>() };
         Eigen::Matrix4f T = m_Localizer->TransformPointCloud<pcl::PointXYZRGB>(frame, *localPointCloud, *transformedPointCloud);
 
-        /*
         // align with last transformed point cloud
         pcl::PointCloud<pcl::PointXYZRGB>::Ptr alignedPointCloud { new pcl::PointCloud<pcl::PointXYZRGB>() };
         cv::Mat projected3D;
         m_Reconstructor->Project3D(result.DisparityImage, projected3D);
         m_PointCloudRegistration->RegisterFrameWithPreviousFrame(frame.LeftImage, projected3D, T, transformedPointCloud, alignedPointCloud);
-        */
 
-        pcl::PointCloud<pcl::PointXYZRGB>::Ptr alignedPointCloud { new pcl::PointCloud<pcl::PointXYZRGB>() };
-        m_PointCloudRegistration->AlignPointCloudWithPrevious(transformedPointCloud, alignedPointCloud);
+        //pcl::PointCloud<pcl::PointXYZRGB>::Ptr alignedPointCloud { new pcl::PointCloud<pcl::PointXYZRGB>() };
+        //m_PointCloudRegistration->AlignPointCloudWithPrevious(transformedPointCloud, alignedPointCloud);
 
         result.PointCloudLocalized = alignedPointCloud;
     }
