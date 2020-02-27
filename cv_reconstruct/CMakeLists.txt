@@ -5,6 +5,9 @@ cmake_minimum_required(VERSION 3.10)
 project(cv_reconstruct)
 set(CMAKE_CXX_STANDARD 14)
 
+# option to compile test programs
+option(COMPILE_CV_TEST_PROGRAMS "Compile the test programs for the reconstruction server" ON)
+
 # Mac OSX Check
 if (${CMAKE_SYSTEM_NAME} MATCHES "Darwin")
     set(MACOSX TRUE)
@@ -90,65 +93,70 @@ add_executable(cv_server src/main.cpp ${CAMERA_SOURCES}
 )
 target_link_libraries(cv_server ${OpenCV_LIBS} ${Boost_LIBRARIES} ${PCL_LIBRARIES} reconstruction::networking)
 
-# Reconstruct module test program
-add_executable(reconstruct_test src/test/reconstruct_test_kitti_rectified.cpp src/test/tests_common.cpp
-        ${CAMERA_SOURCES}
-        ${RECONSTRUCT_3D_SOURCES}
-        ${CONFIG_SOURCES}
-        ${PIPELINE_SOURCES}
-        ${POINT_CLOUD_SOURCES}
-        ${EXTERN_SOURCES}
-)
-target_link_libraries(reconstruct_test ${OpenCV_LIBS} ${Boost_LIBRARIES} ${PCL_LIBRARIES})
+# All test programs
+if (${COMPILE_CV_TEST_PROGRAMS})
 
-# Localization module test program
-add_executable(localization_test src/test/localization_test_kitti.cpp src/test/tests_common.cpp
-        ${CAMERA_SOURCES}
-        ${RECONSTRUCT_3D_SOURCES}
-        ${CONFIG_SOURCES}
-        ${PIPELINE_SOURCES}
-        ${POINT_CLOUD_SOURCES}
-        ${EXTERN_SOURCES}
-)
-target_link_libraries(localization_test ${OpenCV_LIBS} ${Boost_LIBRARIES} ${PCL_LIBRARIES})
+    # Reconstruct module test program
+    add_executable(reconstruct_test src/test/reconstruct_test_kitti_rectified.cpp src/test/tests_common.cpp
+            ${CAMERA_SOURCES}
+            ${RECONSTRUCT_3D_SOURCES}
+            ${CONFIG_SOURCES}
+            ${PIPELINE_SOURCES}
+            ${POINT_CLOUD_SOURCES}
+            ${EXTERN_SOURCES}
+    )
+    target_link_libraries(reconstruct_test ${OpenCV_LIBS} ${Boost_LIBRARIES} ${PCL_LIBRARIES})
 
-# Pipeline module test program
-add_executable(pipeline_test src/test/pipeline_test.cpp src/test/tests_common.cpp
-        ${CAMERA_SOURCES}
-        ${RECONSTRUCT_3D_SOURCES}
-        ${CONFIG_SOURCES}
-        ${PIPELINE_SOURCES}
-        ${POINT_CLOUD_SOURCES}
-        ${EXTERN_SOURCES}
-)
-target_link_libraries(pipeline_test ${OpenCV_LIBS} ${Boost_LIBRARIES} ${PCL_LIBRARIES})
+    # Localization module test program
+    add_executable(localization_test src/test/localization_test_kitti.cpp src/test/tests_common.cpp
+            ${CAMERA_SOURCES}
+            ${RECONSTRUCT_3D_SOURCES}
+            ${CONFIG_SOURCES}
+            ${PIPELINE_SOURCES}
+            ${POINT_CLOUD_SOURCES}
+            ${EXTERN_SOURCES}
+    )
+    target_link_libraries(localization_test ${OpenCV_LIBS} ${Boost_LIBRARIES} ${PCL_LIBRARIES})
 
-# Feature extraction module test program
-add_executable(feature_extract_test src/test/feature_extraction_test.cpp src/test/tests_common.cpp
-        ${CAMERA_SOURCES}
-        ${RECONSTRUCT_3D_SOURCES}
-        ${CONFIG_SOURCES}
-        ${PIPELINE_SOURCES}
-        ${POINT_CLOUD_SOURCES}
-        ${EXTERN_SOURCES}
-)
-target_link_libraries(feature_extract_test ${OpenCV_LIBS} ${Boost_LIBRARIES} ${PCL_LIBRARIES})
+    # Pipeline module test program
+    add_executable(pipeline_test src/test/pipeline_test.cpp src/test/tests_common.cpp
+            ${CAMERA_SOURCES}
+            ${RECONSTRUCT_3D_SOURCES}
+            ${CONFIG_SOURCES}
+            ${PIPELINE_SOURCES}
+            ${POINT_CLOUD_SOURCES}
+            ${EXTERN_SOURCES}
+    )
+    target_link_libraries(pipeline_test ${OpenCV_LIBS} ${Boost_LIBRARIES} ${PCL_LIBRARIES} Jly::GoICP)
 
-# Feature extraction module test program
-add_executable(image_feature_test src/test/image_feature_test.cpp
-        ${CAMERA_SOURCES}
-        ${RECONSTRUCT_3D_SOURCES}
-        ${CONFIG_SOURCES}
-        ${PIPELINE_SOURCES}
-        ${POINT_CLOUD_SOURCES}
-        ${EXTERN_SOURCES}
-)
-target_link_libraries(image_feature_test ${OpenCV_LIBS} ${Boost_LIBRARIES} ${PCL_LIBRARIES})
+    # Feature extraction module test program
+    add_executable(feature_extract_test src/test/feature_extraction_test.cpp src/test/tests_common.cpp
+            ${CAMERA_SOURCES}
+            ${RECONSTRUCT_3D_SOURCES}
+            ${CONFIG_SOURCES}
+            ${PIPELINE_SOURCES}
+            ${POINT_CLOUD_SOURCES}
+            ${EXTERN_SOURCES}
+    )
+    target_link_libraries(feature_extract_test ${OpenCV_LIBS} ${Boost_LIBRARIES} ${PCL_LIBRARIES})
 
-# Alignment test
-add_executable(alignment_test src/test/alignment_test.cpp)
-target_link_libraries(alignment_test ${OpenCV_LIBS} ${Boost_LIBRARIES} ${PCL_LIBRARIES})
+    # Feature extraction module test program
+    add_executable(image_feature_test src/test/image_feature_test.cpp
+            ${CAMERA_SOURCES}
+            ${RECONSTRUCT_3D_SOURCES}
+            ${CONFIG_SOURCES}
+            ${PIPELINE_SOURCES}
+            ${POINT_CLOUD_SOURCES}
+            ${EXTERN_SOURCES}
+    )
+    target_link_libraries(image_feature_test ${OpenCV_LIBS} ${Boost_LIBRARIES} ${PCL_LIBRARIES})
 
-# Catch2 Tests
-add_executable(test_camera_calib_parser test/test_camera_calib_parser.cpp ${CAMERA_SOURCES} ${RECONSTRUCT_3D_SOURCES} ${CONFIG_SOURCES} ${EXTERN_SOURCES} ${TESTING_SOURCES})
-target_link_libraries(test_camera_calib_parser ${OpenCV_LIBS} ${Boost_LIBRARIES} ${PCL_LIBRARIES})
+    # Alignment test
+    add_executable(alignment_test src/test/alignment_test.cpp)
+    target_link_libraries(alignment_test ${OpenCV_LIBS} ${Boost_LIBRARIES} ${PCL_LIBRARIES})
+
+    # Catch2 Tests
+    add_executable(test_camera_calib_parser test/test_camera_calib_parser.cpp ${CAMERA_SOURCES} ${RECONSTRUCT_3D_SOURCES} ${CONFIG_SOURCES} ${EXTERN_SOURCES} ${TESTING_SOURCES})
+    target_link_libraries(test_camera_calib_parser ${OpenCV_LIBS} ${Boost_LIBRARIES} ${PCL_LIBRARIES})
+
+endif()

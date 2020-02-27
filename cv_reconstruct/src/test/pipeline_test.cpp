@@ -14,6 +14,8 @@
 #include "pipeline/ReconstructionPipeline.hpp"
 #include "tests_common.hpp"
 
+#include "GoICP/jly_icp3d.hpp"
+
 #define LOCALIZATION_DATA_FILE "pipeline_localization_data.txt"
 
 int main(int argc, char** argv)
@@ -43,7 +45,6 @@ int main(int argc, char** argv)
         return 1;
     }
 
-    pcl::PointCloud<pcl::PointXYZI> greyscaleCloud;
     for (const auto& frame : frames)
     {
         std::cout << "\nProcessing frame #" << frame.ID << std::endl;
@@ -65,11 +66,6 @@ int main(int argc, char** argv)
         pcl::io::savePCDFileBinary("cloud_" + std::to_string(frame.ID) + ".pcd", *temp);
          */
 
-        // save greyscale cloud
-        ConvertToGreyScale(*temp, greyscaleCloud);
-        pcl::io::savePCDFileASCII("cloud_" + std::to_string(frame.ID) + ".ascii", greyscaleCloud);
-        pcl::io::savePCDFileBinary("cloud_" + std::to_string(frame.ID) + ".pcd", *temp);
-        greyscaleCloud.clear();
         *pointCloud += *temp;
         temp->clear();
     }

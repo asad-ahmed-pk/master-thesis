@@ -8,6 +8,7 @@
 #include <pcl/io/pcd_io.h>
 #include <pcl/common/geometry.h>
 #include <pcl/common/transforms.h>
+#include <GoICP/jly_goicp.h>
 
 #include "reconstruct/Reconstruct3D.hpp"
 #include "point_cloud/PointCloudRegistration.hpp"
@@ -156,5 +157,108 @@ namespace PointCloud
 
         // save the transform, this will be the target's world space transform
         m_TargetData.WorldTransform = transform;
+    }
+
+    // New alignment method based using GO-ICP
+    void PointCloudRegistration::AlignPointCloudWithPrevious(pcl::PointCloud<pcl::PointXYZRGB>::Ptr source, pcl::PointCloud<pcl::PointXYZRGB>::Ptr result)
+    {
+        if (m_TargetCloud == nullptr) {
+            m_TargetCloud = pcl::PointCloud<pcl::PointXYZRGB>::Ptr { new pcl::PointCloud<pcl::PointXYZRGB>() };
+            pcl::copyPointCloud(*source, *m_TargetCloud);
+            return;
+        }
+
+        // Need to normalize X,Y,Z coords for GoICP. Determine Max X,Y,Z for each cloud
+        float maxXSource = 0.0; float maxXTarget;
+        float maxYSource = 0.0; float maxYTarget;
+        float maxZSource = 0.0; float maxZTarget;
+
+        maxXSource = std::max_element(source->points.begin(), source->points.end(), [](const auto& p1, const auto& p2) -> bool {
+            return (p1.x < p2.x);
+        })->x;
+        maxYSource = std::max_element(source->points.begin(), source->points.end(), [](const auto& p1, const auto& p2) -> bool {
+            return (p1.y < p2.y);
+        })->y;
+        maxZSource = std::max_element(source->points.begin(), source->points.end(), [](const auto& p1, const auto& p2) -> bool {
+            return (p1.z < p2.z);
+        })->z;
+
+        maxXTarget = std::max_element(m_TargetCloud->points.begin(), m_TargetCloud->points.end(), [](const auto& p1, const auto& p2) -> bool {
+            return (p1.x < p2.x);
+        })->x;
+        maxYTarget = std::max_element(m_TargetCloud->points.begin(), m_TargetCloud->points.end(), [](const auto& p1, const auto& p2) -> bool {
+            return (p1.y < p2.y);
+        })->y;
+        maxZTarget = std::max_element(m_TargetCloud->points.begin(), m_TargetCloud->points.end(), [](const auto& p1, const auto& p2) -> bool {
+            return (p1.z < p2.z);
+        })->z;
+
+        // GoICP as the library
+        GoICP::GoICP goICP;
+
+        // read in cofig for GoICP
+        const std::string config { "go_icp_config.txt" };
+        goICP.ReadConfig(config);
+
+        // GoICP source points
+        std::shared_ptr<GoICP::POINT3D> sourcePoints { new GoICP::POINT3D[source->points.size()]};
+        goICP.pData = sourcePoints.get();
+        goICP.Nd = source->points.size();
+
+        for (int i = 0; i < source->points.size(); i++)
+        {
+            GoICP::POINT3D point;
+
+            point.x = source->points[i].x / maxXSource;
+            point.y = source->points[i].y / maxYSource;
+            point.z = source->points[i].z / maxZSource;
+
+            goICP.pData[i] = point;
+        }
+
+        // GoICP target points
+        std::shared_ptr<GoICP::POINT3D> targetPoints { new GoICP::POINT3D[m_TargetCloud->points.size()]};
+        goICP.pModel = targetPoints.get();
+        goICP.Nm = m_TargetCloud->points.size();
+
+        for (int i = 0; i < m_TargetCloud->points.size(); i++)
+        {
+            GoICP::POINT3D point;
+
+            point.x = source->points[i].x / maxXTarget;
+            point.y = source->points[i].y / maxYTarget;
+            point.z = source->points[i].z / maxZTarget;
+
+            goICP.pModel[i] = point;
+        }
+
+        // build distance transform
+        goICP.BuildDT();
+
+        // register
+        goICP.Register();
+
+        // get optimal T,R
+        double* tData;
+        goICP.optT.getData(tData);
+        Eigen::Vector3f t { static_cast<float>(tData[0]), static_cast<float>(tData[1]), static_cast<float>(tData[2]) };
+
+        double* rData;
+        goICP.optR.getData(rData);
+        Eigen::Matrix3f R;
+        int i = 0;
+        for (int r = 0; r < 3; r++) {
+            for (int c = 0; c < 3; c++) {
+                R(r, c) = rData[r * 3 + c];
+            }
+        }
+
+        // get 4x4 transform matrix
+        Eigen::Matrix4f T;
+        T.block(0, 0, 3, 3) = R;
+        T.block(0, 3, 3, 1) = t;
+
+        // transform point cloud and store in result
+        pcl::transformPointCloud(*source, *result, T);
     }
 }
