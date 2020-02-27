@@ -11,3 +11,8 @@ set(CMAKE_CXX_STANDARD 14)
 add_subdirectory(kitti_vision_streamer)
 add_subdirectory(network_protocol)
 add_subdirectory(cv_reconstruct)
+
+# external libs
+
+add_subdirectory(external/Go-ICP)
+
