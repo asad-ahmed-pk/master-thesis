@@ -15,7 +15,7 @@ Jiaolong Yang <yangjiaolong@gmail.com>
 
 #ifdef __APPLE__
 #include <malloc/malloc.h>
-#elif
+#else
 #include <malloc.h>
 #endif
 

@@ -244,11 +244,11 @@ namespace PointCloud
         goICP.Register();
 
         // get optimal T,R
-        double* tData;
+        double tData[3];
         goICP.optT.getData(tData);
         Eigen::Vector3f t { static_cast<float>(tData[0]), static_cast<float>(tData[1]), static_cast<float>(tData[2]) };
 
-        double* rData;
+        double rData[9];
         goICP.optR.getData(rData);
         Eigen::Matrix3f R;
         int i = 0;
