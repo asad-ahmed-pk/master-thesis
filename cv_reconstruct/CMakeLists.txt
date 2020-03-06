@@ -26,6 +26,10 @@ include_directories(${PCL_INCLUDE_DIRS})
 link_directories(${PCL_LIBRARY_DIRS})
 add_definitions(${PCL_DEFINITIONS})
 
+# G2O
+find_package(G2O REQUIRED)
+include_directories(${G2O_INCLUDE_DIR})
+
 # Includes for eigen for MacOS
 if (${MACOSX})
     include_directories(eigen3)
@@ -75,6 +79,19 @@ list(APPEND EXTERN_SOURCES
 # Testing sources
 list(APPEND TESTING_SOURCES
         extern/catch2/catch.hpp
+)
+
+# G2o libs
+LIST(APPEND G2O_LIBS
+        cxsparse
+        cholmod
+        g2o_cli g2o_simulator
+        g2o_solver_slam2d_linear g2o_types_icp g2o_types_slam2d
+        g2o_core g2o_solver_csparse g2o_solver_structure_only
+        g2o_types_sba g2o_types_slam3d g2o_csparse_extension
+        g2o_solver_dense g2o_stuff
+        g2o_types_sclam2d g2o_parser g2o_solver_pcg
+        g2o_types_data g2o_types_sim3
 )
 
 # Executables
@@ -148,6 +165,17 @@ target_link_libraries(image_feature_test ${OpenCV_LIBS} ${Boost_LIBRARIES} ${PCL
 # Alignment test
 add_executable(alignment_test src/test/alignment_test.cpp)
 target_link_libraries(alignment_test ${OpenCV_LIBS} ${Boost_LIBRARIES} ${PCL_LIBRARIES})
+
+# Bundle adjustment test
+add_executable(bundle_adjustment_test src/test/bundle_adjustment_test.cpp src/test/tests_common.cpp
+        ${CAMERA_SOURCES}
+        ${RECONSTRUCT_3D_SOURCES}
+        ${CONFIG_SOURCES}
+        ${PIPELINE_SOURCES}
+        ${POINT_CLOUD_SOURCES}
+        ${EXTERN_SOURCES}
+)
+target_link_libraries(bundle_adjustment_test ${OpenCV_LIBS} ${Boost_LIBRARIES} ${PCL_LIBRARIES} ${G2O_LIBS})
 
 # Catch2 Tests
 add_executable(test_camera_calib_parser test/test_camera_calib_parser.cpp ${CAMERA_SOURCES} ${RECONSTRUCT_3D_SOURCES} ${CONFIG_SOURCES} ${EXTERN_SOURCES} ${TESTING_SOURCES})
