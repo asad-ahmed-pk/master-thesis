@@ -43,7 +43,7 @@ int main(int argc, char** argv)
         return 1;
     }
 
-    pcl::PointCloud<pcl::PointXYZI> greyscaleCloud;
+    pcl::PointCloud<pcl::PointXYZRGB> merged;
     for (const auto& frame : frames)
     {
         std::cout << "\nProcessing frame #" << frame.ID << std::endl;
@@ -57,22 +57,25 @@ int main(int argc, char** argv)
             if (frame.ID == 0) {
                 temp->points[i].r = 255;
             }
+            else if(frame.ID == 1) {
+                temp->points[i].g = 255;
+            }
             else {
                 temp->points[i].b = 255;
             }
         }
 
-        pcl::io::savePCDFileBinary("cloud_" + std::to_string(frame.ID) + ".pcd", *temp);
-         */
+        merged += *temp;
+        */
 
-        // save greyscale cloud
-        ConvertToGreyScale(*temp, greyscaleCloud);
-        pcl::io::savePCDFileASCII("cloud_" + std::to_string(frame.ID) + ".ascii", greyscaleCloud);
         pcl::io::savePCDFileBinary("cloud_" + std::to_string(frame.ID) + ".pcd", *temp);
-        greyscaleCloud.clear();
+
         *pointCloud += *temp;
         temp->clear();
     }
+
+    //pcl::io::savePCDFileBinary("merged_clouds.pcd", merged);
+    //merged.clear();
 
     // visualise using PCL
     pcl::visualization::PCLVisualizer::Ptr viewer = rgbVis(pointCloud);

@@ -33,35 +33,25 @@ namespace Reconstruct
         }
 
         Eigen::Matrix4f T = ComputeWorldSpaceTransform(frame);
+        std::cout << "\nPose:\n" << T << std::endl;
         pcl::transformPointCloud(input, output, T);
 
         return T;
     }
 
-    // Get 4x4 transformation matrix for GPS location
+    // Get 4x4 transformation matrix for GPS location in world space
     Eigen::Matrix4f Localizer::ComputeWorldSpaceTransform(const Pipeline::StereoFrame& frame)
     {
-        // compute relative pose
-        Eigen::Matrix3f R0 = m_InitialPose->block(0, 0, 3, 3);
-        Eigen::Matrix3f R = R0.transpose() * frame.Rotation;
+        // compute pose in coordinate space of first frame
+        Eigen::Vector3f t = ProjectGPSToMercator(frame.Translation(0), frame.Translation(1), frame.Translation(2));
 
-        Eigen::Vector3f T0 = m_InitialPose->block(0, 3, 3, 1);
-        Eigen::Vector3f T = ProjectGPSToMercator(frame.Translation(0), frame.Translation(1), frame.Translation(2)) - T0;
+        Eigen::Matrix4f T = Eigen::Matrix4f::Identity();
+        T.block(0, 0, 3, 3) = frame.Rotation;
+        T.block(0, 3, 3, 1) = t;
 
-        Eigen::Matrix4f transform = Eigen::Matrix4f::Identity();
-        transform.block(0, 0, 3, 3) = R;
-        transform.block(0, 3, 3, 1) = T;
+        Eigen::Matrix4f TW = m_InitialPose->inverse() * T;
 
-        /*
-        std::cout << "\n\nLocalization\n";
-        std::cout << "\nT:\n" << T;
-        std::cout << "\nR:\n" << R;
-        std::cout << "\n\n";
-        std::cout << "\nTransform:" << transform;
-        std::cout << std::endl;
-        */
-
-        return std::move(transform);
+        return std::move(TW);
     }
 
     // GPS to Mercator Projection
