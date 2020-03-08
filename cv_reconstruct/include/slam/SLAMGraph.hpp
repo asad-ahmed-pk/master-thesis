@@ -13,8 +13,9 @@
 #include <opencv2/core/core.hpp>
 #include <eigen3/Eigen/Eigen>
 
+#include "slam/Map.hpp"
+
 class Frame;
-class Map;
 
 namespace SLAM
 {
@@ -57,9 +58,12 @@ namespace SLAM
     private:
         cv::Mat m_CameraK;
         std::vector<float> m_CameraDistCoeffs;
+
         int m_NextVertexIndex { 0 };
         int m_NextEdgeIndex { 0 };
-        std::unique_ptr<g2o::SparseOptimizer> m_Optimiser;
+
+        std::shared_ptr<Map> m_Map { nullptr };
+        std::unique_ptr<g2o::SparseOptimizer> m_Optimiser { nullptr };
     };
 }
 

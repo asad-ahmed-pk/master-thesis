@@ -35,6 +35,10 @@ namespace SLAM
         cv::eigen2cv(K, m_CameraK);
         cv::eigen2cv(d, m_CameraDistCoeffs);
 
+        // setup 3D map
+        m_Map = std::make_shared<Map>();
+
+        // setup optimisation graph (3D map will link with nodes)
         SetupGraph();
     }
 
@@ -56,6 +60,11 @@ namespace SLAM
         g2o::OptimizationAlgorithm* algorithm { new OptimizationAlgorithm(solver) };
 
         m_Optimiser->setAlgorithm(algorithm);
+    }
+
+    // Getter for map
+    std::shared_ptr<Map> SLAMGraph::GetCurrentMap() {
+        return m_Map;
     }
 
     // Add a new keyframe
