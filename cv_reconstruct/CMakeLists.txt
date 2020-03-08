@@ -71,6 +71,11 @@ list (APPEND PIPELINE_SOURCES
         src/pipeline/FrameFeatureExtractor.cpp
 )
 
+list(APPEND SLAM_SOURCES
+        src/slam/SLAMGraph.cpp
+        src/slam/Map.cpp
+)
+
 # External sources
 list(APPEND EXTERN_SOURCES
         extern/nlohmann/json.hpp
@@ -136,9 +141,10 @@ add_executable(pipeline_test src/test/pipeline_test.cpp src/test/tests_common.cp
         ${CONFIG_SOURCES}
         ${PIPELINE_SOURCES}
         ${POINT_CLOUD_SOURCES}
+        ${SLAM_SOURCES}
         ${EXTERN_SOURCES}
 )
-target_link_libraries(pipeline_test ${OpenCV_LIBS} ${Boost_LIBRARIES} ${PCL_LIBRARIES})
+target_link_libraries(pipeline_test ${OpenCV_LIBS} ${Boost_LIBRARIES} ${PCL_LIBRARIES} ${G2O_LIBS})
 
 # Feature extraction module test program
 add_executable(feature_extract_test src/test/feature_extraction_test.cpp src/test/tests_common.cpp
