@@ -12,10 +12,8 @@
 
 namespace Reconstruct
 {
-    // Transform point cloud
-    // Assumes frame translation is in GPS coordinates: [lat, lon, alt] => R3
-    template <typename PointT>
-    Eigen::Matrix4f Localizer::TransformPointCloud(const Pipeline::StereoFrame& frame, const pcl::PointCloud<PointT>& input, pcl::PointCloud<PointT>& output)
+    // Get frame pose in world space
+    Eigen::Matrix4f Localizer::GetFrameWorldPose(const Pipeline::StereoFrame &frame)
     {
         // record initial pose and calculate mercator scale
         if (m_InitialPose == nullptr)
@@ -26,13 +24,23 @@ namespace Reconstruct
             // translation as mercator projection
             Eigen::Vector3f T = ProjectGPSToMercator(frame.Translation(0), frame.Translation(1), frame.Translation(2));
 
-            // pose
+            // set initial pose
             m_InitialPose = std::make_unique<Eigen::Matrix4f>(Eigen::Matrix4f::Identity());
             m_InitialPose->block(0, 0, 3, 3) = frame.Rotation;
             m_InitialPose->block(0, 3, 3, 1) = T;
         }
 
         Eigen::Matrix4f T = ComputeWorldSpaceTransform(frame);
+
+        return T;
+    }
+
+    // Transform point cloud
+    // Assumes frame translation is in GPS coordinates: [lat, lon, alt] => R3
+    template <typename PointT>
+    Eigen::Matrix4f Localizer::TransformPointCloud(const Pipeline::StereoFrame& frame, const pcl::PointCloud<PointT>& input, pcl::PointCloud<PointT>& output)
+    {
+        Eigen::Matrix4f T = GetFrameWorldPose(frame);
         std::cout << "\nPose:\n" << T << std::endl;
         pcl::transformPointCloud(input, output, T);
 
@@ -49,7 +57,12 @@ namespace Reconstruct
         T.block(0, 0, 3, 3) = frame.Rotation;
         T.block(0, 3, 3, 1) = t;
 
-        Eigen::Matrix4f TW = m_InitialPose->inverse() * T;
+        Eigen::Matrix4f TW = T;
+
+#ifndef NDEBUG
+        std::cout << "\nEuclidean coordinates frame #" << frame.ID << "\n" << t.transpose() << std::endl;
+        std::cout << "Pose for frame #" << frame.ID << "\n" << TW << std::endl;
+#endif
 
         return std::move(TW);
     }
@@ -64,7 +77,7 @@ namespace Reconstruct
         float left = m_MercatorScale * EARTH_RADIUS_METERS * log(tan((M_PI * (90 + latitude)) / 360.0));
         float up = altitude;
 
-        T(0) = -left;
+        T(0) = left;
         T(1) = up;
         T(2) = fwd;
 

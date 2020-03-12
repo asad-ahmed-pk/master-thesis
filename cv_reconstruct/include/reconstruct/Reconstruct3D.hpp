@@ -35,6 +35,12 @@ namespace Reconstruct
         /// \return The disparity map
         cv::Mat GenerateDisparityMap(const cv::Mat& leftImage, const cv::Mat& rightImage) const;
 
+        /// Get the depth map from the left and right image
+        /// \param leftImage The left image
+        /// \param rightImage The right image
+        /// \return The depth map
+        cv::Mat GenerateDepthMap(const cv::Mat& leftImage, const cv::Mat& rightImage) const;
+
         /// Generate point cloud from disparity map
         /// \param disparity The 8 or 16 bit disparity image
         /// \param cameraImage A RGB camera image used for creating the disparity map

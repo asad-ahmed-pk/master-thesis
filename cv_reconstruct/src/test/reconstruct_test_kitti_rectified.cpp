@@ -21,8 +21,8 @@
 #include <pcl/point_types.h>
 
 // Test file names (placed in same directory as executable)
-#define LEFT_IMG_NAME "img_left.png"
-#define RIGHT_IMG_NAME "img_right.png"
+#define LEFT_IMG_NAME "0l.png"
+#define RIGHT_IMG_NAME "0r.png"
 #define CALIB_FILE_NAME "stereo_calib.json"
 
 int main(int argc, char** argv)
@@ -55,7 +55,9 @@ int main(int argc, char** argv)
     cv::imwrite("disparity_map.png", disparity);
 
     // create point cloud
-    pcl::PointCloud<pcl::PointXYZRGB>::Ptr pointCloud(new pcl::PointCloud<pcl::PointXYZRGB>(std::move(reconstructor.GeneratePointCloud(disparity, leftImage))));
+    pcl::PointCloud<pcl::PointXYZRGB>::Ptr pointCloud(new pcl::PointCloud<pcl::PointXYZRGB>(std::move(reconstructor.Triangulate3D(disparity, leftImage, rightImage))));
+
+    //pcl::PointCloud<pcl::PointXYZRGB>::Ptr pointCloud(new pcl::PointCloud<pcl::PointXYZRGB>(std::move(reconstructor.GeneratePointCloud(disparity, leftImage))));
 
     // remove outliers
     PointCloud::PointCloudPostProcessor pointCloudPostProcessor(config);

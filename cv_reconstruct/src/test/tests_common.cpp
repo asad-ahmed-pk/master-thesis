@@ -7,6 +7,8 @@
 
 #include "tests_common.hpp"
 
+#define EARTH_RADIUS_METERS 6378137.0f
+
 // Get calib and config file
 bool GetCalibAndConfig(Camera::Calib::StereoCalib& calib, Config::Config& config)
 {
@@ -116,8 +118,43 @@ void ConvertLocalizationsToStereoFrames(const std::vector<LocalizationData>& dat
     for (Pipeline::StereoFrame& frame : frames)
     {
         frame.ID = i++;
+
         frame.LeftImage = cv::imread(std::to_string(frame.ID) + "l.png", cv::IMREAD_COLOR);
         frame.RightImage = cv::imread(std::to_string(frame.ID) + "r.png", cv::IMREAD_COLOR);
+    }
+}
+
+// Add 4 point point cloud
+void AddCameraDebugShape(pcl::PointCloud<pcl::PointXYZRGB>& cloud, int r, int g, int b, float scale)
+{
+    for (int i = -1; i <= 1; i++)
+    {
+        for (int j = -1; j <= 1; j++)
+        {
+            pcl::PointXYZRGB p(r, g, b);
+
+            p.x = scale * i;
+            p.y = scale * j;
+            p.z = scale;
+
+            cloud.push_back(p);
+        }
+    }
+
+    // line to plane as camera (forward line)
+    for (int i = 0; i < scale; i++)
+    {
+        pcl::PointXYZRGB p(0, 0, 255);
+        p.x = p.y = 0; p.z = i;
+        cloud.push_back(p);
+    }
+
+    // line upwards
+    for (int i = 0; i < scale; i++)
+    {
+        pcl::PointXYZRGB p(0, 255, 255);
+        p.x = 0; p.y = i; p.z = 0;
+        cloud.push_back(p);
     }
 }
 
@@ -128,6 +165,7 @@ void ConvertToGreyScale(const pcl::PointCloud<pcl::PointXYZRGB>& input, pcl::Poi
     for (int i = 0; i < input.points.size(); i++)
     {
         Eigen::Vector3i rgb = input.points[i].getRGBVector3i();
+
         float r = rgb(0) / 255.0f;
         float g = rgb(1) / 255.0f;
         float b = rgb(2) / 255.0f;
@@ -141,4 +179,59 @@ void ConvertToGreyScale(const pcl::PointCloud<pcl::PointXYZRGB>& input, pcl::Poi
 
         result.push_back(p);
     }
+}
+
+// GPS to Mercator Projection
+// X: Right, Y: Up, Z: Forward
+Eigen::Vector3f ProjectGPSToMercator(float latitude, float longitude, float altitude)
+{
+    // record the mercator scale
+    static float mercatorScale = -1.0;
+    if (mercatorScale < 0.0) {
+        mercatorScale = cosf((latitude * static_cast<float>(M_PI)) / 180.0f);
+    }
+
+    Eigen::Vector3f T = Eigen::Vector3f::Zero();
+
+    float fwd = mercatorScale * longitude * M_PI * EARTH_RADIUS_METERS / 180.0;
+    float left = mercatorScale * EARTH_RADIUS_METERS * log(tan((M_PI * (90 + latitude)) / 360.0));
+    float up = altitude;
+
+    T(0) = -left;
+    T(1) = up;
+    T(2) = fwd;
+
+#ifndef NDEBUG
+    std::cout << "\nGPS:\n" << T << std::endl;
+#endif
+
+    return std::move(T);
+}
+
+// Get world pose for the stereo frame in euclidean coordinate space
+Eigen::Matrix4f GetFrameWorldPose(const Pipeline::StereoFrame& frame)
+{
+    // get mercator projection
+    Eigen::Vector3f t = ProjectGPSToMercator(frame.Translation(0), frame.Translation(1), frame.Translation(2));
+
+    // store first transform
+    static std::unique_ptr<Eigen::Matrix4f> T0 { nullptr };
+    if (T0 == nullptr)
+    {
+        T0 = std::make_unique<Eigen::Matrix4f>(Eigen::Matrix4f::Identity());
+        T0->block(0, 0, 3, 3) = frame.Rotation;
+        T0->block(0, 3, 3, 1) = t;
+    }
+
+    // this transform
+    Eigen::Matrix4f T1 = Eigen::Matrix4f::Identity();
+    T1.block(0, 0, 3, 3) = frame.Rotation;
+    T1.block(0, 3, 3, 1) = t - T0->block(0, 3, 3, 1);
+
+    return T1;
+
+    // convert frame to coordinate system relative to origin (world space)
+    //Eigen::Matrix4f T1_W = T0->inverse() * T1;
+
+    //return T1_W;
 }

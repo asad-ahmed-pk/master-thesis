@@ -65,7 +65,7 @@ namespace Pipeline
         CalculateDisparity(frame, result.DisparityImage);
 
         // triangulation
-        pcl::PointCloud<pcl::PointXYZRGB>::Ptr localPointCloud(new pcl::PointCloud<pcl::PointXYZRGB>(m_Reconstructor->GeneratePointCloud(result.DisparityImage, frame.LeftImage)));
+        pcl::PointCloud<pcl::PointXYZRGB>::Ptr localPointCloud(new pcl::PointCloud<pcl::PointXYZRGB>(m_Reconstructor->Triangulate3D(result.DisparityImage, frame.LeftImage, frame.RightImage)));
 
         // remove outliers
         m_PointCloudPostProcessor->RemoveOutliers(localPointCloud, localPointCloud);
@@ -80,6 +80,8 @@ namespace Pipeline
         m_PointCloudRegistration->SaveFirstFrame(frame.LeftImage, projected3D, T);
 
         result.PointCloudLocalized = transformedPointCloud;
+
+        *m_PrevPointCloud += *result.PointCloudLocalized;
     }
 
     // Process a frame that has had a frame processed before it. Assumes m_LastPipelineResult has valid data set.
@@ -89,7 +91,7 @@ namespace Pipeline
         CalculateDisparity(frame, result.DisparityImage);
 
         // triangulation
-        pcl::PointCloud<pcl::PointXYZRGB>::Ptr localPointCloud(new pcl::PointCloud<pcl::PointXYZRGB>(m_Reconstructor->GeneratePointCloud(result.DisparityImage, frame.LeftImage)));
+        pcl::PointCloud<pcl::PointXYZRGB>::Ptr localPointCloud(new pcl::PointCloud<pcl::PointXYZRGB>(m_Reconstructor->Triangulate3D(result.DisparityImage, frame.LeftImage, frame.RightImage)));
 
         // remove outliers
         m_PointCloudPostProcessor->RemoveOutliers(localPointCloud, localPointCloud);
@@ -100,10 +102,15 @@ namespace Pipeline
 
         // align with last transformed point cloud
         pcl::PointCloud<pcl::PointXYZRGB>::Ptr alignedPointCloud { new pcl::PointCloud<pcl::PointXYZRGB>() };
-        cv::Mat projected3D;
-        m_Reconstructor->Project3D(result.DisparityImage, projected3D);
-        m_PointCloudRegistration->RegisterFrameWithPreviousFrame(frame.LeftImage, projected3D, T, transformedPointCloud, alignedPointCloud);
+        //cv::Mat projected3D;
+        //m_Reconstructor->Project3D(result.DisparityImage, projected3D);
+        //m_PointCloudRegistration->RegisterFrameWithPreviousFrame(frame.LeftImage, projected3D, T, transformedPointCloud, alignedPointCloud);
 
-        result.PointCloudLocalized = alignedPointCloud;
+        m_PointCloudRegistration->AlignPointClouds(transformedPointCloud, m_PrevPointCloud);
+
+        result.PointCloudLocalized = transformedPointCloud;
+
+        m_PrevPointCloud->clear();
+        *m_PrevPointCloud += *transformedPointCloud;
     }
 }

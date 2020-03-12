@@ -24,6 +24,25 @@ namespace PointCloud
         m_ICP.setRANSACIterations(config.PointCloudRegistration.ICP.NumRansacIterations);
     }
 
+    // Simple ICP alignment
+    void PointCloudRegistration::AlignPointClouds(pcl::PointCloud<pcl::PointXYZRGB>::Ptr source, pcl::PointCloud<pcl::PointXYZRGB>::Ptr target)
+    {
+        pcl::IterativeClosestPoint<pcl::PointXYZRGB, pcl::PointXYZRGB> icp;
+
+        icp.setMaximumIterations(10);
+        icp.setRANSACIterations(10);
+        icp.setTransformationEpsilon (1e-8);
+        icp.setEuclideanFitnessEpsilon (0.01);
+
+        icp.setInputSource(source);
+        icp.setInputTarget(target);
+        icp.align(*source);
+
+#ifndef NDEBUG
+        std::cout << "\nICP T: \n" << icp.getFinalTransformation();
+#endif
+    }
+
     // Align the frame with the previous frame using 2D image keypoints and descriptors with the given world transform
     void PointCloudRegistration::RegisterFrameWithPreviousFrame(const cv::Mat& image, const cv::Mat& projected3D, const Eigen::Matrix4f& worldTransform, pcl::PointCloud<pcl::PointXYZRGB>::Ptr input, pcl::PointCloud<pcl::PointXYZRGB>::Ptr registeredCloud)
     {

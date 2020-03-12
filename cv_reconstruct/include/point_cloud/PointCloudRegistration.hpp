@@ -29,6 +29,8 @@ namespace PointCloud
 
         ~PointCloudRegistration() = default;
 
+        void AlignPointClouds(pcl::PointCloud<pcl::PointXYZRGB>::Ptr source, pcl::PointCloud<pcl::PointXYZRGB>::Ptr target);
+
         /// Register this frame with the previous frame and generate the registered point cloud
         /// \param image The RGB image to be used for 2D feature detection
         /// \param projected3D The 3D image of the frame which contains the X,Y,Z points in camera space

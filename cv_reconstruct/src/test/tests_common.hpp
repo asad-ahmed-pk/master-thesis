@@ -60,4 +60,13 @@ void PointClicked(const pcl::visualization::PointPickingEvent& event);
 // Convert point cloud to greyscale
 void ConvertToGreyScale(const pcl::PointCloud<pcl::PointXYZRGB>& input, pcl::PointCloud<pcl::PointXYZI>& result);
 
+// Mercator projection
+Eigen::Vector3f ProjectGPSToMercator(float latitude, float longitude, float altitude);
+
+// Get world pose from GPS in euclidean space for frame
+Eigen::Matrix4f GetFrameWorldPose(const Pipeline::StereoFrame& frame);
+
+// Camera debug shape
+void AddCameraDebugShape(pcl::PointCloud<pcl::PointXYZRGB>& cloud, int r, int g, int b, float scale = 10.0f);
+
 #endif //MASTER_THESIS_TESTS_COMMON_HPP

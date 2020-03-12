@@ -50,6 +50,8 @@ namespace Pipeline
         std::unique_ptr<Reconstruct::Localizer> m_Localizer;
         std::unique_ptr<PointCloud::PointCloudPostProcessor> m_PointCloudPostProcessor;
         std::unique_ptr<PointCloud::PointCloudRegistration> m_PointCloudRegistration;
+
+        pcl::PointCloud<pcl::PointXYZRGB>::Ptr m_PrevPointCloud { new pcl::PointCloud<pcl::PointXYZRGB>() };
     };
 }
 

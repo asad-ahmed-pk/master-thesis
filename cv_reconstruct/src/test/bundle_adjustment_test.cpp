@@ -22,11 +22,11 @@
 
 #include "pipeline/StereoFrame.hpp"
 #include "reconstruct/Reconstruct3D.hpp"
+#include "reconstruct/Localizer.hpp"
 
 #include "tests_common.hpp"
 
 #define LOCALIZATION_DATA_FILE "pipeline_localization_data.txt"
-#define EARTH_RADIUS_METERS 6378137.0f
 
 typedef g2o::BlockSolver_6_3 BlockSolver;
 
@@ -60,9 +60,7 @@ struct KeyFrame
 
 // BA on the point cloud
 void BundleAdjust(std::vector<KeyFrame> frames, pcl::PointCloud<pcl::PointXYZRGB>::Ptr result, const Camera::Calib::StereoCalib& calib);
-Eigen::Matrix4f GetFrameWorldPose(const Pipeline::StereoFrame& frame);
 pcl::PointCloud<pcl::PointXYZRGB>::Ptr GetFramePointCloud(const Pipeline::StereoFrame& frame, const Reconstruct::Reconstruct3D& reconstruct3D);
-Eigen::Vector3f ProjectGPSToMercator(float latitude, float longitude, float altitude);
 
 int main(int argc, char** argv)
 {
@@ -80,10 +78,14 @@ int main(int argc, char** argv)
 
     // create all the required components
     Reconstruct::Reconstruct3D reconstruct3D(stereoCalib, config);
+    Reconstruct::Localizer localizer;
 
     // prepare clouds and key frames
     pcl::PointCloud<pcl::PointXYZRGB>::Ptr pc;
+    pcl::PointCloud<pcl::PointXYZRGB>::Ptr transformed { new pcl::PointCloud<pcl::PointXYZRGB>() };
     pcl::PointCloud<pcl::PointXYZRGB>::Ptr scene { new pcl::PointCloud<pcl::PointXYZRGB>() };
+    pcl::PointCloud<pcl::PointXYZRGB>::Ptr debugCloud { new pcl::PointCloud<pcl::PointXYZRGB>() };
+
     std::vector<KeyFrame> keyframes;
 
     for (unsigned int i = 0; i < frames.size(); i++)
@@ -94,17 +96,48 @@ int main(int argc, char** argv)
         pc = GetFramePointCloud(frames[i], reconstruct3D);
 
         // get the pose for the keyframe
-        Eigen::Matrix4f pose = GetFrameWorldPose(frames[i]);
+        Eigen::Matrix4f pose = localizer.GetFrameWorldPose(frames[i]);
         std::cout << "\nPose for frame #" << i << "\n" << pose << std::endl;
 
+        // add camera debug shape
+        //AddCameraDebugShape(*pc, (i == 0 ? 255 : 0), (i == 1 ? 255 : 0), (i == 2 ? 255 : 0));
+
         // update the points with a rigid-body transform
-        pcl::transformPointCloud(*pc, *pc, pose);
+        pcl::transformPointCloud(*pc, *transformed, pose);
+
+        // add color
+        /*
+        for (auto& p : *transformed)
+        {
+            p.rgb = 0;
+            switch (i)
+            {
+                case 0:
+                    p.r = 255;
+                    break;
+                case 1:
+                    p.g = 255;
+                    break;
+                case 2:
+                    p.b = 255;
+                    break;
+            }
+        }
+        */
+
+        // create camera plane debug point cloud to see transforms
+        AddCameraDebugShape(*debugCloud, (i == 0 ? 255 : 0), (i == 1 ? 255 : 0), (i == 2 ? 255 : 0));
+        pcl::transformPointCloud(*debugCloud, *debugCloud, pose);
 
         // append to scene cloud
-        *scene += *pc;
+        *scene += *transformed;
+        *scene += *debugCloud;
 
         // create keyframe for SLAM
-        keyframes.push_back(std::move(KeyFrame(i, pose, pc)));
+        keyframes.push_back(std::move(KeyFrame(i, pose, transformed)));
+
+        transformed->clear();
+        debugCloud->clear();
 
         pc->clear();
     }
@@ -130,7 +163,7 @@ int main(int argc, char** argv)
 void BundleAdjust(std::vector<KeyFrame> frames, pcl::PointCloud<pcl::PointXYZRGB>::Ptr result, const Camera::Calib::StereoCalib& calib)
 {
     g2o::SparseOptimizer optimizer;
-    optimizer.setVerbose(false);
+    optimizer.setVerbose(true);
 
     // setup block solver and optimisation algorithm (for cholesky sparse decomposition)
     LinearSolver * linearSolver { new LinearSolver() };
@@ -154,6 +187,9 @@ void BundleAdjust(std::vector<KeyFrame> frames, pcl::PointCloud<pcl::PointXYZRGB
     int vertexIndex = 0;
     int edgeIndex = 0;
 
+    // last pose to connect
+    g2o::VertexSE3Expmap* previousPoseVertex { nullptr };
+
     // this will map the PCL point cloud index to the address of the map point vertex in the optimised graph
     std::vector<std::vector<g2o::VertexSBAPointXYZ*>> correctedPoints;
 
@@ -168,7 +204,7 @@ void BundleAdjust(std::vector<KeyFrame> frames, pcl::PointCloud<pcl::PointXYZRGB
 
         g2o::VertexSE3Expmap* poseVertex = new g2o::VertexSE3Expmap;
         poseVertex->setId(vertexIndex);
-        if (frame.Index < 2) {
+        if (frame.Index < 1) {
             poseVertex->setFixed(true);
         }
         poseVertex->setEstimate(pose);
@@ -202,8 +238,35 @@ void BundleAdjust(std::vector<KeyFrame> frames, pcl::PointCloud<pcl::PointXYZRGB
             e->information() = Eigen::Matrix2d::Identity();
             e->setParameterId(0, 0);
 
+            if (!optimizer.addEdge(e)) {
+                assert(false);
+            }
+        }
+
+        // connect this pose to previous camera pose
+        if (previousPoseVertex != nullptr)
+        {
+            g2o::EdgeSE3Expmap* e = new g2o::EdgeSE3Expmap;
+
+            Eigen::Vector3f t1 = frame.Pose.block(0, 3, 3, 1);
+            Eigen::Vector3f t2 = frames[frame.Index - 1].Pose.block(0, 3, 3, 1);
+            Eigen::Vector3d t = (t2 - t1).cast<double>();
+
+            Eigen::Matrix4d P = Eigen::Matrix4d::Identity();
+            P.block(0, 3, 3, 1) = t;
+
+            Eigen::Quaterniond q;
+            q.setIdentity();
+            g2o::SE3Quat m(q, t);
+
+            e->setVertex(0, dynamic_cast<g2o::OptimizableGraph::Vertex*>(previousPoseVertex));
+            e->setVertex(1, dynamic_cast<g2o::OptimizableGraph::Vertex*>(poseVertex));
+            e->setMeasurement(m);
+
             optimizer.addEdge(e);
         }
+
+        previousPoseVertex = poseVertex;
     }
 
     std::cout << "\nAll edges and vertices added. Performing map optimisation" << std::endl;
@@ -232,62 +295,16 @@ void BundleAdjust(std::vector<KeyFrame> frames, pcl::PointCloud<pcl::PointXYZRGB
     std::cout << "\nDone. BA complete" << std::endl;
 }
 
-// Get world pose for the stereo frame in euclidean coordinate space
-Eigen::Matrix4f GetFrameWorldPose(const Pipeline::StereoFrame& frame)
-{
-    // get mercator projection
-    Eigen::Vector3f t = ProjectGPSToMercator(frame.Translation(0), frame.Translation(1), frame.Translation(2));
 
-    // store first transform
-    static std::unique_ptr<Eigen::Matrix4f> T0 { nullptr };
-    if (T0 == nullptr)
-    {
-        T0 = std::make_unique<Eigen::Matrix4f>(Eigen::Matrix4f::Identity());
-        T0->block(0, 0, 3, 3) = frame.Rotation;
-        T0->block(0, 3, 3, 1) = t;
-    }
-
-    // this transform
-    Eigen::Matrix4f T1 = Eigen::Matrix4f::Identity();
-    T1.block(0, 0, 3, 3) = frame.Rotation;
-    T1.block(0, 3, 3, 1) = t;
-
-    // convert frame to coordinate system relative to origin (world space)
-    Eigen::Matrix4f T1_W = T0->inverse() * T1;
-
-    return T1_W;
-}
 
 // Get point cloud for the given stereo frame
 pcl::PointCloud<pcl::PointXYZRGB>::Ptr GetFramePointCloud(const Pipeline::StereoFrame& frame, const Reconstruct::Reconstruct3D& reconstruct3D)
 {
     cv::Mat disparity = reconstruct3D.GenerateDisparityMap(frame.LeftImage, frame.RightImage);
 
-    pcl::PointCloud<pcl::PointXYZRGB> cloud = reconstruct3D.GeneratePointCloud(disparity, frame.LeftImage);
+    pcl::PointCloud<pcl::PointXYZRGB> cloud = reconstruct3D.Triangulate3D(disparity, frame.LeftImage, frame.RightImage);
+    //pcl::PointCloud<pcl::PointXYZRGB> cloud = reconstruct3D.GeneratePointCloud(disparity, frame.LeftImage);
     pcl::PointCloud<pcl::PointXYZRGB>::Ptr pc { new pcl::PointCloud<pcl::PointXYZRGB>(std::move(cloud)) };
 
     return pc;
-}
-
-// GPS to Mercator Projection
-// X: Right, Y: Up, Z: Forward
-Eigen::Vector3f ProjectGPSToMercator(float latitude, float longitude, float altitude)
-{
-    // record the mercator scale
-    static float mercatorScale = -1.0;
-    if (mercatorScale < 0.0) {
-        mercatorScale = cosf((latitude * static_cast<float>(M_PI)) / 180.0f);
-    }
-
-    Eigen::Vector3f T = Eigen::Vector3f::Zero();
-
-    float fwd = mercatorScale * EARTH_RADIUS_METERS * ((M_PI * longitude) / 180.0);
-    float left = mercatorScale * EARTH_RADIUS_METERS * log(tan((M_PI * (90 + latitude)) / 360.0));
-    float up = altitude;
-
-    T(0) = -left;
-    T(1) = up;
-    T(2) = fwd;
-
-    return std::move(T);
 }
