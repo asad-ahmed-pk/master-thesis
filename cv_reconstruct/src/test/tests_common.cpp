@@ -50,7 +50,7 @@ Pipeline::StereoFrame ConvertToFrame(const LocalizationData& data)
 Eigen::Matrix3f RotationMatrixFromEuler(float pitch, float yaw, float roll)
 {
     Eigen::AngleAxisf pitchAngle(pitch, Eigen::Vector3f::UnitX());
-    Eigen::AngleAxisf yawAngle(yaw, Eigen::Vector3f::UnitY());
+    Eigen::AngleAxisf yawAngle(-yaw, Eigen::Vector3f::UnitY());
     Eigen::AngleAxisf rollAngle(roll, Eigen::Vector3f::UnitZ());
 
     Eigen::Quaternion<float> q = rollAngle * yawAngle * pitchAngle;

@@ -48,14 +48,28 @@ namespace Pipeline
         pcl::PointCloud<pcl::PointXYZRGB>::Ptr cloud{ new pcl::PointCloud<pcl::PointXYZRGB>() };
         PipelineResult pipelineResult{};
 
-        if (frame.ID == 0) {
+        Eigen::Vector3f t = m_Localizer->GetFrameWorldPose(frame).block(0, 3, 3, 1);
+
+        if (frame.ID == 0)
+        {
             ProcessFirstFrame(frame, pipelineResult);
+            m_LastFramePosition = t;
+            result = pipelineResult.PointCloudLocalized;
         }
-        else {
-            ProcessSubsequentFrame(frame, pipelineResult);
+        else
+        {
+            // only process if vehicle moved certain distance
+            float distance = (t - m_LastFramePosition).norm();
+            if (distance >= 5.0f)
+            {
+                std::cout << "\nProcessing frame #" << frame.ID << std::endl;
+                ProcessSubsequentFrame(frame, pipelineResult);
+                result = pipelineResult.PointCloudLocalized;
+
+                m_LastFramePosition = t;
+            }
         }
 
-        result = pipelineResult.PointCloudLocalized;
     }
 
     // Process this as the first frame
@@ -102,13 +116,14 @@ namespace Pipeline
 
         // align with last transformed point cloud
         pcl::PointCloud<pcl::PointXYZRGB>::Ptr alignedPointCloud { new pcl::PointCloud<pcl::PointXYZRGB>() };
-        //cv::Mat projected3D;
-        //m_Reconstructor->Project3D(result.DisparityImage, projected3D);
-        //m_PointCloudRegistration->RegisterFrameWithPreviousFrame(frame.LeftImage, projected3D, T, transformedPointCloud, alignedPointCloud);
+        cv::Mat projected3D;
+        m_Reconstructor->Project3D(result.DisparityImage, projected3D);
+        m_PointCloudRegistration->RegisterFrameWithPreviousFrame(frame.LeftImage, projected3D, T, transformedPointCloud, alignedPointCloud);
 
-        m_PointCloudRegistration->AlignPointClouds(transformedPointCloud, m_PrevPointCloud);
+        // ICP
+        //m_PointCloudRegistration->AlignPointClouds(transformedPointCloud, m_PrevPointCloud);
 
-        result.PointCloudLocalized = transformedPointCloud;
+        result.PointCloudLocalized = alignedPointCloud;
 
         m_PrevPointCloud->clear();
         *m_PrevPointCloud += *transformedPointCloud;

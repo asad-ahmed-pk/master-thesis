@@ -204,7 +204,7 @@ void BundleAdjust(std::vector<KeyFrame> frames, pcl::PointCloud<pcl::PointXYZRGB
 
         g2o::VertexSE3Expmap* poseVertex = new g2o::VertexSE3Expmap;
         poseVertex->setId(vertexIndex);
-        if (frame.Index < 1) {
+        if (frame.Index <= 1) {
             poseVertex->setFixed(true);
         }
         poseVertex->setEstimate(pose);

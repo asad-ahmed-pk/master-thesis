@@ -195,7 +195,7 @@ namespace Reconstruct
                 //std::cout << "\nd = " << d;
 
                 point.z = f * b / d;
-                point.x = -(static_cast<float>(j) - cx) * (point.z / f);
+                point.x = (static_cast<float>(j) - cx) * (point.z / f);
                 point.y = -(static_cast<float>(i) - cy) * (point.z / f);
 
                 point.r = leftImage.at<cv::Vec3b>(i, j)[2];

@@ -9,6 +9,7 @@
 #include "reconstruct/Reconstruct3D.hpp"
 #include "config/ConfigParser.hpp"
 #include "point_cloud/PointCloudPostProcessor.hpp"
+#include "tests_common.hpp"
 
 #include <string>
 #include <iostream>
@@ -64,6 +65,9 @@ int main(int argc, char** argv)
     pointCloudPostProcessor.SetMinimumNeighboursOutlierRemoval(config.PointCloudPostProcess.OutlierMinK);
     pointCloudPostProcessor.SetStdDevOutlierRemoval(config.PointCloudPostProcess.OutlierStdDevThreshold);
     pointCloudPostProcessor.RemoveOutliers(pointCloud, pointCloud);
+
+    // add debug shape
+    AddCameraDebugShape(*pointCloud, 255, 0, 0);
 
     // save point cloud file
     std::cout << "\nSaving point cloud file..." << std::endl;

@@ -41,8 +41,12 @@ namespace Reconstruct
     Eigen::Matrix4f Localizer::TransformPointCloud(const Pipeline::StereoFrame& frame, const pcl::PointCloud<PointT>& input, pcl::PointCloud<PointT>& output)
     {
         Eigen::Matrix4f T = GetFrameWorldPose(frame);
-        std::cout << "\nPose:\n" << T << std::endl;
         pcl::transformPointCloud(input, output, T);
+
+#ifndef NDEBUG
+        std::cout << "\nPose:\n" << T << std::endl;
+#endif
+
 
         return T;
     }
@@ -55,7 +59,7 @@ namespace Reconstruct
 
         Eigen::Matrix4f T = Eigen::Matrix4f::Identity();
         T.block(0, 0, 3, 3) = frame.Rotation;
-        T.block(0, 3, 3, 1) = t;
+        T.block(0, 3, 3, 1) = (t - m_InitialPose->block(0, 3, 3, 1));
 
         Eigen::Matrix4f TW = T;
 
@@ -77,7 +81,7 @@ namespace Reconstruct
         float left = m_MercatorScale * EARTH_RADIUS_METERS * log(tan((M_PI * (90 + latitude)) / 360.0));
         float up = altitude;
 
-        T(0) = left;
+        T(0) = -left;
         T(1) = up;
         T(2) = fwd;
 

@@ -46,6 +46,8 @@ namespace Pipeline
         Config::Config m_Config;
         bool m_ShouldRectifyImages;
 
+        Eigen::Vector3f m_LastFramePosition;
+
         std::unique_ptr<Reconstruct::Reconstruct3D> m_Reconstructor;
         std::unique_ptr<Reconstruct::Localizer> m_Localizer;
         std::unique_ptr<PointCloud::PointCloudPostProcessor> m_PointCloudPostProcessor;
