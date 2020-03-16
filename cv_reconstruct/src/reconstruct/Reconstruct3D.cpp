@@ -9,6 +9,9 @@
 #include <opencv2/imgproc/imgproc.hpp>
 #include <opencv2/core/eigen.hpp>
 
+#include <pcl/stereo/disparity_map_converter.h>
+#include <pcl/common/transforms.h>
+
 #include <fstream>
 
 #define MISSING_DISPARITY_Z 10000
@@ -27,8 +30,8 @@ namespace Reconstruct
 
         // calculate and store the Q matrix (3D projection)
         Eigen::Matrix4f Q = Eigen::Matrix4f::Identity();
-        float averageFocalLength = (m_StereoCameraSetup.LeftCameraCalib.K(0, 0) + m_StereoCameraSetup.RightCameraCalib.K(0, 0)) / 2.0f;
-        Q(2, 2) = 0.005 * averageFocalLength;
+        float f = (m_StereoCameraSetup.LeftCameraCalib.K(0, 0) + m_StereoCameraSetup.RightCameraCalib.K(0, 0)) / 2.0f;
+        Q(2, 2) = 0.005 * f;
         cv::eigen2cv(Q, m_Q);
     }
 
@@ -92,7 +95,6 @@ namespace Reconstruct
         cv::reprojectImageTo3D(disparity, reprojected3D, m_Q, true);
 
         pcl::PointCloud<pcl::PointXYZRGB> pointCloud;
-
         cv::Vec3f coords;
         pcl::PointXYZRGB point;
 
@@ -110,8 +112,8 @@ namespace Reconstruct
                 }
 
                 // set 3D point X,Y,Z and RGB
-                point.x = coords[0];
-                point.y = -coords[1];
+                point.x = (coords[0] - (cameraImage.cols / 2.0f));
+                point.y = -(coords[1] - (cameraImage.rows / 2.0f));
                 point.z = coords[2];
 
                 point.r = cameraImage.at<cv::Vec3b>(row, col)[2];
@@ -127,6 +129,11 @@ namespace Reconstruct
         pointCloud.width = count;
         pointCloud.height = 1;
         pointCloud.is_dense = true;
+
+        // perspective fix
+        Eigen::Matrix4f P = Eigen::Matrix4f::Identity();
+        P(0, 0) = -1;
+        pcl::transformPointCloud(pointCloud, pointCloud, P);
 
         return pointCloud;
     }
@@ -150,7 +157,14 @@ namespace Reconstruct
 
         uint32_t count = 0;
         float d;
+
+        // baseline and focal length
+        float b = m_StereoCameraSetup.T(0);
         float f = (m_StereoCameraSetup.LeftCameraCalib.K(0, 0) + m_StereoCameraSetup.LeftCameraCalib.K(1, 1)) / 2.0f;
+
+        // principal point
+        float cx = m_StereoCameraSetup.LeftCameraCalib.K(0, 2);
+        float cy = m_StereoCameraSetup.LeftCameraCalib.K(1, 2);
 
         for (int i = 0; i < disparity.rows; i++)
         {
@@ -162,9 +176,11 @@ namespace Reconstruct
                     continue;
                 }
 
-                point.z = f * (m_StereoCameraSetup.T(0) / d);
-                point.x = (static_cast<float>(i) - m_StereoCameraSetup.LeftCameraCalib.K(0, 2)) * (point.z / f);
-                point.y = (static_cast<float>(j) - m_StereoCameraSetup.LeftCameraCalib.K(1, 2)) * (point.z / f);
+                //std::cout << "\nd = " << d;
+
+                point.z = f * b / d;
+                point.x = (static_cast<float>(j) - cx) * (point.z / f);
+                point.y = -(static_cast<float>(i) - cy) * (point.z / f);
 
                 point.r = leftImage.at<cv::Vec3b>(i, j)[2];
                 point.g = leftImage.at<cv::Vec3b>(i, j)[1];
