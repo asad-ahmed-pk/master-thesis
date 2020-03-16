@@ -4,6 +4,8 @@
 // Responsible for configuring required components according to the config
 //
 
+#include <opencv2/imgproc/imgproc.hpp>
+
 #include "pipeline/ReconstructionPipeline.hpp"
 
 namespace Pipeline
@@ -32,13 +34,33 @@ namespace Pipeline
     void ReconstructionPipeline::CalculateDisparity(const Pipeline::StereoFrame& frame, cv::Mat& disparity) const
     {
         // rectify if image rectification required
-        if (m_ShouldRectifyImages) {
+        if (m_ShouldRectifyImages)
+        {
             cv::Mat leftImageRectified, rightImageRectified;
             m_Reconstructor->RectifyImages(frame.LeftImage, frame.RightImage, leftImageRectified, rightImageRectified);
             disparity = m_Reconstructor->GenerateDisparityMap(leftImageRectified, rightImageRectified);
         }
         else {
             disparity = m_Reconstructor->GenerateDisparityMap(frame.LeftImage, frame.RightImage);
+        }
+
+        // compute std dev of disparity and threshold it
+        cv::Mat disp; cv::Mat mean; std::vector<double> std;
+        cv::normalize(disparity, disp, 0, 255, cv::NORM_MINMAX, CV_8U);
+        cv::Mat mask(disp.rows, disp.cols, CV_8U);
+        cv::meanStdDev(disp, mean, std);
+        cv::threshold(disp, mask, std[0] * 1.3, 255, cv::THRESH_BINARY);
+
+        // apply mask to disparity
+        for (int row = 0; row < mask.rows; row++)
+        {
+            for (int col = 0; col < mask.cols; col++)
+            {
+                int value = static_cast<int>(mask.at<unsigned char>(row, col));
+                if (value == 0) {
+                    disparity.at<short>(row, col) = 0;
+                }
+            }
         }
     }
 
