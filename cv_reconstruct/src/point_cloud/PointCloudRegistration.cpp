@@ -19,9 +19,15 @@ namespace PointCloud
     {
         // setup ICP params from config file
         m_ICP.setMaximumIterations(config.PointCloudRegistration.ICP.NumMaxIterations);
-        m_ICP.setTransformationEpsilon (config.PointCloudRegistration.ICP.TransformEpsilon);
-        m_ICP.setEuclideanFitnessEpsilon (config.PointCloudRegistration.ICP.EuclideanFitnessEpsilon);
+        m_ICP.setTransformationEpsilon(config.PointCloudRegistration.ICP.TransformEpsilon);
+        m_ICP.setEuclideanFitnessEpsilon(config.PointCloudRegistration.ICP.EuclideanFitnessEpsilon);
         m_ICP.setRANSACIterations(config.PointCloudRegistration.ICP.NumRansacIterations);
+
+        // TODO: Remove later once working
+        m_ICP2.setMaximumIterations(config.PointCloudRegistration.ICP.NumMaxIterations);
+        m_ICP2.setTransformationEpsilon(config.PointCloudRegistration.ICP.TransformEpsilon);
+        m_ICP2.setEuclideanFitnessEpsilon(config.PointCloudRegistration.ICP.EuclideanFitnessEpsilon);
+        m_ICP2.setRANSACIterations(config.PointCloudRegistration.ICP.NumRansacIterations);
     }
 
     // Align the frame with the previous frame using 2D image keypoints and descriptors with the given world transform
@@ -156,5 +162,17 @@ namespace PointCloud
 
         // save the transform, this will be the target's world space transform
         m_TargetData.WorldTransform = transform;
+    }
+
+    // Registration by ICP
+    Eigen::Matrix4f PointCloudRegistration::RegisterCloudICP(pcl::PointCloud<pcl::PointXYZRGB>::Ptr& source, pcl::PointCloud<pcl::PointXYZRGB>::ConstPtr target)
+    {
+        m_ICP2.setInputSource(source);
+        m_ICP2.setInputTarget(target);
+        m_ICP2.align(*source);
+
+        Eigen::Matrix4f T = m_ICP.getFinalTransformation();
+
+        return T;
     }
 }

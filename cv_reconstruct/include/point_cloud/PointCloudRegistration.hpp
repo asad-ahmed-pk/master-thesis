@@ -29,6 +29,12 @@ namespace PointCloud
 
         ~PointCloudRegistration() = default;
 
+        /// Register the source cloud to the target cloud using ICP
+        /// \param source The source cloud. Will be moved in-place.
+        /// \param target The target cloud
+        /// \return Returns the 4x4 rigid-body transform estimated for alignment
+        Eigen::Matrix4f RegisterCloudICP(pcl::PointCloud<pcl::PointXYZRGB>::Ptr& source, pcl::PointCloud<pcl::PointXYZRGB>::ConstPtr target);
+
         /// Register this frame with the previous frame and generate the registered point cloud
         /// \param image The RGB image to be used for 2D feature detection
         /// \param projected3D The 3D image of the frame which contains the X,Y,Z points in camera space
@@ -64,6 +70,7 @@ namespace PointCloud
     private:
         Pipeline::FrameFeatureExtractor m_2DFeatureExtractor;
         pcl::IterativeClosestPoint<pcl::PointXYZ, pcl::PointXYZ> m_ICP;
+        pcl::IterativeClosestPoint<pcl::PointXYZRGB, pcl::PointXYZRGB> m_ICP2;
         TempData m_TargetData;
     };
 }

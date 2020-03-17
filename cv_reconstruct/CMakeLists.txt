@@ -67,6 +67,13 @@ list (APPEND PIPELINE_SOURCES
         src/pipeline/FrameFeatureExtractor.cpp
 )
 
+list (APPEND SYSTEM_SOURCES
+        src/system/ReconstructionSystem.cpp
+        src/system/MappingSystem.cpp
+        src/system/MapBlock.cpp
+        src/system/MapDataBase.cpp
+)
+
 # External sources
 list(APPEND EXTERN_SOURCES
         extern/nlohmann/json.hpp
@@ -85,6 +92,7 @@ add_executable(cv_server src/main.cpp ${CAMERA_SOURCES}
         ${SERVER_SOURCES}
         ${CONFIG_SOURCES}
         ${PIPELINE_SOURCES}
+        ${SYSTEM_SOURCES}
         ${POINT_CLOUD_SOURCES}
         ${EXTERN_SOURCES}
 )
