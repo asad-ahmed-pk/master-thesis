@@ -13,7 +13,7 @@ namespace System
     ReconstructionSystem::ReconstructionSystem(const Config::Config& config, const Camera::Calib::StereoCalib& stereoCalib) : m_Config(config),
     m_3DReconstructor(stereoCalib, config), m_PointCloudRegistration(config)
     {
-
+        m_MappingSystem.StartOptimisationThread();
     }
 
     // Process stereo frame
@@ -43,7 +43,9 @@ namespace System
         pcl::PointCloud<pcl::PointXYZRGB>::Ptr cloud { new pcl::PointCloud<pcl::PointXYZRGB>(std::move(m_3DReconstructor.Triangulate3D(disparity, leftImage, rightImage))) };
 
         // align to previous point cloud using ICP and get the estimated transform
-        if (m_PreviousPointCloud != nullptr) {
+        if (m_PreviousPointCloud != nullptr)
+        {
+            pcl::transformPointCloud(*cloud, *cloud, m_PreviousEstimatedPose);
             Eigen::Matrix4f T = m_PointCloudRegistration.RegisterCloudICP(cloud, m_PreviousPointCloud);
             m_PreviousEstimatedPose = T;
         }

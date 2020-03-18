@@ -20,7 +20,7 @@ namespace System
         MappingSystem();
 
         /// Start the optimisation thread
-        void StartOptimsationThread();
+        void StartOptimisationThread();
 
         ~MappingSystem() = default;
 
