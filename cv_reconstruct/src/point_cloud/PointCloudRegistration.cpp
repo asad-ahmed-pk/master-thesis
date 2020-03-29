@@ -8,14 +8,17 @@
 #include <pcl/io/pcd_io.h>
 #include <pcl/common/geometry.h>
 #include <pcl/common/transforms.h>
+#include <pcl/filters/uniform_sampling.h>
+#include <pcl/filters/radius_outlier_removal.h>
 
+#include "system/TrackingFrame.hpp"
 #include "reconstruct/Reconstruct3D.hpp"
 #include "point_cloud/PointCloudRegistration.hpp"
 
 namespace PointCloud
 {
     // Constructor
-    PointCloudRegistration::PointCloudRegistration(const Config::Config& config)
+    PointCloudRegistration::PointCloudRegistration(const Config::Config& config, std::shared_ptr<Reconstruct::Reconstruct3D> reconstructor) : m_3DReconstructor(reconstructor)
     {
         // setup ICP params from config file
         m_ICP.setMaximumIterations(config.PointCloudRegistration.ICP.NumMaxIterations);
@@ -28,6 +31,7 @@ namespace PointCloud
         m_ICP2.setTransformationEpsilon(config.PointCloudRegistration.ICP.TransformEpsilon);
         m_ICP2.setEuclideanFitnessEpsilon(config.PointCloudRegistration.ICP.EuclideanFitnessEpsilon);
         m_ICP2.setRANSACIterations(config.PointCloudRegistration.ICP.NumRansacIterations);
+        m_ICP2.setMaxCorrespondenceDistance(100);
     }
 
     // Align the frame with the previous frame using 2D image keypoints and descriptors with the given world transform
@@ -167,12 +171,45 @@ namespace PointCloud
     // Registration by ICP
     Eigen::Matrix4f PointCloudRegistration::RegisterCloudICP(pcl::PointCloud<pcl::PointXYZRGB>::Ptr& source, pcl::PointCloud<pcl::PointXYZRGB>::ConstPtr target)
     {
-        m_ICP2.setInputSource(source);
-        m_ICP2.setInputTarget(target);
-        m_ICP2.align(*source);
+        // downsample based on radius search
+        pcl::PointCloud<pcl::PointXYZRGB>::Ptr sourceFiltered { new pcl::PointCloud<pcl::PointXYZRGB>() };
+        pcl::PointCloud<pcl::PointXYZRGB>::Ptr targetFiltered { new pcl::PointCloud<pcl::PointXYZRGB>() };
+
+        pcl::RadiusOutlierRemoval<pcl::PointXYZRGB> outrem;
+        outrem.setRadiusSearch(0.1);
+        outrem.setMinNeighborsInRadius (20);
+
+        // get filtered source and target
+        outrem.setInputCloud(source);
+        outrem.filter (*sourceFiltered);
+        outrem.setInputCloud(target);
+        outrem.filter(*targetFiltered);
+
+        //pcl::io::savePCDFileBinary("uniform_dist_source.pcd", *sourceFiltered);
+
+        m_ICP2.setInputSource(sourceFiltered);
+        m_ICP2.setInputTarget(targetFiltered);
+        m_ICP2.align(*sourceFiltered);
 
         Eigen::Matrix4f T = m_ICP.getFinalTransformation();
 
+        return T;
+    }
+
+    // Estimate tracking frame to frame transform
+    Eigen::Matrix4f PointCloudRegistration::EstimateTransformForFrameAlignment(const System::TrackingFrame& source, const System::TrackingFrame& target)
+    {
+        // find correspondences between frame features
+        cv::Mat sourceDescriptors = source.GetFeatureDescriptors();
+        cv::Mat targetDescriptors = target.GetFeatureDescriptors();
+        std::vector<cv::DMatch> matches;
+
+        m_2DFeatureExtractor.ComputeCorrespondences(sourceDescriptors, targetDescriptors, matches);
+
+
+
+
+        Eigen::Matrix4f T = Eigen::Matrix4f::Identity();
         return T;
     }
 }

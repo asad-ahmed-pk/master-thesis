@@ -74,7 +74,7 @@ namespace CVNetwork
 
                 if (m_IsCalibRequired) {
 #ifndef NDEBUG
-                    std::cout << "\nReceived calib from client: " << calibMessage.fx1 << " " << calibMessage.fx2 << std::endl;
+                    //std::cout << "\nReceived calib from client: " << calibMessage.fx1 << " " << calibMessage.fx2 << std::endl;
 #endif
                     m_IsCalibAvailable = true;
                     m_CalibMessage = calibMessage;
@@ -130,6 +130,8 @@ namespace CVNetwork
                 // sleep so client thread can process
                 std::this_thread::sleep_for(std::chrono::milliseconds (100));
             }
+
+            m_StereoStream.CloseConnection();
         }
 
         // Process data message
@@ -142,8 +144,8 @@ namespace CVNetwork
                     Message::StereoMessage message = m_StereoStream.ReadStereoImageData();
 
 #ifndef NDEBUG
-                    std::cout << "\nStereo data read from client" << std::endl;
-                    std::cout << "\nX, Y, Z = " << message.X << ", " << message.Y << ", " << message.Z << std::endl;
+                    //std::cout << "\nStereo data read from client" << std::endl;
+                    //std::cout << "\nX, Y, Z = " << message.X << ", " << message.Y << ", " << message.Z << std::endl;
 #endif
 
                     m_Mutex.lock();
@@ -151,7 +153,7 @@ namespace CVNetwork
                     m_Mutex.unlock();
 
 #ifndef NDEBUG
-                    std::cout << "\nAdded to queue" << std::endl;
+                    //std::cout << "\nAdded to queue" << std::endl;
 #endif
 
                     break;

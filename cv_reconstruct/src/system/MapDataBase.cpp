@@ -26,10 +26,15 @@ namespace System
         pcl::PointXYZ min; pcl::PointXYZ max;
         block->GetBoundingBox3D(min, max);
 
-        RTree::Box3D boundingBox(RTree::Point3D(min.x, min.y, min.z), RTree::Point3D(min.x, min.y, min.z));
+        RTree::Box3D boundingBox(RTree::Point3D(min.x, min.y, min.z), RTree::Point3D(max.x, max.y, max.z));
         m_RTree.insert(std::make_pair(boundingBox, id));
 
         return id;
+    }
+
+    // Is Empty
+    bool MapDataBase::IsEmpty() const {
+        return m_Blocks.empty();
     }
 
     // Query: overlapping blocks
@@ -41,7 +46,7 @@ namespace System
         // query R tree
         RTree::Box3D query(RTree::Point3D(min.x, min.y, min.z), RTree::Point3D(max.x, max.y, max.z));
         std::vector<RTree::Value> valueResults;
-        m_RTree.query(boost::geometry::index::intersects(query), std::back_inserter(valueResults));
+        m_RTree.query(boost::geometry::index::overlaps(query), std::back_inserter(valueResults));
 
         // extract pointers to blocks in database
         std::transform(valueResults.begin(), valueResults.end(), std::back_inserter(results), [&](const RTree::Value& v) -> std::shared_ptr<MapBlock> {

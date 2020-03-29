@@ -12,9 +12,15 @@
 #include <pcl/point_cloud.h>
 
 #include "config/Config.hpp"
+
 #include "reconstruct/Reconstruct3D.hpp"
+#include "reconstruct/Localizer.hpp"
+
+#include "system/TrackingFrame.hpp"
 #include "system/MappingSystem.hpp"
-#include "point_cloud/PointCloudRegistration.hpp"
+#include "system/Tracker.hpp"
+
+#include "pipeline/FrameFeatureExtractor.hpp"
 
 namespace Pipeline {
     class StereoFrame;
@@ -22,7 +28,7 @@ namespace Pipeline {
 
 namespace Camera {
     namespace Calib {
-        class StereoCalib;
+        struct StereoCalib;
     }
 }
 
@@ -48,19 +54,19 @@ namespace System
         /// \param stereoFrame The stereo frame containing the left and right stereo images
         void ProcessStereoFrame(const Pipeline::StereoFrame& stereoFrame);
 
-    private:
-        void PruneDisparityImage(cv::Mat& disparity) const;
+        /// Get the current map that has been built
+        /// \param cloud Will be filled with the point cloud data
+        void GetCurrentBuiltMap(pcl::PointCloud<pcl::PointXYZRGB>::Ptr cloud) const;
 
     private:
         Config::Config m_Config;
         std::atomic_bool m_RequestedShutdown { false };
 
-        pcl::PointCloud<pcl::PointXYZRGB>::Ptr m_PreviousPointCloud { nullptr };
-        Eigen::Matrix4f m_PreviousEstimatedPose = Eigen::Matrix4f::Identity();
-
-        PointCloud::PointCloudRegistration m_PointCloudRegistration;
-        Reconstruct::Reconstruct3D m_3DReconstructor;
-        MappingSystem m_MappingSystem;
+    private:
+        std::unique_ptr<Tracker> m_Tracker;
+        std::shared_ptr<Pipeline::FrameFeatureExtractor> m_FeatureExtractor = std::make_shared<Pipeline::FrameFeatureExtractor>();
+        std::shared_ptr<Reconstruct::Reconstruct3D> m_3DReconstructor;
+        std::shared_ptr<MappingSystem> m_MappingSystem;
     };
 }
 

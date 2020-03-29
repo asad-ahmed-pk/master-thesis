@@ -3,17 +3,26 @@
 // Main system for 3D reconstruction. Computes keyframes, and creates 3D map.
 //
 
-#include <opencv2/imgproc/imgproc.hpp>
-
 #include "system/ReconstructionSystem.hpp"
+
+#define RAD_TO_DEG (180.0/3.141592653589793238463)
 
 namespace System
 {
     // Constructor
-    ReconstructionSystem::ReconstructionSystem(const Config::Config& config, const Camera::Calib::StereoCalib& stereoCalib) : m_Config(config),
-    m_3DReconstructor(stereoCalib, config), m_PointCloudRegistration(config)
+    ReconstructionSystem::ReconstructionSystem(const Config::Config& config, const Camera::Calib::StereoCalib& stereoCalib) : m_Config(config)
     {
-        m_MappingSystem.StartOptimisationThread();
+        // init all sub systems and components
+        
+        // 3D reconstruction module (shared by many subsystems)
+        m_3DReconstructor = std::make_shared<Reconstruct::Reconstruct3D>(stereoCalib, config);
+        
+        // mapping subsystem: performs windowed BA and local optimisation of the map
+        m_MappingSystem = std::make_shared<MappingSystem>();
+        m_MappingSystem->StartOptimisationThread();
+        
+        // tracker: tracks frames for local mapping and quick localisation
+        m_Tracker = std::make_unique<Tracker>(m_FeatureExtractor, m_3DReconstructor, m_MappingSystem);
     }
 
     // Process stereo frame
@@ -25,8 +34,8 @@ namespace System
 
         // check if stereo rectification is needed (from config)
         if (m_Config.Reconstruction.ShouldRectifyImages) {
-            m_3DReconstructor.RectifyImages(stereoFrame.LeftImage, stereoFrame.RightImage, leftImage, rightImage);
-            disparity = m_3DReconstructor.GenerateDisparityMap(leftImage, rightImage);
+            m_3DReconstructor->RectifyImages(stereoFrame.LeftImage, stereoFrame.RightImage, leftImage, rightImage);
+            disparity = m_3DReconstructor->GenerateDisparityMap(leftImage, rightImage);
         }
         else {
             leftImage = stereoFrame.LeftImage;
@@ -34,56 +43,20 @@ namespace System
         }
 
         // create disparity image from stereo frame
-        disparity = m_3DReconstructor.GenerateDisparityMap(leftImage, rightImage);
+        disparity = m_3DReconstructor->GenerateDisparityMap(leftImage, rightImage);
 
-        // prune disparity to remove values with higher uncertainty
-        PruneDisparityImage(disparity);
-
-        // triangulate and get 3D points
-        pcl::PointCloud<pcl::PointXYZRGB>::Ptr cloud { new pcl::PointCloud<pcl::PointXYZRGB>(std::move(m_3DReconstructor.Triangulate3D(disparity, leftImage, rightImage))) };
-
-        // align to previous point cloud using ICP and get the estimated transform
-        if (m_PreviousPointCloud != nullptr)
-        {
-            pcl::transformPointCloud(*cloud, *cloud, m_PreviousEstimatedPose);
-            Eigen::Matrix4f T = m_PointCloudRegistration.RegisterCloudICP(cloud, m_PreviousPointCloud);
-            m_PreviousEstimatedPose = T;
-        }
-        else {
-             m_PreviousPointCloud = cloud;
-        }
-
-        // add to mapping system
-        m_MappingSystem.AddPointCloud(*cloud);
-    }
-
-    // Prune disparity image
-    void ReconstructionSystem::PruneDisparityImage(cv::Mat& disparity) const
-    {
-        // compute std dev of disparity and threshold it
-        cv::Mat disp; cv::Mat mean; std::vector<double> std;
-        cv::normalize(disparity, disp, 0, 255, cv::NORM_MINMAX, CV_8U);
-
-        cv::Mat mask(disp.rows, disp.cols, CV_8U);
-        cv::meanStdDev(disp, mean, std);
-
-        cv::threshold(disp, mask, std[0] * 1.3, 255, cv::THRESH_BINARY);
-
-        // apply mask to disparity and prune
-        for (int row = 0; row < mask.rows; row++)
-        {
-            for (int col = 0; col < mask.cols; col++)
-            {
-                int value = static_cast<int>(mask.at<unsigned char>(row, col));
-                if (value == 0) {
-                    disparity.at<short>(row, col) = 0;
-                }
-            }
-        }
+        // create the tracking frame for this stereo frame and pass to tracker to track
+        std::shared_ptr<TrackingFrame> frame { new TrackingFrame(leftImage, disparity, m_FeatureExtractor, m_3DReconstructor) };
+        m_Tracker->TrackFrame(frame);
     }
 
     // Shutdown request
     void ReconstructionSystem::RequestShutdown() {
         m_RequestedShutdown = true;
+    }
+
+    // Get current map
+    void ReconstructionSystem::GetCurrentBuiltMap(pcl::PointCloud<pcl::PointXYZRGB>::Ptr cloud) const {
+        m_MappingSystem->GetMap(cloud);
     }
 }

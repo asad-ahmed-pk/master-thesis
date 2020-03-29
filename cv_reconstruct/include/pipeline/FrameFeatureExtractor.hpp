@@ -21,6 +21,21 @@ namespace Pipeline
 
         ~FrameFeatureExtractor() = default;
 
+        /// Compute correspondences given descriptors
+        /// \param d1 Descriptors for image 1
+        /// \param d2 Descriptors for image 2
+        /// \param matches Will be populated with matches
+        void ComputeCorrespondences(const cv::Mat& d1, const cv::Mat& d2, std::vector<cv::DMatch>& matches) const;
+        
+        /// Compute correspondences given descriptors
+        /// \param image1 first image
+        /// \param image2 second image
+        /// \param kp1 Will be populated with matching keypoints of image 1
+        /// \param kp2 Will be populated with matching keypoints of image 2
+        /// \param mask1 Optional mask for image 1 to restrict keypoints
+        /// \param mask2 Optional mask for image 2 to restrict keypoints
+        void ComputeCorrespondences(const cv::Mat& image1, const cv::Mat& image2, std::vector<cv::KeyPoint>& kp1, std::vector<cv::KeyPoint>& kp2, cv::InputArray mask1 = cv::noArray(), cv::InputArray mask2 = cv::noArray()) const;
+
         /// Compute the correspondences between the 2 images
         /// \param image1 The first image
         /// \param image2 The second image

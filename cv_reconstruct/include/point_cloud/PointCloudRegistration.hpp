@@ -13,10 +13,14 @@
 #include <pcl/correspondence.h>
 #include <pcl/registration/icp.h>
 
+#include "reconstruct/Reconstruct3D.hpp"
 #include "pipeline/FrameFeatureExtractor.hpp"
 #include "config/Config.hpp"
 #include "point_cloud_constants.hpp"
 
+namespace System {
+    class TrackingFrame;
+}
 
 namespace PointCloud
 {
@@ -25,9 +29,16 @@ namespace PointCloud
     public:
         /// Create a default instance of the registration pipeline with the given config
         /// \param config The config with params set for ICP
-        PointCloudRegistration(const Config::Config& config);
+        /// \param reconstructor The 3D reconstructor to use for triangulation
+        PointCloudRegistration(const Config::Config& config, std::shared_ptr<Reconstruct::Reconstruct3D> reconstructor);
 
         ~PointCloudRegistration() = default;
+
+        /// Estimate the transform needed to align source to target
+        /// \param source The source tracking frame
+        /// \param target The target tracking frame
+        /// \return The estimated transform
+        Eigen::Matrix4f EstimateTransformForFrameAlignment(const System::TrackingFrame& source, const System::TrackingFrame& target);
 
         /// Register the source cloud to the target cloud using ICP
         /// \param source The source cloud. Will be moved in-place.
@@ -68,6 +79,7 @@ namespace PointCloud
         };
 
     private:
+        std::shared_ptr<Reconstruct::Reconstruct3D> m_3DReconstructor { nullptr };
         Pipeline::FrameFeatureExtractor m_2DFeatureExtractor;
         pcl::IterativeClosestPoint<pcl::PointXYZ, pcl::PointXYZ> m_ICP;
         pcl::IterativeClosestPoint<pcl::PointXYZRGB, pcl::PointXYZRGB> m_ICP2;

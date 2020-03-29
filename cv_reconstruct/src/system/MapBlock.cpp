@@ -3,6 +3,8 @@
 // Represents a block for the map (a 'piece' of the map')
 //
 
+#include <cmath>
+
 #include <pcl/common/io.h>
 #include <pcl/common/common.h>
 
@@ -102,9 +104,36 @@ namespace System
             return 0.0;
         }
 
-        float v1 = (m_MaxPoint.x - m_MinPoint.x) * (m_MaxPoint.y - m_MinPoint.y) * (m_MaxPoint.z - m_MinPoint.z);
-        float v2 = (other.m_MaxPoint.x - other.m_MinPoint.x) * (other.m_MaxPoint.y - other.m_MinPoint.y) * (other.m_MaxPoint.z - other.m_MinPoint.z);
+        float va = GetVolume();
+        float vb = other.GetVolume();
 
-        return (fabs(v2 - v1) / (v1 + v2));
+        float xa1 = m_MinPoint.x; float xa2 = m_MaxPoint.x;
+        float ya1 = m_MinPoint.y; float ya2 = m_MaxPoint.y;
+        float za1 = m_MinPoint.z; float za2 = m_MaxPoint.z;
+
+        float xb1 = other.m_MinPoint.x; float xb2 = other.m_MaxPoint.x;
+        float yb1 = other.m_MinPoint.y; float yb2 = other.m_MaxPoint.y;
+        float zb1 = other.m_MinPoint.z; float zb2 = other.m_MaxPoint.z;
+
+        float intersectionVolume = fmax(0.0f, fmin(xa2, xb2) - fmax(xa1, xb1)) * fmax(0.0f, fmin(ya2, yb2) - fmax(ya1, yb1)) * fmax(0.0f, fmin(za2, zb2) - fmax(za1, zb1));
+        float unionVolume = va + vb - intersectionVolume;
+
+        return (intersectionVolume / unionVolume);
+    }
+
+    // Get volume
+    float MapBlock::GetVolume() const {
+        return ((m_MaxPoint.x - m_MinPoint.x) * (m_MaxPoint.y - m_MinPoint.y) * (m_MaxPoint.z - m_MinPoint.z));
+    }
+
+    // << operator
+    std::ostream& operator <<(std::ostream& os, const MapBlock& block)
+    {
+        os << "\nBlock #" << block.m_ID;
+        os << "\nMin: (" << block.m_MinPoint.x << ", " << block.m_MinPoint.y << ", " << block.m_MinPoint.z << ")";
+        os << "\nMax: (" << block.m_MaxPoint.x << ", " << block.m_MaxPoint.y << ", " << block.m_MaxPoint.z << ")";
+        os << "\nPoints: " << block.m_PointCloud->size();
+
+        return os;
     }
 }

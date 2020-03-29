@@ -6,6 +6,8 @@
 #ifndef MASTER_THESIS_MAPBLOCK_HPP
 #define MASTER_THESIS_MAPBLOCK_HPP
 
+#include <iostream>
+
 #include <pcl/point_cloud.h>
 #include <pcl/point_types.h>
 
@@ -60,11 +62,17 @@ namespace System
         /// \return The ratio of overlap from 0.0 to 1.0
         float OverlapRatio(const MapBlock& other) const;
 
+        /// Get the approximate volume taken by the block
+        /// \return The volume of the block
+        float GetVolume() const;
+
+        friend std::ostream& operator<<(std::ostream& os, const MapBlock& block);
+
     private:
         void CalculateBoundingBox();
 
     private:
-        size_t m_ID;
+        size_t m_ID { 0 };
         pcl::PointCloud<pcl::PointXYZRGB>::Ptr m_PointCloud;
         pcl::PointXYZRGB m_MinPoint;
         pcl::PointXYZRGB m_MaxPoint;

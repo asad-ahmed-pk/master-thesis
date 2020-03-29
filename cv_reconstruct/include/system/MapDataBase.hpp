@@ -50,8 +50,12 @@ namespace System
         /// \param cloud Will be populated with all the points from all current blocks
         void GetFullPointCloud(pcl::PointCloud<pcl::PointXYZRGB>::Ptr cloud) const;
 
+        /// Check if database is empty
+        /// \return True if the database is empty
+        bool IsEmpty() const;
+
     private:
-        boost::geometry::index::rtree<RTree::Value, boost::geometry::index::quadratic<16>> m_RTree;
+        boost::geometry::index::rtree<RTree::Value, boost::geometry::index::rstar<16>> m_RTree;
         std::unordered_map<size_t, std::shared_ptr<MapBlock>> m_Blocks;
         size_t m_NextID { 0 };
     };

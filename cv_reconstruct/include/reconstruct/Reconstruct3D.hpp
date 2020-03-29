@@ -43,10 +43,38 @@ namespace Reconstruct
 
         /// Generate point cloud using triangulation method
         /// \param disparity The disparity image (parallax map)
-        /// \param leftImage The left camera image (rectified)
-        /// \param rightImage The right camera image (rectified)
+        /// \param cameraImage The RGB camera image (rectified)
         /// \return Returns the generated point cloud with RGB information
-        pcl::PointCloud<pcl::PointXYZRGB> Triangulate3D(const cv::Mat& disparity, const cv::Mat& leftImage, const cv::Mat& rightImage) const;
+        pcl::PointCloud<pcl::PointXYZRGB> Triangulate3D(const cv::Mat& disparity, const cv::Mat& cameraImage, cv::InputArray& mask = cv::noArray()) const;
+        
+        /// Triangulate the single image point to 3D space
+        /// \param u The x coorindate in the image plane
+        /// \param v The y coordinate in the image plane
+        /// \param disparity The disparity computed for this image point
+        /// \param color The RGB color triplet for this image
+        /// \return The triangulated 3D point with color information
+        pcl::PointXYZRGB TriangulateUV(float u, float v, float disparity, const cv::Vec3b& color) const;
+        
+        /// Backproject a point in 2D to 3D
+        /// \param x the x coord of the point
+        /// \param y the y coord of the point
+        /// \return the 3D projected point
+        pcl::PointXYZ BackProjectPoint(float x, float y) const;
+        
+        /// Triangulate the list of 2D image points using the given dispartiy image
+        /// \param disparity The disparity image
+        /// \param cameraImage The camera image (3 channel 8 bit)
+        /// \param points The list of 2D image points
+        /// \param triangulatedPoints Output vector that will be populated with 3D points corresponding to each 2D image point in points vector
+        void TriangulatePoints(const cv::Mat& disparity, const cv::Mat& cameraImage, const std::vector<cv::KeyPoint>& points, std::vector<pcl::PointXYZRGB>& triangulatedPoints) const;
+        
+        /// Get camera itrinsics for selected camera number
+        /// \param fx The horizontal focal length
+        /// \param fy The vertical focal length
+        /// \param cx The horizontal component of the principle point
+        /// \param cy The vertical component of the principle point
+        /// \param camNumber The camera number, default is 0 - left camera
+        void GetCameraParameters(float& fx, float& fy, float& cx, float& cy, int camNumber = 0) const;
 
         /// Apply stereo rectification to the images
         /// \param leftImage The left camera image (rectified)

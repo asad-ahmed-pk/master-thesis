@@ -26,7 +26,11 @@ namespace System
 
         /// Add the given points to the mapping system to process
         /// \param points The potentially new point cloud to add to the underlying map
-        void AddPointCloud(const pcl::PointCloud<pcl::PointXYZRGB>& points);
+        bool AddPointCloud(const pcl::PointCloud<pcl::PointXYZRGB>& points);
+
+        /// Get the current built map
+        /// \param cloud Will be filled with the points of the current map
+        void GetMap(pcl::PointCloud<pcl::PointXYZRGB>::Ptr cloud) const;
 
     private:
         MapDataBase m_MapDataBase;

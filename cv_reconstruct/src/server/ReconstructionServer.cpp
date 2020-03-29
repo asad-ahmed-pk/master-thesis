@@ -98,7 +98,6 @@ namespace Server
     void ReconstructionServer::RunProcessingThread()
     {
         m_ReconstructionServer->StartServer();
-        bool isRunning = true;
 
         // wait for calib if required from client
         if (m_Calib == nullptr)
@@ -121,20 +120,17 @@ namespace Server
         Camera::CameraCompute cameraCompute(*m_Calib);
         stereoSetup = std::move(cameraCompute.GetRectifiedStereoSettings());
 
-        // construct the pipeline with the calib information
-        m_ReconstructionPipeline = std::make_unique<Pipeline::ReconstructionPipeline>(m_Config, stereoSetup, !m_Config.Reconstruction.ShouldRectifyImages);
+        // construct the reconstruction system (pun intended)
+        m_ReconstructionSystem = std::make_unique<System::ReconstructionSystem>(m_Config, stereoSetup);
 
         // calib data will be loaded by now - expecting a constant stream of stereo messages at this point
         // these are in the server's data queue
         CVNetwork::Message::StereoMessage message;
         Pipeline::StereoFrame frame;
 
-        pcl::PointCloud<pcl::PointXYZRGB>::Ptr pointCloud(new pcl::PointCloud<pcl::PointXYZRGB>());
-        pcl::PointCloud<pcl::PointXYZRGB>::Ptr finalPointCloud(new pcl::PointCloud<pcl::PointXYZRGB>());
-
         m_ProcessingStarted = true;
 
-        while (isRunning && !m_UserRequestedToQuit)
+        while (!m_UserRequestedToQuit)
         {
             if (m_ReconstructionServer->GetNextStereoDataFromQueue(message))
             {
@@ -144,23 +140,22 @@ namespace Server
                 frame = std::move(Utility::MessageConverter::ConvertStereoMessage(message));
                 frame.ID = m_NumFramesProcessed;
 
-                // clear all points from temp point cloud
-                pointCloud->clear();
+                // submit to reconstruction system for processing
+                m_ReconstructionSystem->ProcessStereoFrame(frame);
 
-                // process this frame
-                m_ReconstructionPipeline->ProcessFrame(frame, pointCloud);
-
-                // append all points from this point cloud to final point cloud
-                for (const auto& p : *pointCloud) {
-                    finalPointCloud->push_back(p);
-                }
                 m_NumFramesProcessed++;
             }
         }
 
-        // save point cloud to file for now
-        // TODO: rename point cloud to a better file name (timestamped maybe?)
-        std::cout << "\nServer finished receiving stream. Saving point cloud to file" << std::endl;
-        pcl::io::savePCDFileBinary("final_point_cloud.pcd", *finalPointCloud);
+        // wait for networking read thread to join
+        m_ReconstructionServer->StopServer();
+
+        // save current built map (point cloud) to file
+        std::cout << "\n\nSaving current built map to disk..." << std::endl;
+
+        pcl::PointCloud<pcl::PointXYZRGB>::Ptr cloud { new pcl::PointCloud<pcl::PointXYZRGB>() };
+        m_ReconstructionSystem->GetCurrentBuiltMap(cloud);
+
+        pcl::io::savePCDFileBinary("full_cloud.pcd", *cloud);
     }
 }

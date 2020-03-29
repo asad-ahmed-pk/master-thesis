@@ -143,13 +143,28 @@ namespace Reconstruct
         cv::reprojectImageTo3D(disparity, projected3D, m_Q, true);
     }
 
-    // Generate point cloud by direct calculation from disparity
-    pcl::PointCloud<pcl::PointXYZRGB> Reconstruct3D::Triangulate3D(const cv::Mat &disparity, const cv::Mat& leftImage, const cv::Mat& rightImage) const
+    // Get camera intrinsics
+    void Reconstruct3D::GetCameraParameters(float& fx, float& fy, float& cx, float& cy, int camNumber) const
     {
-        // get true disparity
-        cv::Mat trueDisparity;
-        disparity.convertTo(trueDisparity, CV_32F, 1.0 / 16.0, 0.0);
+        if (camNumber == 1)
+        {
+            fx = m_StereoCameraSetup.RightCameraCalib.K(0, 0);
+            fy = m_StereoCameraSetup.RightCameraCalib.K(1, 1);
+            cx = m_StereoCameraSetup.RightCameraCalib.K(0, 2);
+            cy = m_StereoCameraSetup.RightCameraCalib.K(1, 2);
+        }
+        else
+        {
+            fx = m_StereoCameraSetup.LeftCameraCalib.K(0, 0);
+            fy = m_StereoCameraSetup.LeftCameraCalib.K(1, 1);
+            cx = m_StereoCameraSetup.LeftCameraCalib.K(0, 2);
+            cy = m_StereoCameraSetup.LeftCameraCalib.K(1, 2);
+        }
+    }
 
+    // Generate point cloud by direct calculation from disparity
+    pcl::PointCloud<pcl::PointXYZRGB> Reconstruct3D::Triangulate3D(const cv::Mat& disparity, const cv::Mat& cameraImage, cv::InputArray& mask) const
+    {
         pcl::PointCloud<pcl::PointXYZRGB> pointCloud;
 
         cv::Vec3f coords;
@@ -166,25 +181,37 @@ namespace Reconstruct
         float cx = m_StereoCameraSetup.LeftCameraCalib.K(0, 2);
         float cy = m_StereoCameraSetup.LeftCameraCalib.K(1, 2);
 
+        bool applyingMask = (&mask != &cv::noArray());
+        cv::Mat maskImage;
+        if (applyingMask) {
+            maskImage = mask.getMat();
+        }
+
         for (int i = 0; i < disparity.rows; i++)
         {
             for (int j = 0; j < disparity.cols; j++)
             {
                 // skip zero disparities
-                d = trueDisparity.at<float>(i, j);
+                d = disparity.at<float>(i, j);
                 if (d <= 0.0) {
                     continue;
                 }
 
-                //std::cout << "\nd = " << d;
+                // check for mask and skip triangulation if mask is being applied
+                if (applyingMask) {
+                    int value = static_cast<int>(maskImage.at<unsigned char>(i, j));
+                    if (value == 0) {
+                        continue;
+                    }
+                }
 
                 point.z = f * b / d;
                 point.x = (static_cast<float>(j) - cx) * (point.z / f);
                 point.y = -(static_cast<float>(i) - cy) * (point.z / f);
 
-                point.r = leftImage.at<cv::Vec3b>(i, j)[2];
-                point.g = leftImage.at<cv::Vec3b>(i, j)[1];
-                point.b = leftImage.at<cv::Vec3b>(i, j)[0];
+                point.r = cameraImage.at<cv::Vec3b>(i, j)[2];
+                point.g = cameraImage.at<cv::Vec3b>(i, j)[1];
+                point.b = cameraImage.at<cv::Vec3b>(i, j)[0];
 
                 pointCloud.push_back(point);
                 count++;
@@ -196,6 +223,83 @@ namespace Reconstruct
         pointCloud.is_dense = true;
 
         return pointCloud;
+    }
+
+    // Triangulate vector of 2D points using disparity
+    void Reconstruct3D::TriangulatePoints(const cv::Mat& disparity, const cv::Mat& cameraImage, const std::vector<cv::KeyPoint>& points, std::vector<pcl::PointXYZRGB>& triangulatedPoints) const
+    {
+        // get cam params
+        float fx, fy, cx, cy, b;
+        GetCameraParameters(fx, fy, cx, cy);
+        b = m_StereoCameraSetup.T(0);
+        
+        pcl::PointXYZRGB P;
+        cv::Vec3b color;
+        float d = 0.0;
+        
+        // triangulate each 2D point to 3D
+        for (const cv::KeyPoint& p : points)
+        {
+            d = disparity.at<float>(static_cast<int>(p.pt.y + 0.5), static_cast<int>(p.pt.x + 0.5));
+            color = cameraImage.at<cv::Vec3b>(p.pt.y, p.pt.x);
+            
+            // no disparity for this point!
+            if (d <= 0.0) {
+                std::cerr << "\nERROR: Negative or 0 disparity!" << d << std::endl;
+            }
+            
+            P = pcl::PointXYZRGB(color[2], color[1], color[0]);
+            
+            P.z = fx * b / d;
+            P.x = (p.pt.x - cx) * P.z / fx;
+            P.y = -(p.pt.y - cy) * P.z / fy;
+            
+            triangulatedPoints.push_back(P);
+        }
+    }
+
+    // Back projection
+    pcl::PointXYZ Reconstruct3D::BackProjectPoint(float x, float y) const
+    {
+        float fx = m_StereoCameraSetup.LeftCameraCalib.K(0, 0);
+        float fy = m_StereoCameraSetup.LeftCameraCalib.K(1, 1);
+        float cx = m_StereoCameraSetup.LeftCameraCalib.K(0, 2);
+        float cy = m_StereoCameraSetup.LeftCameraCalib.K(1, 2);
+        
+        float Z = 1.0f;
+        float X = (x - cx) * Z / fx;
+        float Y = (y - cy) * Z / fy;
+        
+        pcl::PointXYZ p;
+        p.x = X;
+        p.y = Y;
+        p.z = Z;
+        
+        return p;
+    }
+
+    // Triangulate a single image point to 3D space
+    pcl::PointXYZRGB Reconstruct3D::TriangulateUV(float u, float v, float disparity, const cv::Vec3b& color) const
+    {
+        // baseline and focal length
+        float b = m_StereoCameraSetup.T(0);
+        float f = (m_StereoCameraSetup.LeftCameraCalib.K(0, 0) + m_StereoCameraSetup.LeftCameraCalib.K(1, 1)) / 2.0f;
+
+        // principal point
+        float cx = m_StereoCameraSetup.LeftCameraCalib.K(0, 2);
+        float cy = m_StereoCameraSetup.LeftCameraCalib.K(1, 2);
+        
+        pcl::PointXYZRGB point;
+        
+        point.z = f * b / disparity;
+        point.x = (static_cast<float>(u) - cx) * (point.z / f);
+        point.y = -(static_cast<float>(v) - cy) * (point.z / f);
+
+        point.r = color[2];
+        point.g = color[1];
+        point.b = color[0];
+        
+        return point;
     }
 
     // Apply stereo rectification to left and right images

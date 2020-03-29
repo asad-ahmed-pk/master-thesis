@@ -21,6 +21,11 @@ namespace Reconstruct
         Localizer() = default;
         ~Localizer() = default;
 
+        /// Determine the pose of the frame
+        /// \param frame The stereo frame
+        /// \return Returns the pose in world space to be used for the map
+        Eigen::Matrix4f GetFrameWorldPose(const Pipeline::StereoFrame& frame);
+
         /// Transform the point cloud for the given frame
         /// \param frame The frame this point cloud is being generated for
         /// \param input The input point cloud in camera space

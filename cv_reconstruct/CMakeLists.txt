@@ -26,6 +26,23 @@ include_directories(${PCL_INCLUDE_DIRS})
 link_directories(${PCL_LIBRARY_DIRS})
 add_definitions(${PCL_DEFINITIONS})
 
+# G2O
+find_package(G2O REQUIRED)
+include_directories(${G2O_INCLUDE_DIR})
+
+# G2o libs
+LIST(APPEND G2O_LIBS
+        cxsparse
+        cholmod
+        g2o_cli g2o_simulator
+        g2o_solver_slam2d_linear g2o_types_icp g2o_types_slam2d
+        g2o_core g2o_solver_csparse g2o_solver_structure_only
+        g2o_types_sba g2o_types_slam3d g2o_csparse_extension
+        g2o_solver_dense g2o_stuff
+        g2o_types_sclam2d g2o_parser g2o_solver_pcg
+        g2o_types_data g2o_types_sim3
+)
+
 # Includes for eigen for MacOS
 if (${MACOSX})
     include_directories(eigen3)
@@ -37,11 +54,17 @@ include_directories(extern)
 
 # Sources
 list(APPEND CAMERA_SOURCES
+        include/camera/CameraCalib.hpp
+        include/camera/CameraCalibParser.hpp
+        include/camera/CameraCompute.hpp
         src/camera/CameraCompute.cpp
         src/camera/CameraCalibParser.cpp
 )
 
 list(APPEND RECONSTRUCT_3D_SOURCES
+        include/reconstruct/Reconstruct3D.hpp
+        include/reconstruct/Reconstruct3DTypes.hpp
+        include/reconstruct/ReconstructStatusCode.hpp
         src/reconstruct/Reconstruct3D.cpp
         src/reconstruct/Localizer.cpp
 )
@@ -53,25 +76,46 @@ list(APPEND POINT_CLOUD_SOURCES
 )
 
 list(APPEND SERVER_SOURCES
+        include/server/MessageConverter.hpp
+        include/server/ReconstructionServer.hpp
+        include/server/server_constants.hpp
+        include/server/ServerUserInterface.hpp
         src/server/ReconstructionServer.cpp
         src/server/MessageConverter.cpp
         src/server/ServerUserInterface.cpp
 )
 
 list(APPEND CONFIG_SOURCES
+        include/config/Config.hpp
+        include/config/ConfigParser.hpp
         src/config/ConfigParser.cpp
 )
 
 list (APPEND PIPELINE_SOURCES
-        src/pipeline/ReconstructionPipeline.cpp
+        include/pipeline/FrameFeatureExtractor.hpp
+        include/pipeline/PipelineResult.hpp
+        include/pipeline/ReconstructionPipeline.hpp
+        include/pipeline/StereoFrame.hpp
         src/pipeline/FrameFeatureExtractor.cpp
 )
 
 list (APPEND SYSTEM_SOURCES
+        include/system/MapBlock.hpp
+        include/system/MapDataBase.hpp
+        include/system/MappingSystem.hpp
+        include/system/ReconstructionSystem.hpp
+        include/system/Tracker.hpp
+        include/system/TrackingFrame.hpp
+        include/system/OptimisationGraph.hpp
+        include/system/KeyFrameDatabase.hpp
         src/system/ReconstructionSystem.cpp
         src/system/MappingSystem.cpp
         src/system/MapBlock.cpp
         src/system/MapDataBase.cpp
+        src/system/TrackingFrame.cpp
+        src/system/Tracker.cpp
+        src/system/OptimisationGraph.cpp
+        src/system/KeyFrameDatabase.cpp
 )
 
 # External sources
@@ -96,7 +140,7 @@ add_executable(cv_server src/main.cpp ${CAMERA_SOURCES}
         ${POINT_CLOUD_SOURCES}
         ${EXTERN_SOURCES}
 )
-target_link_libraries(cv_server ${OpenCV_LIBS} ${Boost_LIBRARIES} ${PCL_LIBRARIES} reconstruction::networking)
+target_link_libraries(cv_server ${OpenCV_LIBS} ${Boost_LIBRARIES} ${PCL_LIBRARIES} ${G2O_LIBS} reconstruction::networking)
 
 # Reconstruct module test program
 add_executable(reconstruct_test src/test/reconstruct_test_kitti_rectified.cpp src/test/tests_common.cpp
@@ -129,7 +173,7 @@ add_executable(pipeline_test src/test/pipeline_test.cpp src/test/tests_common.cp
         ${POINT_CLOUD_SOURCES}
         ${EXTERN_SOURCES}
 )
-target_link_libraries(pipeline_test ${OpenCV_LIBS} ${Boost_LIBRARIES} ${PCL_LIBRARIES})
+target_link_libraries(pipeline_test ${OpenCV_LIBS} ${Boost_LIBRARIES} ${PCL_LIBRARIES} ${G2O_LIBS})
 
 # Feature extraction module test program
 add_executable(feature_extract_test src/test/feature_extraction_test.cpp src/test/tests_common.cpp

@@ -41,7 +41,7 @@ namespace PointCloud
     }
 
     // ICP alignment
-    bool PointCloudPostProcessor::AlignPointCloud(PointCloudConstPtr source, PointCloudConstPtr target, PointCloudPtr result)
+    Eigen::Matrix4f PointCloudPostProcessor::AlignPointCloud(PointCloudConstPtr source, PointCloudConstPtr target, PointCloudPtr result)
     {
         // get keypoints and perform ICP on keypoints
         KeypointDetectionResult sourceKeypoints;
@@ -51,15 +51,6 @@ namespace PointCloud
 
         PointCloudPtr alignmentResult { new pcl::PointCloud<PointType>() };
 
-        // ICP on keypoints
-        m_ICP.setInputCloud(source);
-        m_ICP.setInputTarget(target);
-        m_ICP.align(*alignmentResult);
-
-        // apply the transformation to the complete point cloud
-        Eigen::Matrix4f T = m_ICP.getFinalTransformation();
-
-        /*
         // extract features from both point clouds and get correspondences
         FeatureDetectionResult sourceFeatures;
         FeatureDetectionResult targetFeatures;
@@ -101,14 +92,11 @@ namespace PointCloud
         Eigen::Matrix4f T = Eigen::Matrix4f::Identity();
         pcl::registration::TransformationEstimationSVD<pcl::PointXYZRGB, pcl::PointXYZRGB> transformationEstimator;
         transformationEstimator.estimateRigidTransformation(*source, *target, *validCorrespondences, T);
-        */
-
-        //std::cout << "\nEstimated transform: \n" << T << std::endl;
 
         // apply transform to source
         pcl::transformPointCloud(*source, *result, T);
 
-        return true;
+        return T;
     }
 
     // Extract features from point cloud
@@ -116,7 +104,7 @@ namespace PointCloud
     {
         // TODO: uncomment when using keypoint detector that uses normals
         NormalsPtr normals = NormalsPtr(new pcl::PointCloud<pcl::Normal>());
-        //m_FeatureExtractor->ComputeNormals(cloud, normals);
+        m_FeatureExtractor->ComputeNormals(cloud, normals);
 
         // compute keypoints
         KeypointDetectionResult keypointsResult;

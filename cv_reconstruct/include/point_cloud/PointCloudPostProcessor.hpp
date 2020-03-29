@@ -41,8 +41,8 @@ namespace PointCloud
         /// \param source The source point cloud being aligned
         /// \param target The point cloud that source should look like or approximate to
         /// \param result The result point cloud after the alignment is done
-        /// \return True if a solution was found by ICP. Result is valid if returns true.
-        bool AlignPointCloud(PointCloudConstPtr source, PointCloudConstPtr target, PointCloudPtr result);
+        /// \return The estimated rigid-body transform
+        Eigen::Matrix4f AlignPointCloud(PointCloudConstPtr source, PointCloudConstPtr target, PointCloudPtr result);
 
         /// Set the minimum number of neighbours for outlier removal
         /// \param k The minimum number of k neighbours

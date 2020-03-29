@@ -41,6 +41,39 @@ namespace Pipeline
         FilterForGoodMatches(allMatches, matches);
     }
 
+    void FrameFeatureExtractor::ComputeCorrespondences(const cv::Mat& d1, const cv::Mat& d2, std::vector<cv::DMatch>& matches) const
+    {
+        // feature matching
+        std::vector<std::vector<cv::DMatch>> allMatches;
+        m_BFMatcher->knnMatch(d1, d2, allMatches, 2);
+
+        // filter using Lowe ratio test
+        FilterForGoodMatches(allMatches, matches);
+    }
+
+    void FrameFeatureExtractor::ComputeCorrespondences(const cv::Mat& image1, const cv::Mat& image2, std::vector<cv::KeyPoint>& kp1, std::vector<cv::KeyPoint>& kp2, cv::InputArray mask1, cv::InputArray mask2) const
+    {
+        // feature matching
+        std::vector<cv::KeyPoint> points1; std::vector<cv::KeyPoint> points2;
+        cv::Mat descriptors1; cv::Mat descriptors2;
+        
+        m_FeatureExtractor->detectAndCompute(image1, mask1, points1, descriptors1);
+        m_FeatureExtractor->detectAndCompute(image2, mask2, points2, descriptors2);
+        
+        std::vector<std::vector<cv::DMatch>> allMatches;
+        m_BFMatcher->knnMatch(descriptors1, descriptors2, allMatches, 2);
+
+        // filter using Lowe ratio test
+        std::vector<cv::DMatch> matches;
+        FilterForGoodMatches(allMatches, matches);
+        
+        // add keypoints of matches
+        for (const cv::DMatch& match : matches) {
+            kp1.push_back(points1[match.queryIdx]);
+            kp2.push_back(points2[match.trainIdx]);
+        }
+    }
+
     // Find matches with pre-computed descriptors and image
     void FrameFeatureExtractor::ComputeMatchesWithImage(const cv::Mat& descriptors, const cv::Mat& image, std::vector<cv::KeyPoint>& computedKeypoints, cv::Mat& computedDescriptors, std::vector<cv::DMatch>& matches) const
     {
