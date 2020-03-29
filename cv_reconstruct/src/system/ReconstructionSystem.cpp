@@ -5,8 +5,6 @@
 
 #include "system/ReconstructionSystem.hpp"
 
-#define RAD_TO_DEG (180.0/3.141592653589793238463)
-
 namespace System
 {
     // Constructor
@@ -17,12 +15,15 @@ namespace System
         // 3D reconstruction module (shared by many subsystems)
         m_3DReconstructor = std::make_shared<Reconstruct::Reconstruct3D>(stereoCalib, config);
         
+        // keyframe database: stores keyframes and regulates thread safe keyframe access
+        m_KeyFrameDatabase = std::make_shared<KeyFrameDatabase>();
+        
         // mapping subsystem: performs windowed BA and local optimisation of the map
         m_MappingSystem = std::make_shared<MappingSystem>();
         m_MappingSystem->StartOptimisationThread();
         
         // tracker: tracks frames for local mapping and quick localisation
-        m_Tracker = std::make_unique<Tracker>(m_FeatureExtractor, m_3DReconstructor, m_MappingSystem);
+        m_Tracker = std::make_unique<Tracker>(m_FeatureExtractor, m_3DReconstructor, m_MappingSystem, m_KeyFrameDatabase);
     }
 
     // Process stereo frame

@@ -11,11 +11,12 @@
 
 #include <eigen3/Eigen/Eigen>
 
+#include "pipeline/FrameFeatureExtractor.hpp"
 #include "reconstruct/Reconstruct3D.hpp"
 #include "system/TrackingFrame.hpp"
 #include "system/OptimisationGraph.hpp"
 #include "system/MappingSystem.hpp"
-#include "pipeline/FrameFeatureExtractor.hpp"
+#include "system/KeyFrameDatabase.hpp"
 
 namespace System
 {
@@ -24,7 +25,8 @@ namespace System
     public:
         Tracker(std::shared_ptr<Pipeline::FrameFeatureExtractor> featureExtractor,
                 std::shared_ptr<Reconstruct::Reconstruct3D> reconstructor,
-                std::shared_ptr<MappingSystem> mappingSystem);
+                std::shared_ptr<MappingSystem> mappingSystem,
+                std::shared_ptr<KeyFrameDatabase> keyFrameDB);
 
         ~Tracker() = default;
 
@@ -43,6 +45,7 @@ namespace System
         std::shared_ptr<Pipeline::FrameFeatureExtractor> m_FeatureExtractor;
         std::shared_ptr<Reconstruct::Reconstruct3D> m_3DReconstructor;
         std::shared_ptr<MappingSystem> m_MappingSystem;
+        std::shared_ptr<KeyFrameDatabase> m_KeyFrameDatabase;
         
     private:
         std::unordered_map<size_t, int> m_KeyFramePoseVertexIDs;

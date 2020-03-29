@@ -13,16 +13,13 @@
 #define MIN_CORRESPONDENCES_NEEDED 20
 #define MIN_DISTANCE_FOR_NEW_KEYFRAME 5.0
 
-// TODO: Remove later
-#include <pcl/io/pcd_io.h>
-#include <opencv2/highgui/highgui.hpp>
-
 namespace System
 {
     // Constructor
     Tracker::Tracker(std::shared_ptr<Pipeline::FrameFeatureExtractor> featureExtractor,
                      std::shared_ptr<Reconstruct::Reconstruct3D> reconstructor,
-                     std::shared_ptr<MappingSystem> mappingSystem) : m_FeatureExtractor(std::move(featureExtractor)), m_3DReconstructor(reconstructor), m_MappingSystem(mappingSystem)
+                     std::shared_ptr<MappingSystem> mappingSystem,
+                     std::shared_ptr<KeyFrameDatabase> keyFrameDB) : m_FeatureExtractor(std::move(featureExtractor)), m_3DReconstructor(reconstructor), m_MappingSystem(mappingSystem), m_KeyFrameDatabase(keyFrameDB)
     {
         // setup optimsation graph with camera params
         float fx, fy, cx, cy;
@@ -56,11 +53,9 @@ namespace System
         m_FeatureExtractor->ComputeCorrespondences(recentKeyFrame->GetCameraImage(), currentFrame->GetCameraImage(), keyFrameKeyPoints, currentFrameKeyPoints, recentKeyFrame->GetCameraImageMask(), currentFrame->GetCameraImageMask());
         
         // not enough matches - will not get a robust solution for alignment
-        if (keyFrameKeyPoints.size() <= MIN_CORRESPONDENCES_NEEDED)
-        {
-            std::cout << "\nTracking lost (" << keyFrameKeyPoints.size() << " matches found)";
+        if (keyFrameKeyPoints.size() <= MIN_CORRESPONDENCES_NEEDED) {
+            std::cerr << "\nTracking lost (" << keyFrameKeyPoints.size() << " matches found)";
             cv::Mat output;
-            return false;
         }
         
         // keyframe pose is already in graph - add (temporarily) the current frame pose to graph
@@ -110,6 +105,8 @@ namespace System
             
             // this camera pose stays - make it fixed if only 2 keyframes exist
             m_OptimisationGraph->SetCameraPoseFixed(currentCameraID, m_KeyFrames.size() <= 2);
+            
+            std::cout << "\nAdded keyframe" << std::endl;
         }
         else {
              m_OptimisationGraph->RemoveCameraPoseVertex(currentCameraID);

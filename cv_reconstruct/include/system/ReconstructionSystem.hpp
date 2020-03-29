@@ -19,6 +19,7 @@
 #include "system/TrackingFrame.hpp"
 #include "system/MappingSystem.hpp"
 #include "system/Tracker.hpp"
+#include "system/KeyFrameDatabase.hpp"
 
 #include "pipeline/FrameFeatureExtractor.hpp"
 
@@ -67,6 +68,7 @@ namespace System
         std::shared_ptr<Pipeline::FrameFeatureExtractor> m_FeatureExtractor = std::make_shared<Pipeline::FrameFeatureExtractor>();
         std::shared_ptr<Reconstruct::Reconstruct3D> m_3DReconstructor;
         std::shared_ptr<MappingSystem> m_MappingSystem;
+        std::shared_ptr<KeyFrameDatabase> m_KeyFrameDatabase;
     };
 }
 
