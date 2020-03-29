@@ -52,6 +52,8 @@ namespace System
         void SetTrackedPose(const Eigen::Isometry3d& pose);
         
         void SetID(size_t id);
+        
+        bool operator<(const TrackingFrame& other) const;
 
     private:
         void PruneDisparityImage(cv::Mat& disparity, cv::Mat& mask) const;

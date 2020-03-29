@@ -23,11 +23,13 @@ namespace System
         m_Blocks[id]->SetID(id);
 
         // add bounds to r-tree
+        /*
         pcl::PointXYZ min; pcl::PointXYZ max;
         block->GetBoundingBox3D(min, max);
 
         RTree::Box3D boundingBox(RTree::Point3D(min.x, min.y, min.z), RTree::Point3D(max.x, max.y, max.z));
         m_RTree.insert(std::make_pair(boundingBox, id));
+        */
 
         return id;
     }

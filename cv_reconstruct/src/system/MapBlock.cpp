@@ -13,7 +13,7 @@
 namespace System
 {
     // Constructor
-    MapBlock::MapBlock(const pcl::PointCloud<pcl::PointXYZRGB>& points) : m_ID(-1)
+    MapBlock::MapBlock(const std::vector<std::shared_ptr<TrackingFrame>>& keyFrames, const pcl::PointCloud<pcl::PointXYZRGB>& points) : m_KeyFrames(keyFrames)
     {
         // copy the cloud
         m_PointCloud = pcl::PointCloud<pcl::PointXYZRGB>::Ptr { new pcl::PointCloud<pcl::PointXYZRGB>() };
@@ -65,9 +65,9 @@ namespace System
     {
         pcl::PointXYZ mid;
 
-        mid.x = (m_MinPoint.x + m_MaxPoint.x) / 2.0f;
-        mid.y = (m_MinPoint.y + m_MaxPoint.y) / 2.0f;
-        mid.z = (m_MinPoint.z + m_MaxPoint.z) / 2.0f;
+        mid.x = (m_MaxPoint.x - m_MinPoint.x) / 2.0f;
+        mid.y = (m_MaxPoint.y - m_MinPoint.y) / 2.0f;
+        mid.z = (m_MaxPoint.z - m_MinPoint.z) / 2.0f;
 
         return mid;
     }

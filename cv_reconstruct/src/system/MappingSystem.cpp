@@ -25,58 +25,14 @@ namespace System
         // TODO: launch background thread for map refinement
     }
 
-    // Add point cloud
-    bool MappingSystem::AddPointCloud(const pcl::PointCloud<pcl::PointXYZRGB>& points)
+    // Add common point cloud seen from keyframes
+    void MappingSystem::AddPointsForKeyFrames(const pcl::PointCloud<pcl::PointXYZRGB>& points, const std::vector<std::shared_ptr<TrackingFrame>>& keyFrames)
     {
-        // create map block from points
-        std::shared_ptr<MapBlock> block = std::make_shared<MapBlock>(points);
-
-        // insert first block
-        if (m_MapDataBase.IsEmpty())
-        {
-            size_t id = m_MapDataBase.InsertBlock(block);
-            block->SetID(id);
-            std::cout << "\nFirst Block inserted into database" << std::endl;
-            std::cout << *block << std::endl;
-            return true;
-        }
-        else {
-            // for now: just insert it anyway
-            size_t id = m_MapDataBase.InsertBlock(block);
-            block->SetID(id);
-            return true;
-        }
-
-        /*
-        // get overlapping blocks from database system and select last inserted one (largest ID)
-        std::vector<std::shared_ptr<MapBlock>> results;
-        m_MapDataBase.SelectOverlappingBlocks(*block, results);
-
-        std::sort(results.begin(), results.end(), [](const std::shared_ptr<MapBlock>& p1, const std::shared_ptr<MapBlock>& p2) -> bool {
-            return (p1->GetID() > p2->GetID());
-        });
-
-        if (results.empty()) {
-            std::cout << "\nNo overlapping blocks found for new block" << std::endl;
-            std::cout << *block << std::endl;
-            return false;
-        }
-
-        // get last overlapping block
-        std::shared_ptr<MapBlock> lastOverlappingBlock = results[0];
-        float overlapRatio = block->OverlapRatio(*lastOverlappingBlock);
-
-        if (overlapRatio >= MIN_OVERLAP_RATIO_NEDDED_FOR_INSERT && overlapRatio <= MAX_OVERLAP_RATIO_NEDDED_FOR_INSERT) {
-            size_t id = m_MapDataBase.InsertBlock(block);
-            std::cout << "\nBlock #" << id << " inserted due to overlap (" << overlapRatio << ") with block #" << lastOverlappingBlock->GetID() << std::endl;
-            return true;
-        }
-        else {
-            std::cout << "\nNew block failed to meet insertion criteria with overlap of " << overlapRatio << " with block #" << lastOverlappingBlock->GetID() << std::endl;
-        }
-
-        return false;
-        */
+        // create map block from points and insert into database
+        std::shared_ptr<MapBlock> block = std::make_shared<MapBlock>(keyFrames, points);
+        m_MapDataBase.InsertBlock(block);
+        
+        std::cout << "\nMapping system added 3D points" << std::endl;
     }
 
     // Get map

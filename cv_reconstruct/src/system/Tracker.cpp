@@ -11,7 +11,7 @@
 #include "system/Tracker.hpp"
 
 #define MIN_CORRESPONDENCES_NEEDED 20
-#define MIN_DISTANCE_FOR_NEW_KEYFRAME 5.0
+#define MIN_DISTANCE_FOR_NEW_KEYFRAME 2.5
 
 namespace System
 {
@@ -107,6 +107,30 @@ namespace System
             m_OptimisationGraph->SetCameraPoseFixed(currentCameraID, m_KeyFrameDatabase->GetCount() <= 2);
             
             std::cout << "\nAdded keyframe" << std::endl;
+            
+            // get optimised 3D points
+            std::vector<pcl::PointXYZ> optimisedPoints;
+            m_OptimisationGraph->GetPointsObservedByCamera(currentCameraID, optimisedPoints);
+            
+            // add colour information to points
+            pcl::PointCloud<pcl::PointXYZRGB> cloud;
+            cv::Vec3b color;
+            cv::Mat cameraImage = currentFrame->GetCameraImage();
+            for (size_t i = 0; i < optimisedPoints.size(); i++)
+            {
+                color = cameraImage.at<cv::Vec3b>(projectedPoints[1][i].pt.y, projectedPoints[1][i].pt.x);
+                pcl::PointXYZRGB p(color[2], color[1], color[0]);
+                
+                p.x = optimisedPoints[i].x;
+                p.y = optimisedPoints[i].y;
+                p.z = optimisedPoints[i].z;
+                
+                cloud.push_back(p);
+            }
+            
+            // send to mapping system
+            std::vector<std::shared_ptr<TrackingFrame>> keyFramesForPoints { recentKeyFrame, currentFrame };
+            m_MappingSystem->AddPointsForKeyFrames(cloud, keyFramesForPoints);
         }
         else {
              m_OptimisationGraph->RemoveCameraPoseVertex(currentCameraID);

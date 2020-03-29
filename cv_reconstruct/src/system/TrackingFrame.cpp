@@ -110,4 +110,9 @@ namespace System
     void TrackingFrame::SetID(size_t id) {
         m_ID = id;
     }
+
+    // < operator
+    bool TrackingFrame::operator<(const TrackingFrame& other) const {
+        return m_ID < other.m_ID;
+    }
 }

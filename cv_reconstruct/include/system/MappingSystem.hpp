@@ -6,6 +6,9 @@
 #ifndef MASTER_THESIS_MAPPINGSYSTEM_HPP
 #define MASTER_THESIS_MAPPINGSYSTEM_HPP
 
+#include <vector>
+#include <memory>
+
 #include <pcl/point_cloud.h>
 #include <pcl/point_types.h>
 
@@ -13,6 +16,8 @@
 
 namespace System
 {
+    class TrackingFrame;
+
     class MappingSystem
     {
     public:
@@ -26,7 +31,8 @@ namespace System
 
         /// Add the given points to the mapping system to process
         /// \param points The potentially new point cloud to add to the underlying map
-        bool AddPointCloud(const pcl::PointCloud<pcl::PointXYZRGB>& points);
+        /// \param keyFrames The keyframes that are observing these points
+        void AddPointsForKeyFrames(const pcl::PointCloud<pcl::PointXYZRGB>& points, const std::vector<std::shared_ptr<TrackingFrame>>& keyFrames);
 
         /// Get the current built map
         /// \param cloud Will be filled with the points of the current map
