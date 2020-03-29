@@ -10,8 +10,10 @@
 #include "system/TrackingFrame.hpp"
 #include "system/Tracker.hpp"
 
+#include <opencv2/highgui.hpp>
+
 #define MIN_CORRESPONDENCES_NEEDED 20
-#define MIN_DISTANCE_FOR_NEW_KEYFRAME 2.5
+#define MIN_DISTANCE_FOR_NEW_KEYFRAME 1.0
 
 namespace System
 {
@@ -25,6 +27,9 @@ namespace System
         float fx, fy, cx, cy;
         m_3DReconstructor->GetCameraParameters(fx, fy, cx, cy);
         m_OptimisationGraph = std::make_unique<OptimisationGraph>(fx, fy, cx, cy);
+        
+        // optical flow estimation
+        m_OpticalFlowEstimator = std::make_unique<Features::OpticalFlowEstimator>();
     }
 
     // Track this frame and update estimated position and rotation of the camera
@@ -50,7 +55,8 @@ namespace System
         // find correspondences between frames
         std::vector<cv::KeyPoint> keyFrameKeyPoints;
         std::vector<cv::KeyPoint> currentFrameKeyPoints;
-        m_FeatureExtractor->ComputeCorrespondences(recentKeyFrame->GetCameraImage(), currentFrame->GetCameraImage(), keyFrameKeyPoints, currentFrameKeyPoints, recentKeyFrame->GetCameraImageMask(), currentFrame->GetCameraImageMask());
+        //m_FeatureExtractor->ComputeCorrespondences(recentKeyFrame->GetCameraImage(), currentFrame->GetCameraImage(), keyFrameKeyPoints, currentFrameKeyPoints, recentKeyFrame->GetCameraImageMask(), currentFrame->GetCameraImageMask());
+        m_OpticalFlowEstimator->EstimateCorrespondingPixels(recentKeyFrame->GetCameraImage(), currentFrame->GetCameraImage(), keyFrameKeyPoints, currentFrameKeyPoints, recentKeyFrame->GetCameraImageMask(), currentFrame->GetCameraImageMask());
         
         // not enough matches - will not get a robust solution for alignment
         if (keyFrameKeyPoints.size() <= MIN_CORRESPONDENCES_NEEDED) {

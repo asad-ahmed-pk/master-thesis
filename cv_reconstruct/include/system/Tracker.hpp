@@ -12,6 +12,7 @@
 #include <eigen3/Eigen/Eigen>
 
 #include "pipeline/FrameFeatureExtractor.hpp"
+#include "pipeline/OpticalFlowEstimator.hpp"
 #include "reconstruct/Reconstruct3D.hpp"
 #include "system/TrackingFrame.hpp"
 #include "system/OptimisationGraph.hpp"
@@ -54,6 +55,7 @@ namespace System
     private:
         Eigen::Matrix4d m_CurrentPose = Eigen::Matrix4d::Identity();
         std::unique_ptr<OptimisationGraph> m_OptimisationGraph;
+        std::unique_ptr<Features::OpticalFlowEstimator> m_OpticalFlowEstimator;
     };
 }
 

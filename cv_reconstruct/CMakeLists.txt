@@ -93,10 +93,12 @@ list(APPEND CONFIG_SOURCES
 
 list (APPEND PIPELINE_SOURCES
         include/pipeline/FrameFeatureExtractor.hpp
+        include/pipeline/OpticalFlowEstimator.hpp
         include/pipeline/PipelineResult.hpp
         include/pipeline/ReconstructionPipeline.hpp
         include/pipeline/StereoFrame.hpp
         src/pipeline/FrameFeatureExtractor.cpp
+        src/pipeline/OpticalFlowEstimator.cpp
 )
 
 list (APPEND SYSTEM_SOURCES
