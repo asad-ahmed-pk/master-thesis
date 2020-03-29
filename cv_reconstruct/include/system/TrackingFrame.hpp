@@ -29,6 +29,8 @@ namespace System
         TrackingFrame(const cv::Mat& cameraImage, const cv::Mat& disparity, std::shared_ptr<Pipeline::FrameFeatureExtractor> featureExtractor, std::shared_ptr<Reconstruct::Reconstruct3D> reconstructor);
 
         ~TrackingFrame() = default;
+        
+        size_t GetID() const;
 
         // Get features
         cv::Mat GetFeatureDescriptors() const;
@@ -48,6 +50,8 @@ namespace System
         cv::Mat GetDisparity() const;
         
         void SetTrackedPose(const Eigen::Isometry3d& pose);
+        
+        void SetID(size_t id);
 
     private:
         void PruneDisparityImage(cv::Mat& disparity, cv::Mat& mask) const;
@@ -60,6 +64,7 @@ namespace System
         std::shared_ptr<Pipeline::FrameFeatureExtractor> m_FeatureExtractor;
 
     private:
+        size_t m_ID { 0 };
         cv::Mat m_CameraImage;
         cv::Mat m_Disparity;
         cv::Mat m_Descriptors;

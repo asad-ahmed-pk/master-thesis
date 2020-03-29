@@ -43,6 +43,14 @@ namespace System
         /// \param pose The new pose for the keyframe
         void UpdateKeyFramePose(size_t id, const Eigen::Isometry3d& pose);
         
+        /// Check if empty
+        /// \return True if database has no keyframes
+        bool IsEmpty() const;
+        
+        /// Get count
+        /// \return The number of keyframes currently in the database
+        size_t GetCount() const;
+        
     private:
         size_t m_NextUsableID { 0 };
         size_t m_LastInsertedID { 0 };

@@ -50,7 +50,6 @@ namespace System
     private:
         std::unordered_map<size_t, int> m_KeyFramePoseVertexIDs;
         std::unordered_map<size_t, std::tuple<int, int>> m_KeyFrame3DPointVertexIDs;
-        std::vector<std::shared_ptr<TrackingFrame>> m_KeyFrames;
         
     private:
         Eigen::Matrix4d m_CurrentPose = Eigen::Matrix4d::Identity();

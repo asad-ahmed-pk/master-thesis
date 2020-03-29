@@ -31,15 +31,15 @@ namespace System
     void Tracker::TrackFrame(std::shared_ptr<TrackingFrame> frame)
     {
         // if no keyframes add this as the first keyframe
-        if (m_KeyFrames.empty())
+        if (m_KeyFrameDatabase->IsEmpty())
         {
-            m_KeyFrames.push_back(frame);
+            size_t keyFrameID = m_KeyFrameDatabase->InsertKeyFrame(frame);
             int poseVertexID = m_OptimisationGraph->AddDefaultCameraPoseVertex(true);
-            m_KeyFramePoseVertexIDs[m_KeyFrames.size() - 1] = poseVertexID;
+            m_KeyFramePoseVertexIDs[keyFrameID] = poseVertexID;
         }
         else {
             // track against last keyframe
-            std::shared_ptr<TrackingFrame> recentKeyFrame = m_KeyFrames.back();
+            std::shared_ptr<TrackingFrame> recentKeyFrame = m_KeyFrameDatabase->SelectMostRecentKeyFrame();
             return TrackFrame(frame, recentKeyFrame);
         }
     }
@@ -66,7 +66,7 @@ namespace System
         m_3DReconstructor->TriangulatePoints(recentKeyFrame->GetDisparity(), recentKeyFrame->GetCameraImage(), keyFrameKeyPoints, triangulatedPoints);
         
         // get last recent keyframe camera ID
-        int keyFrameCameraID = m_KeyFramePoseVertexIDs[m_KeyFrames.size() - 1];
+        int keyFrameCameraID = m_KeyFramePoseVertexIDs[recentKeyFrame->GetID()];
         
         // add 3D points for these 2 cameras looking at these common 3D points
         std::vector<int> cameras { keyFrameCameraID, currentCameraID };
@@ -100,11 +100,11 @@ namespace System
         if (isNowKeyFrame)
         {
             // add as keyframe and store optimisation graph id
-            m_KeyFrames.push_back(currentFrame);
-            m_KeyFramePoseVertexIDs[m_KeyFrames.size() - 1] = currentCameraID;
+            size_t id = m_KeyFrameDatabase->InsertKeyFrame(currentFrame);
+            m_KeyFramePoseVertexIDs[id] = currentCameraID;
             
             // this camera pose stays - make it fixed if only 2 keyframes exist
-            m_OptimisationGraph->SetCameraPoseFixed(currentCameraID, m_KeyFrames.size() <= 2);
+            m_OptimisationGraph->SetCameraPoseFixed(currentCameraID, m_KeyFrameDatabase->GetCount() <= 2);
             
             std::cout << "\nAdded keyframe" << std::endl;
         }

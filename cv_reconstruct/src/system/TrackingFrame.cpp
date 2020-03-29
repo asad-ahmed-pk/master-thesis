@@ -9,14 +9,11 @@
 
 #include "system/TrackingFrame.hpp"
 
-// TODO: Remove later
-#include <opencv2/highgui/highgui.hpp>
-
 namespace System
 {
     // Constructor
     TrackingFrame::TrackingFrame(const cv::Mat& cameraImage, const cv::Mat& disparity, std::shared_ptr<Pipeline::FrameFeatureExtractor> featureExtractor, std::shared_ptr<Reconstruct::Reconstruct3D> reconstructor) :
-    m_FeatureExtractor(featureExtractor), m_3DReconstructor(reconstructor)
+    m_3DReconstructor(reconstructor), m_FeatureExtractor(featureExtractor)
     {
         cameraImage.copyTo(m_CameraImage);
         disparity.copyTo(m_Disparity);
@@ -41,12 +38,6 @@ namespace System
                 }
             }
         }
-        
-        // for debug
-        cv::Mat disp8;
-        m_Disparity.convertTo(disp8, CV_8U);
-        cv::imwrite("mask.png", m_Mask);
-        cv::imwrite("disparity.png", disp8);
     }
 
     // Prune disparity image
@@ -82,6 +73,10 @@ namespace System
     }
 
     // Getters
+    size_t TrackingFrame::GetID() const {
+        return m_ID;
+    }
+
     std::vector<cv::KeyPoint> TrackingFrame::GetKeypoints() const {
         return m_Keypoints;
     }
@@ -109,5 +104,10 @@ namespace System
     // Set tracked pose
     void TrackingFrame::SetTrackedPose(const Eigen::Isometry3d& pose) {
         m_Pose = pose;
+    }
+
+    // Set id
+    void TrackingFrame::SetID(size_t id) {
+        m_ID = id;
     }
 }

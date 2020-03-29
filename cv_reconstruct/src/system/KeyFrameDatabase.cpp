@@ -14,6 +14,7 @@ namespace System
         
         m_DatabaseMutex.lock();
         m_KeyFrames[id] = frame;
+        frame->SetID(id);
         m_LastInsertedID = id;
         m_DatabaseMutex.unlock();
         
@@ -46,5 +47,15 @@ namespace System
             frame->SetTrackedPose(pose);
         }
         m_DatabaseMutex.unlock();
+    }
+
+    // Empty
+    bool KeyFrameDatabase::IsEmpty() const {
+        return m_KeyFrames.empty();
+    }
+
+    // Count
+    size_t KeyFrameDatabase::GetCount() const {
+        return m_KeyFrames.size();
     }
 }
