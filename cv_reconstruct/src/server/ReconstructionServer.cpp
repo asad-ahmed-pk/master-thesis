@@ -118,7 +118,7 @@ namespace Server
         // calib setup by this point - perform stereo rectification
         Camera::Calib::StereoCalib stereoSetup;
         Camera::CameraCompute cameraCompute(*m_Calib);
-        stereoSetup = std::move(cameraCompute.GetRectifiedStereoSettings());
+        stereoSetup = cameraCompute.GetRectifiedStereoSettings();
 
         // construct the reconstruction system (pun intended)
         m_ReconstructionSystem = std::make_unique<System::ReconstructionSystem>(m_Config, stereoSetup);
@@ -137,7 +137,7 @@ namespace Server
                 //std::cout << "\nProcessing frame #" << n << " in queue" << std::endl;
 
                 // got a stereo message from the client process with 3D reconstruct
-                frame = std::move(Utility::MessageConverter::ConvertStereoMessage(message));
+                frame = Utility::MessageConverter::ConvertStereoMessage(message);
                 frame.ID = m_NumFramesProcessed;
 
                 // submit to reconstruction system for processing
