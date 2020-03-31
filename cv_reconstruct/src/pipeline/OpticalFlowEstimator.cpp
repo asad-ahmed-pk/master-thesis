@@ -94,4 +94,96 @@ namespace Features
             }
         }
     }
+
+    // Multiple image version of flow estimation
+    void OpticalFlowEstimator::EstimateCorrespondingPixels(const std::vector<cv::Mat>& images, std::vector<std::vector<cv::KeyPoint>>& trackedPoints, cv::InputArray mask)
+    {
+        // determine if mask is being applied
+        bool isMasked = (&mask != &cv::noArray());
+        cv::Mat maskImage;
+        if (isMasked) {
+            maskImage = mask.getMat();
+        }
+        
+        // need at least 2 images
+        if (images.size() < 2) {
+            return;
+        }
+        
+        // allocate space for tracked points
+        for (size_t i = 0; i < images.size(); i++) {
+            trackedPoints.push_back(std::vector<cv::KeyPoint>());
+        }
+        
+        // estimate flow from first image to second image
+        EstimateCorrespondingPixels(images[0], images[1], trackedPoints[0], trackedPoints[1]);
+        
+        // setup second image as greyscale and estimate flow from second image and onwards
+        cv::Mat prevImage; cv::Mat nextImage; cv::Mat flow;
+        cv::cvtColor(images[1], prevImage, cv::COLOR_BGR2GRAY);
+        
+        // only 2 images were provided - done here
+        if (images.size() == 2) {
+            return;
+        }
+        
+        // vector of iterators to remove points that go off in any of the images (want common points)
+        std::vector<std::vector<cv::KeyPoint>::iterator> iters {
+            trackedPoints[1].begin()
+        };
+        
+        // image bounds
+        int width = images[0].cols; int height = images[0].rows;
+        
+        // begin flow estimation on remaining n - 1 images
+        std::vector<cv::Mat> components; float x0, x1, y0, y1;
+        for (size_t i = 2; i < images.size(); i++)
+        {
+            // next image as grey scale
+            cv::cvtColor(images[i], nextImage, cv::COLOR_BGR2GRAY);
+            
+            // dense optical flow
+            m_FarnebackOF->calc(prevImage, nextImage, flow);
+            cv::split(flow, components);
+            
+            // iterate using first image points as basis
+            auto iter = trackedPoints[0].begin();
+            while (iter != trackedPoints[0].end())
+            {
+                // previous image pixel positions
+                x0 = iters.back()->pt.x;
+                y0 = iters.back()->pt.y;
+                
+                // new pixel positions in this image
+                x1 = x0 + components[0].at<float>(iter->pt.y, iter->pt.x);
+                y1 = y0 + components[1].at<float>(iter->pt.y, iter->pt.x);
+                
+                // check if out of bounds and remove in all previous images
+                if ((x1 < 0.0 || x1 >= width) || (y1 < 0.0 || y1 >= height))
+                {
+                    // remove in first image
+                    iter = trackedPoints[0].erase(iter);
+                    
+                    // remove in all other images
+                    for (size_t j = 0; j < iters.size(); j++) {
+                        iters[j] = trackedPoints[j + 1].erase(iters[j]);
+                    }
+                }
+                else
+                {
+                    // all good insert this point for this image
+                    trackedPoints[i].push_back(cv::KeyPoint(x1, y1, 10.0));
+                    iter++;
+                }
+            }
+            
+            // add iter for this image since done processing
+            iters.push_back(trackedPoints[i].begin());
+            
+            // reset the other iters for next image processing
+            for (size_t j = 0; j < iters.size(); j++) {
+                iters[j] = trackedPoints[j + 1].begin();
+            }
+        }
+    }
 }

@@ -19,7 +19,7 @@ namespace System
         m_KeyFrameDatabase = std::make_shared<KeyFrameDatabase>();
         
         // mapping subsystem: performs windowed BA and local optimisation of the map
-        m_MappingSystem = std::make_shared<MappingSystem>();
+        m_MappingSystem = std::make_shared<MappingSystem>(m_3DReconstructor);
         m_MappingSystem->StartOptimisationThread();
         
         // tracker: tracks frames for local mapping and quick localisation

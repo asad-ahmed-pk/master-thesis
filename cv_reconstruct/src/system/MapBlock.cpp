@@ -60,6 +60,11 @@ namespace System
         return m_ID;
     }
 
+    // Get keyframes
+    std::vector<std::shared_ptr<TrackingFrame>> MapBlock::GetKeyFrames() const {
+        return m_KeyFrames;
+    }
+
     // Get center point
     pcl::PointXYZ MapBlock::GetCenterPoint() const
     {

@@ -39,6 +39,10 @@ namespace System
         /// \param id The ID to set for the vertex
         void RemoveCameraPoseVertex(int id);
         
+        /// Check if camera pose already exists
+        /// \param camera The ID of the camera
+        bool CameraExists(int camera);
+        
         /// Add edges connecting 2 cameras looking at common 3D points
         /// \param cameras The IDs of the pose vertices of the cameras looking at the common 3D points
         /// \param pointsXYZ A vector of observed 3D points for the intial estimate

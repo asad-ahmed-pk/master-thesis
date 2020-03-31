@@ -8,6 +8,7 @@
 
 #include <unordered_map>
 #include <memory>
+#include <mutex>
 
 #include <boost/geometry.hpp>
 #include <boost/geometry/index/rtree.hpp>
@@ -40,6 +41,11 @@ namespace System
         /// \param block The map block
         /// \return The ID of the newly inserted block
         size_t InsertBlock(std::shared_ptr<MapBlock> block);
+        
+        /// Merge the blocks with the common 3D points
+        /// \param blocks The a vector of blocks being merged
+        /// \param points The new 3D points to set for this merged block
+        void MergeBlocks(const std::vector<std::shared_ptr<MapBlock>>& blocks, const pcl::PointCloud<pcl::PointXYZRGB>& points);
 
         /// Get overlapping blocks that overlap the given block
         /// \param queryBlock The block being queried. Does not have to exist in the database.
@@ -57,6 +63,7 @@ namespace System
     private:
         boost::geometry::index::rtree<RTree::Value, boost::geometry::index::rstar<16>> m_RTree;
         std::unordered_map<size_t, std::shared_ptr<MapBlock>> m_Blocks;
+        std::mutex m_UpdateMutex;
         size_t m_NextID { 0 };
     };
 }

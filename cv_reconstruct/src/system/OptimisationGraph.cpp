@@ -57,6 +57,11 @@ namespace System
         return id;
     }
 
+    // Camera vertex check
+    bool OptimisationGraph::CameraExists(int camera) {
+        return (m_Optimiser.vertex(camera) != nullptr);
+    }
+
     // Remove pose vertex
     void OptimisationGraph::RemoveCameraPoseVertex(int id)
     {

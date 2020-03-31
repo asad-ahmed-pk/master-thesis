@@ -115,4 +115,9 @@ namespace System
     bool TrackingFrame::operator<(const TrackingFrame& other) const {
         return m_ID < other.m_ID;
     }
+    
+    // == operator
+    bool TrackingFrame::operator==(const TrackingFrame& other) const {
+        return m_ID == other.m_ID;
+    }
 }

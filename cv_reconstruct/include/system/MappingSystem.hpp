@@ -8,10 +8,15 @@
 
 #include <vector>
 #include <memory>
+#include <unordered_map>
 
 #include <pcl/point_cloud.h>
 #include <pcl/point_types.h>
 
+#include "pipeline/OpticalFlowEstimator.hpp"
+#include "reconstruct/Reconstruct3D.hpp"
+#include "system/OptimisationGraph.hpp"
+#include "system/MapBlock.hpp"
 #include "system/MapDataBase.hpp"
 
 namespace System
@@ -22,7 +27,7 @@ namespace System
     {
     public:
         /// Create default instance of mapping system.
-        MappingSystem();
+        MappingSystem(std::shared_ptr<Reconstruct::Reconstruct3D> reconstructor);
 
         /// Start the optimisation thread
         void StartOptimisationThread();
@@ -37,8 +42,18 @@ namespace System
         /// Get the current built map
         /// \param cloud Will be filled with the points of the current map
         void GetMap(pcl::PointCloud<pcl::PointXYZRGB>::Ptr cloud) const;
+        
+    private:
+        void LocalOptimisation();
 
     private:
+        std::unordered_map<size_t, int> m_CameraGraphIDs;
+        std::vector<std::shared_ptr<MapBlock>> m_UnoptimisedBlocks;
+        
+    private:
+        std::unique_ptr<OptimisationGraph> m_OptimisationGraph;
+        std::unique_ptr<Features::OpticalFlowEstimator> m_OpticalFlowEstimator;
+        std::shared_ptr<Reconstruct::Reconstruct3D> m_3DReconstructor;
         MapDataBase m_MapDataBase;
     };
 }

@@ -54,6 +54,8 @@ namespace System
         void SetID(size_t id);
         
         bool operator<(const TrackingFrame& other) const;
+        
+        bool operator==(const TrackingFrame& other) const;
 
     private:
         void PruneDisparityImage(cv::Mat& disparity, cv::Mat& mask) const;

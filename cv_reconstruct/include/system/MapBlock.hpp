@@ -43,6 +43,10 @@ namespace System
         /// Get the ID of this block
         /// \return The ID
         size_t GetID() const;
+        
+        /// Get keyframes
+        /// \return The keyframes in this block
+        std::vector<std::shared_ptr<TrackingFrame>> GetKeyFrames() const;
 
         /// Get the 3D bounding box for this map block
         /// \param minPoint The minimum point

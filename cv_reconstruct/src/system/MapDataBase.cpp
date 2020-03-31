@@ -3,6 +3,8 @@
 // Represents the 3D map database and exposes operations for querying the DB
 //
 
+#include <unordered_set>
+
 #include "system/MapDataBase.hpp"
 
 namespace System
@@ -32,6 +34,36 @@ namespace System
         */
 
         return id;
+    }
+
+    // Block merge
+    void MapDataBase::MergeBlocks(const std::vector<std::shared_ptr<MapBlock>>& blocks, const pcl::PointCloud<pcl::PointXYZRGB>& points)
+    {
+        m_UpdateMutex.lock();
+        
+        // create new block
+        std::vector<std::shared_ptr<TrackingFrame>> keyFrames;
+        std::unordered_set<size_t> keyframeIDs;
+        
+        // add unique keyframes (some keyframes will overlap between blocks)
+        for (auto block : blocks)
+        {
+            // delete the block from the database
+            m_Blocks.erase(block->GetID());
+            
+            // get keyframes from this block
+            for (auto keyFrame : block->GetKeyFrames()) {
+                if (keyframeIDs.find(keyFrame->GetID()) == keyframeIDs.end()) {
+                    keyFrames.push_back(keyFrame);
+                }
+            }
+        }
+        
+        // create new merged block
+        std::shared_ptr<MapBlock> mergedBlock = std::make_shared<MapBlock>(keyFrames, points);
+        InsertBlock(mergedBlock);
+        
+        m_UpdateMutex.unlock();
     }
 
     // Is Empty

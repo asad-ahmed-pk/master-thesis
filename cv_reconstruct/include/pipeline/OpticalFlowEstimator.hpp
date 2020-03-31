@@ -30,6 +30,12 @@ namespace Features
         /// \param mask2 An optional mask for image 2
         void EstimateCorrespondingPixels(const cv::Mat& image1, const cv::Mat& image2, std::vector<cv::KeyPoint>& points1, std::vector<cv::KeyPoint>& points2, cv::InputArray mask1 = cv::noArray(), cv::InputArray mask2 = cv::noArray());
         
+        /// Compute pixel correspondences from dense optical flow from images in the list
+        /// \param images A list of images to compute motion flowing from the first to the second and so on...
+        /// \param trackedPoints Will be populated with the common pixels that were seen in ALL images
+        /// \param An optional mask to apply on the first image before tracking the flow of pixels
+        void EstimateCorrespondingPixels(const std::vector<cv::Mat>& images, std::vector<std::vector<cv::KeyPoint>>& trackedPoints, cv::InputArray mask = cv::noArray());
+        
     private:
         cv::Ptr<cv::FarnebackOpticalFlow> m_FarnebackOF;
     };
