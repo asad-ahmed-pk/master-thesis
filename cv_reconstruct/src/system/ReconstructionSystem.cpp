@@ -3,6 +3,7 @@
 // Main system for 3D reconstruction. Computes keyframes, and creates 3D map.
 //
 
+#include "system/MapDataBase.hpp"
 #include "system/ReconstructionSystem.hpp"
 
 namespace System
@@ -59,5 +60,10 @@ namespace System
     // Get current map
     void ReconstructionSystem::GetCurrentBuiltMap(pcl::PointCloud<pcl::PointXYZRGB>::Ptr cloud) const {
         m_MappingSystem->GetMap(cloud);
+    }
+
+    // Get map database
+    std::shared_ptr<MapDataBase> ReconstructionSystem::GetMapDataBase() const {
+        return m_MappingSystem->GetMapDataBase();
     }
 }

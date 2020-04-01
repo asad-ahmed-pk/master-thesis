@@ -20,6 +20,9 @@ namespace System
     // Constructor
     MappingSystem::MappingSystem(std::shared_ptr<Reconstruct::Reconstruct3D> reconstructor) : m_3DReconstructor(reconstructor)
     {
+        // map database
+        m_MapDataBase = std::make_shared<MapDataBase>();
+        
         // setup optimsation graph with camera params
         float fx, fy, cx, cy;
         m_3DReconstructor->GetCameraParameters(fx, fy, cx, cy);
@@ -40,7 +43,7 @@ namespace System
     {
         // create map block from points and insert into database
         std::shared_ptr<MapBlock> block = std::make_shared<MapBlock>(keyFrames, points);
-        m_MapDataBase.InsertBlock(block);
+        m_MapDataBase->InsertBlock(block);
         
         // check if local optimisation is needed
         m_UnoptimisedBlocks.push_back(block);
@@ -53,7 +56,12 @@ namespace System
 
     // Get map
     void MappingSystem::GetMap(pcl::PointCloud<pcl::PointXYZRGB>::Ptr cloud) const {
-        m_MapDataBase.GetFullPointCloud(cloud);
+        m_MapDataBase->GetFullPointCloud(cloud);
+    }
+
+    // Get map database
+    std::shared_ptr<MapDataBase> MappingSystem::GetMapDataBase() const {
+        return m_MapDataBase;
     }
 
     // Local optimisation
@@ -119,7 +127,7 @@ namespace System
         }
         
         // merge the set of blocks
-        m_MapDataBase.MergeBlocks(m_UnoptimisedBlocks, cloud);
+        m_MapDataBase->MergeBlocks(m_UnoptimisedBlocks, cloud);
         m_UnoptimisedBlocks.clear();
         
         std::cout << "\nLocal BA updated map database" << std::endl;

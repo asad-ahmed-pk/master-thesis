@@ -35,7 +35,7 @@ namespace Camera {
 
 namespace System
 {
-    class Keyframe;
+    class MapDataBase;
 
     class ReconstructionSystem
     {
@@ -58,6 +58,10 @@ namespace System
         /// Get the current map that has been built
         /// \param cloud Will be filled with the point cloud data
         void GetCurrentBuiltMap(pcl::PointCloud<pcl::PointXYZRGB>::Ptr cloud) const;
+        
+        /// Get access to the map database
+        /// \return A shared pointer to the map database
+        std::shared_ptr<MapDataBase> GetMapDataBase() const;
 
     private:
         Config::Config m_Config;

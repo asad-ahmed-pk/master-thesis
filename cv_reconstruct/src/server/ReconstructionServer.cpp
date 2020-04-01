@@ -65,7 +65,9 @@ namespace Server
         // print message that client connected and is streaming
         m_UserInterface.PrintClientConnectedMessage();
 
+        // old method: CLI
         // main event loop: get user prompt and process user's command
+        /*
         do
         {
             UserOption option = m_UserInterface.GetUserCommandOption();
@@ -85,6 +87,14 @@ namespace Server
                     break;
             }
         } while (!m_UserRequestedToQuit);
+        */
+        
+        // create and run visualiser (on main thread)
+        m_Visualiser = std::make_unique<Visualisation::Visualiser>(m_ReconstructionSystem->GetMapDataBase());
+        m_Visualiser->Run();
+        
+        // if here - window was closed
+        m_UserRequestedToQuit = true;
 
         // if user requested to quit, wait for the processing thread
         m_ProcessingThread.join();

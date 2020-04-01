@@ -15,6 +15,7 @@
 #include "reconstruct/ReconstructStatusCode.hpp"
 #include "config/Config.hpp"
 #include "camera/CameraCalib.hpp"
+#include "visualisation/Visualiser.hpp"
 #include "cv_networking/server/ReconstructionServer.hpp"
 #include "system/ReconstructionSystem.hpp"
 
@@ -47,6 +48,7 @@ namespace Server
 
     private:
         Config::Config m_Config;
+        std::unique_ptr<Visualisation::Visualiser> m_Visualiser;
         std::unique_ptr<System::ReconstructionSystem> m_ReconstructionSystem { nullptr };
         std::unique_ptr<Camera::Calib::StereoCalib> m_Calib { nullptr };
         std::unique_ptr<CVNetwork::Servers::ReconstructionServer> m_ReconstructionServer { nullptr };

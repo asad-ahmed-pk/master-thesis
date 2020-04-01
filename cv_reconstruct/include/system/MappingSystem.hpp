@@ -43,6 +43,10 @@ namespace System
         /// \param cloud Will be filled with the points of the current map
         void GetMap(pcl::PointCloud<pcl::PointXYZRGB>::Ptr cloud) const;
         
+        /// Get a shared pointer to the map database
+        /// \return A shared pointer to the map database
+        std::shared_ptr<MapDataBase> GetMapDataBase() const;
+        
     private:
         void LocalOptimisation();
 
@@ -54,7 +58,7 @@ namespace System
         std::unique_ptr<OptimisationGraph> m_OptimisationGraph;
         std::unique_ptr<Features::OpticalFlowEstimator> m_OpticalFlowEstimator;
         std::shared_ptr<Reconstruct::Reconstruct3D> m_3DReconstructor;
-        MapDataBase m_MapDataBase;
+        std::shared_ptr<MapDataBase> m_MapDataBase;
     };
 }
 

@@ -59,10 +59,15 @@ namespace System
         /// Check if database is empty
         /// \return True if the database is empty
         bool IsEmpty() const;
+        
+        /// Get access to the current point cloud being maintained and updated by the database
+        /// \return A const shared pointer to the underlying point cloud being actively built and refined
+        pcl::PointCloud<pcl::PointXYZRGB>::ConstPtr GetPointCloud() const;
 
     private:
         boost::geometry::index::rtree<RTree::Value, boost::geometry::index::rstar<16>> m_RTree;
         std::unordered_map<size_t, std::shared_ptr<MapBlock>> m_Blocks;
+        pcl::PointCloud<pcl::PointXYZRGB>::Ptr m_CurrentPointCloud { new pcl::PointCloud<pcl::PointXYZRGB>() };
         std::mutex m_UpdateMutex;
         size_t m_NextID { 0 };
     };

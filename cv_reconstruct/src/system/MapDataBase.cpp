@@ -23,6 +23,9 @@ namespace System
 
         m_Blocks[id] = block;
         m_Blocks[id]->SetID(id);
+        
+        // append to point cloud
+        *m_CurrentPointCloud += *block->GetPoints();
 
         // add bounds to r-tree
         /*
@@ -69,6 +72,10 @@ namespace System
     // Is Empty
     bool MapDataBase::IsEmpty() const {
         return m_Blocks.empty();
+    }
+
+    pcl::PointCloud<pcl::PointXYZRGB>::ConstPtr MapDataBase::GetPointCloud() const {
+        return m_CurrentPointCloud;
     }
 
     // Query: overlapping blocks
