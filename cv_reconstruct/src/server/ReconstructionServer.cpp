@@ -15,14 +15,17 @@
 #include <memory>
 #include <thread>
 #include <chrono>
-#include <boost/filesystem.hpp>
+
 #include <pcl/io/pcd_io.h>
+#include <boost/filesystem.hpp>
 #include <opencv2/highgui/highgui.hpp>
+#include <opencv2/imgproc/imgproc.hpp>
+
+#define CALIB_FILE_PATH "calib.json"
+#define IMAGE_DOWNSIZE_FACTOR 0.3
 
 namespace Server
 {
-#define CALIB_FILE_PATH "calib.json"
-
     // Constructor
     ReconstructionServer::ReconstructionServer()
     {
@@ -129,6 +132,17 @@ namespace Server
         Camera::Calib::StereoCalib stereoSetup;
         Camera::CameraCompute cameraCompute(*m_Calib);
         stereoSetup = cameraCompute.GetRectifiedStereoSettings();
+        
+        // adjust intrinsics since downscaling images
+        stereoSetup.LeftCameraCalib.K(0, 0) = stereoSetup.LeftCameraCalib.K(0, 0) * IMAGE_DOWNSIZE_FACTOR;
+        stereoSetup.LeftCameraCalib.K(1, 1) = stereoSetup.LeftCameraCalib.K(1, 1) * IMAGE_DOWNSIZE_FACTOR;
+        stereoSetup.LeftCameraCalib.K(0, 2) = stereoSetup.LeftCameraCalib.K(0, 2) * IMAGE_DOWNSIZE_FACTOR;
+        stereoSetup.LeftCameraCalib.K(1, 2) = stereoSetup.LeftCameraCalib.K(1, 2) * IMAGE_DOWNSIZE_FACTOR;
+        
+        stereoSetup.RightCameraCalib.K(0, 0) = stereoSetup.RightCameraCalib.K(0, 0) * IMAGE_DOWNSIZE_FACTOR;
+        stereoSetup.RightCameraCalib.K(1, 1) = stereoSetup.RightCameraCalib.K(1, 1) * IMAGE_DOWNSIZE_FACTOR;
+        stereoSetup.RightCameraCalib.K(0, 2) = stereoSetup.RightCameraCalib.K(0, 2) * IMAGE_DOWNSIZE_FACTOR;
+        stereoSetup.RightCameraCalib.K(1, 2) = stereoSetup.RightCameraCalib.K(1, 2) * IMAGE_DOWNSIZE_FACTOR;
 
         // construct the reconstruction system (pun intended)
         m_ReconstructionSystem = std::make_unique<System::ReconstructionSystem>(m_Config, stereoSetup);
@@ -149,6 +163,10 @@ namespace Server
                 // got a stereo message from the client process with 3D reconstruct
                 frame = Utility::MessageConverter::ConvertStereoMessage(message);
                 frame.ID = m_NumFramesProcessed;
+                
+                // downsize the image to half its size
+                cv::resize(frame.LeftImage, frame.LeftImage, cv::Size(frame.LeftImage.cols * IMAGE_DOWNSIZE_FACTOR, frame.LeftImage.rows * IMAGE_DOWNSIZE_FACTOR));
+                cv::resize(frame.RightImage, frame.RightImage, cv::Size(frame.RightImage.cols * IMAGE_DOWNSIZE_FACTOR, frame.RightImage.rows * IMAGE_DOWNSIZE_FACTOR));
 
                 // submit to reconstruction system for processing
                 m_ReconstructionSystem->ProcessStereoFrame(frame);

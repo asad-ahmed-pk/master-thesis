@@ -13,7 +13,7 @@
 #include <opencv2/highgui.hpp>
 
 #define MIN_CORRESPONDENCES_NEEDED 20
-#define MIN_DISTANCE_FOR_NEW_KEYFRAME 1.0
+#define MIN_DISTANCE_FOR_NEW_KEYFRAME 0.5
 
 namespace System
 {

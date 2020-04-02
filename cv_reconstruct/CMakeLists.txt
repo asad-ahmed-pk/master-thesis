@@ -155,10 +155,11 @@ add_executable(reconstruct_test src/test/reconstruct_test_kitti_rectified.cpp sr
         ${RECONSTRUCT_3D_SOURCES}
         ${CONFIG_SOURCES}
         ${PIPELINE_SOURCES}
+        ${SYSTEM_SOURCES}
         ${POINT_CLOUD_SOURCES}
         ${EXTERN_SOURCES}
 )
-target_link_libraries(reconstruct_test ${OpenCV_LIBS} ${Boost_LIBRARIES} ${PCL_LIBRARIES})
+target_link_libraries(reconstruct_test ${OpenCV_LIBS} ${Boost_LIBRARIES} ${PCL_LIBRARIES} ${G2O_LIBS})
 
 # Localization module test program
 add_executable(localization_test src/test/localization_test_kitti.cpp src/test/tests_common.cpp
