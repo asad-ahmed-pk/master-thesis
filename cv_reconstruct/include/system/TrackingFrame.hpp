@@ -26,20 +26,11 @@ namespace System
         /// \param disparity The disparity image used for depth estimation
         /// \param featureExtractor Shared ptr to a 2D feature extractor
         /// \param reconstructor Shared ptr to a set-up 3D reconstructor
-        TrackingFrame(const cv::Mat& cameraImage, const cv::Mat& disparity, std::shared_ptr<Pipeline::FrameFeatureExtractor> featureExtractor, std::shared_ptr<Reconstruct::Reconstruct3D> reconstructor);
+        TrackingFrame(const cv::Mat& cameraImage, const cv::Mat& disparity, std::shared_ptr<Reconstruct::Reconstruct3D> reconstructor);
 
         ~TrackingFrame() = default;
         
         size_t GetID() const;
-
-        // Get features
-        cv::Mat GetFeatureDescriptors() const;
-
-        // Get keypoints
-        std::vector<cv::KeyPoint> GetKeypoints() const;
-
-        // Get keypoint point cloud
-        pcl::PointCloud<pcl::PointXYZRGB>::Ptr GetKeypointPointCloud() const;
         
         pcl::PointCloud<pcl::PointXYZRGB>::Ptr GetDensePointCloud() const;
         
@@ -60,21 +51,15 @@ namespace System
     private:
         void PruneDisparityImage(cv::Mat& disparity, cv::Mat& mask) const;
         void SetupFrame();
-        void ComputeKeypointCloud();
-        void PruneFeatures();
 
     private:
         std::shared_ptr<Reconstruct::Reconstruct3D> m_3DReconstructor;
-        std::shared_ptr<Pipeline::FrameFeatureExtractor> m_FeatureExtractor;
 
     private:
         size_t m_ID { 0 };
         cv::Mat m_CameraImage;
         cv::Mat m_Disparity;
-        cv::Mat m_Descriptors;
         cv::Mat m_Mask;
-        std::vector<cv::KeyPoint> m_Keypoints;
-        pcl::PointCloud<pcl::PointXYZRGB>::Ptr m_KeypointPointCloud { new pcl::PointCloud<pcl::PointXYZRGB>() };
         
     private:
         Eigen::Isometry3d m_Pose;

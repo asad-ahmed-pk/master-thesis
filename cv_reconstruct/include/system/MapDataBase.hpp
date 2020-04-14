@@ -9,11 +9,8 @@
 #include <unordered_map>
 #include <memory>
 #include <mutex>
-
-#include <boost/geometry.hpp>
-#include <boost/geometry/index/rtree.hpp>
-#include <boost/geometry/geometries/box.hpp>
-#include <boost/geometry/geometries/point.hpp>
+#include <tuple>
+#include <map>
 
 #include <pcl/point_types.h>
 #include <pcl/point_cloud.h>
@@ -22,13 +19,6 @@
 
 namespace System
 {
-    // Typedefs for the RTree
-    namespace RTree {
-        typedef boost::geometry::model::point<float, 3, boost::geometry::cs::cartesian> Point3D;
-        typedef boost::geometry::model::box<Point3D> Box3D;
-        typedef std::pair<Box3D, size_t> Value;
-    }
-
     class MapDataBase
     {
     public:
@@ -46,11 +36,10 @@ namespace System
         /// \param blocks The a vector of blocks being merged
         /// \param points The new 3D points to set for this merged block
         void MergeBlocks(const std::vector<std::shared_ptr<MapBlock>>& blocks, const pcl::PointCloud<pcl::PointXYZRGB>& points);
-
-        /// Get overlapping blocks that overlap the given block
-        /// \param queryBlock The block being queried. Does not have to exist in the database.
-        /// \param results Will be populated with a list of pointers to the blocks in the database
-        void SelectOverlappingBlocks(const MapBlock& queryBlock, std::vector<std::shared_ptr<MapBlock>>& results);
+        
+        /// Delete the given block with the given ID
+        /// \param id The id of the block to delete
+        void DeleteBlock(size_t id);
 
         /// Get a full scene point cloud from all the current blocks in the database
         /// \param cloud Will be populated with all the points from all current blocks
@@ -65,8 +54,8 @@ namespace System
         pcl::PointCloud<pcl::PointXYZRGB>::ConstPtr GetPointCloud() const;
 
     private:
-        boost::geometry::index::rtree<RTree::Value, boost::geometry::index::rstar<16>> m_RTree;
         std::unordered_map<size_t, std::shared_ptr<MapBlock>> m_Blocks;
+        std::map<size_t, std::tuple<size_t, size_t>> m_PointCloudIndices;
         pcl::PointCloud<pcl::PointXYZRGB>::Ptr m_CurrentPointCloud { new pcl::PointCloud<pcl::PointXYZRGB>() };
         std::mutex m_UpdateMutex;
         size_t m_NextID { 0 };

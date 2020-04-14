@@ -23,16 +23,9 @@ namespace Reconstruct
     //constexpr int SGM_P2 = 32 * 3 * SGM_BLOCK_SIZE * SGM_BLOCK_SIZE;
 
     // Constructor
-    Reconstruct3D::Reconstruct3D(const Camera::Calib::StereoCalib& stereoSetup, const Config::Config& config) : m_StereoCameraSetup(stereoSetup)
-    {
+    Reconstruct3D::Reconstruct3D(const Camera::Calib::StereoCalib& stereoSetup, const Config::Config& config) : m_StereoCameraSetup(stereoSetup) {
         // setup stereo matcher
         ConfigureSteoreoMatcher(config);
-
-        // calculate and store the Q matrix (3D projection)
-        Eigen::Matrix4f Q = Eigen::Matrix4f::Identity();
-        float f = (m_StereoCameraSetup.LeftCameraCalib.K(0, 0) + m_StereoCameraSetup.RightCameraCalib.K(0, 0)) / 2.0f;
-        Q(2, 2) = 0.005 * f;
-        cv::eigen2cv(Q, m_Q);
     }
 
     // Configure stereo matcher from config
@@ -68,11 +61,6 @@ namespace Reconstruct
         }
     }
 
-    // Getter for invalid Z values
-    float Reconstruct3D::GetInvalidDisparityZValue() {
-        return MISSING_DISPARITY_Z;
-    }
-
     // Disparity map
     cv::Mat Reconstruct3D::GenerateDisparityMap(const cv::Mat &leftImage, const cv::Mat &rightImage) const
     {
@@ -86,61 +74,6 @@ namespace Reconstruct
         m_StereoMatcher->compute(leftImageGrey, rightImageGrey, disparity);
 
         return disparity;
-    }
-
-    // Point cloud generation
-    pcl::PointCloud<pcl::PointXYZRGB> Reconstruct3D::GeneratePointCloud(const cv::Mat& disparity, const cv::Mat& cameraImage) const
-    {
-        cv::Mat reprojected3D;
-        cv::reprojectImageTo3D(disparity, reprojected3D, m_Q, true);
-
-        pcl::PointCloud<pcl::PointXYZRGB> pointCloud;
-        cv::Vec3f coords;
-        pcl::PointXYZRGB point;
-
-        uint32_t count = 0;
-
-        for (int row = 0; row < reprojected3D.rows; row++)
-        {
-            for (int col = 0; col < reprojected3D.cols; col++)
-            {
-                coords = reprojected3D.at<cv::Vec3f>(row, col);
-
-                // skip points with infinity values and zero depth
-                if (coords[2] == MISSING_DISPARITY_Z) {
-                    continue;
-                }
-
-                // set 3D point X,Y,Z and RGB
-                point.x = (coords[0] - (cameraImage.cols / 2.0f));
-                point.y = -(coords[1] - (cameraImage.rows / 2.0f));
-                point.z = coords[2];
-
-                point.r = cameraImage.at<cv::Vec3b>(row, col)[2];
-                point.g = cameraImage.at<cv::Vec3b>(row, col)[1];
-                point.b = cameraImage.at<cv::Vec3b>(row, col)[0];
-
-                pointCloud.push_back(point);
-
-                count++;
-            }
-        }
-
-        pointCloud.width = count;
-        pointCloud.height = 1;
-        pointCloud.is_dense = true;
-
-        // perspective fix
-        Eigen::Matrix4f P = Eigen::Matrix4f::Identity();
-        P(0, 0) = -1;
-        pcl::transformPointCloud(pointCloud, pointCloud, P);
-
-        return pointCloud;
-    }
-
-    // Get 3D projected image
-    void Reconstruct3D::Project3D(const cv::Mat& disparity, cv::Mat& projected3D) const {
-        cv::reprojectImageTo3D(disparity, projected3D, m_Q, true);
     }
 
     // Get camera intrinsics
@@ -334,69 +267,6 @@ namespace Reconstruct
         cv::Mat leftImageRectified, rightImageRectified;
         cv::remap(leftImage, rectLeftImage, map11, map12, cv::INTER_LINEAR);
         cv::remap(rightImage, rectRightImage, map21, map22, cv::INTER_LINEAR);
-    }
-
-    // TODO: Fix - compute 3D locations directly from parallax map using matrix operation
-    // useful later for parallel implementation
-    pcl::PointCloud<pcl::PointXYZRGB> Reconstruct3D::PointCloudMatrixCompute(const cv::Mat &leftImage, const cv::Mat &disparity) const
-    {
-        pcl::PointCloud<pcl::PointXYZRGB> pointCloud;
-        pcl::PointXYZRGB point;
-
-        uint32_t count = 0;
-        float f = m_StereoCameraSetup.LeftCameraCalib.K(0, 0);          // focal length
-        float b = m_StereoCameraSetup.T(0);                                 // baseline
-
-        // new method using matrix multiplication
-        int N = disparity.rows * disparity.cols;
-
-        // Matrix P: will be filled with 3D coordinates X, Y, Z, W
-        cv::Mat P(4, N, CV_32FC1);
-
-        // Matrix M: Image scale matrix
-        cv::Mat M = cv::Mat::zeros(4, 4, CV_32FC1);
-
-        // Matrix I: Image matrix with image points (4xN)
-        cv::Mat I(4, N, CV_32FC1, cv::Scalar(1.0));
-        int n = 0;
-        for (int y = 0; y < disparity.rows; y++)
-        {
-            for (int x = 0; x < disparity.cols; x++)
-            {
-                I.at<float>(0, n) = x;
-                I.at<float>(1, n) = y;
-                I.at<float>(3, n) = static_cast<float>(disparity.at<short>(x, y));
-                n++;
-            }
-        }
-
-        // calculate by matrix multiplication
-        P = M * I;
-
-        // create point cloud from result P matrix
-        int row, col = 0;
-        for (int n = 0; n < N; n++)
-        {
-            point.x = P.at<float>(0, n) / P.at<float>(3, n);
-            point.y = P.at<float>(1, n) / P.at<float>(3, n);
-            point.z = P.at<float>(2, n) / P.at<float>(3, n);
-
-            col = static_cast<int>(I.at<float>(0, n));
-            row = static_cast<int>(I.at<float>(1, n));
-
-            point.r = leftImage.at<cv::Vec3b>(row, col)[2];
-            point.g = leftImage.at<cv::Vec3b>(row, col)[1];
-            point.b = leftImage.at<cv::Vec3b>(row, col)[0];
-
-            pointCloud.push_back(point);
-            count++;
-        }
-
-        pointCloud.width = count;
-        pointCloud.height = 1;
-        pointCloud.is_dense = true;
-
-        return pointCloud;
     }
 
     // Setters

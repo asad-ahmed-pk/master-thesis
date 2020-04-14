@@ -67,21 +67,10 @@ int main(int argc, char** argv)
     // generate disparity maps
     cv::Mat disparity = reconstructor.GenerateDisparityMap(leftImage, rightImage);
     std::cout << "\nDisparity map computed successfully" << std::endl;
-    cv::imwrite("disparity_map.png", disparity);
-    
-    // true disparity
-    disparity.convertTo(disparity, CV_32F, 1.0 / 16.0, 0.0);
+    cv::imwrite("disparity_map_sbm.png", disparity);
 
     // create point cloud
     pcl::PointCloud<pcl::PointXYZRGB>::Ptr pointCloud(new pcl::PointCloud<pcl::PointXYZRGB>(std::move(reconstructor.Triangulate3D(disparity, leftImage))));
-
-    // remove outliers
-    /*
-    PointCloud::PointCloudPostProcessor pointCloudPostProcessor(config);
-    pointCloudPostProcessor.SetMinimumNeighboursOutlierRemoval(config.PointCloudPostProcess.OutlierMinK);
-    pointCloudPostProcessor.SetStdDevOutlierRemoval(config.PointCloudPostProcess.OutlierStdDevThreshold);
-    pointCloudPostProcessor.RemoveOutliers(pointCloud, pointCloud);
-    */
 
     // save point cloud file
     std::cout << "\nSaving point cloud file..." << std::endl;

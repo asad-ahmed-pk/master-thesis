@@ -19,7 +19,6 @@ namespace CVNetwork
         /// IDs for control messages to identify the type of the control message
         enum ControlMessageID {
             CONTROL_ID_ROVER_CONNECT = 0,
-            CONTROL_ID_ROVER_CONNECT_RESPONSE,
             CONTROL_ID_CALIB_REQUEST,
             CONTROL_ID_BEGIN_STEREO_DATA_STREAM,
             CONTROL_ID_END_STEREO_DATA_STREAM

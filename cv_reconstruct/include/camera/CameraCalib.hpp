@@ -47,9 +47,12 @@ namespace Camera
             CameraCalib LeftCameraCalib{};
             CameraCalib RightCameraCalib{};
 
-            // Epipolar geometry with essential, fundamental, and relative rotation of 2nd camera with respect to 1st
+            // Epipolar geometry with essential and fundamental matrices
+            // (currently not used)
             Eigen::Matrix3f E = Eigen::Matrix3f::Zero();
             Eigen::Matrix3f F = Eigen::Matrix3f::Zero();
+            
+            // Relative rotation of 2nd camera to 1st
             Eigen::Matrix3f R = Eigen::Matrix3f::Zero();
 
             // Transform from left camera origin to right camera origin

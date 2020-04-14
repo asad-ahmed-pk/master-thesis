@@ -48,7 +48,7 @@ namespace System
         disparity = m_3DReconstructor->GenerateDisparityMap(leftImage, rightImage);
 
         // create the tracking frame for this stereo frame and pass to tracker to track
-        std::shared_ptr<TrackingFrame> frame { new TrackingFrame(leftImage, disparity, m_FeatureExtractor, m_3DReconstructor) };
+        std::shared_ptr<TrackingFrame> frame { new TrackingFrame(leftImage, disparity, m_3DReconstructor) };
         m_Tracker->TrackFrame(frame);
     }
 

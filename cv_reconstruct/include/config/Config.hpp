@@ -44,56 +44,6 @@ namespace Config
             } SGBM;
 
         } Reconstruction;
-
-        // Point cloud post processing
-        struct PointCloudPostProcess
-        {
-            double OutlierStdDevThreshold { 1.0 };
-            int OutlierMinK { 50 };
-            PointCloud::KeypointType KeypointDetector;
-            PointCloud::FeatureDetectorType FeatureDetector;
-
-        } PointCloudPostProcess;
-
-        // Point cloud registration
-        struct PointCloudRegistration
-        {
-            // Params for ICP algorithm
-            struct ICP {
-                int NumMaxIterations { 20 };
-                int NumRansacIterations { 20 };
-                double TransformEpsilon { 1e-8 };
-                double EuclideanFitnessEpsilon { 1.0 };
-            } ICP;
-
-        } PointCloudRegistration;
-
-        // Point cloud feature detection
-        struct PointCloudFeatureDetection
-        {
-            struct Normals {
-                float Radius { 0.0 };
-            } Normals;
-            struct FPFH {
-                float MinRadius { 0.0 };
-            } FPFH;
-            struct SHOTColor {
-
-            } SHOTColor;
-
-        } PointCloudFeatureDetection;
-
-        // Point cloud keypoint detection
-        struct PointCloudKeypointDetection
-        {
-            struct SIFT {
-                float MinScale { 1.0 };
-                int NumOctaves { 0 };
-                int NumScalesPerOctave { 0 };
-                float MinContrast { 0.0 };
-            } SIFT;
-
-        } PointCloudKeypointDetection;
     };
 }
 

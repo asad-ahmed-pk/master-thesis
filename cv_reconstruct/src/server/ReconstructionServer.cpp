@@ -4,17 +4,18 @@
 // Connects to the visualisation module as a client and streams the reconstructed point clouds
 //
 
-#include "server/ReconstructionServer.hpp"
 #include "config/ConfigParser.hpp"
 #include "camera/CameraCalibParser.hpp"
 #include "camera/CameraCompute.hpp"
-#include "server/MessageConverter.hpp"
 #include "cv_networking/message/StereoStreamMessages.hpp"
+#include "server/MessageConverter.hpp"
 #include "server/server_constants.hpp"
+#include "server/ReconstructionServer.hpp"
 
 #include <memory>
 #include <thread>
 #include <chrono>
+#include <iostream>
 
 #include <pcl/io/pcd_io.h>
 #include <boost/filesystem.hpp>
@@ -58,7 +59,7 @@ namespace Server
         m_ProcessingThread = std::thread(&ReconstructionServer::RunProcessingThread, this);
 
         // notify user that server has started
-        m_UserInterface.PrintServerStartedMessage();
+        std::cout << "\nServer started. Waiting for client to connect." << std::endl;
 
         // wait until processing begins
         while (!m_ProcessingStarted) {
@@ -66,31 +67,7 @@ namespace Server
         }
 
         // print message that client connected and is streaming
-        m_UserInterface.PrintClientConnectedMessage();
-
-        // old method: CLI
-        // main event loop: get user prompt and process user's command
-        /*
-        do
-        {
-            UserOption option = m_UserInterface.GetUserCommandOption();
-
-            switch (option) {
-                case USER_OPTION_PRINT_STATUS:
-                    // TODO: get number of messages in queue and send as param
-                    m_UserInterface.PrintStatusMessage(m_NumFramesProcessed, 0);
-                    break;
-
-                case USER_OPTION_QUIT:
-                    // set the exit flag
-                    m_UserRequestedToQuit = true;
-                    break;
-
-                default:
-                    break;
-            }
-        } while (!m_UserRequestedToQuit);
-        */
+        std::cout << "\nClient connected. Recieving stereo stream..." << std::endl;
         
         // create and run visualiser (on main thread)
         m_Visualiser = std::make_unique<Visualisation::Visualiser>(m_ReconstructionSystem->GetMapDataBase());

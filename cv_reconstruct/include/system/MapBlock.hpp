@@ -48,45 +48,13 @@ namespace System
         /// \return The keyframes in this block
         std::vector<std::shared_ptr<TrackingFrame>> GetKeyFrames() const;
 
-        /// Get the 3D bounding box for this map block
-        /// \param minPoint The minimum point
-        /// \param maxPoint The maximum point
-        void GetBoundingBox3D(pcl::PointXYZ& minPoint, pcl::PointXYZ& maxPoint) const;
-
-        /// Get the center point of the 3D bounding box
-        /// \return The center point
-        pcl::PointXYZ GetCenterPoint() const;
-
         /// Get a const pointer to the points stored in this block
         /// \return The const pointer to the point cloud
         pcl::PointCloud<pcl::PointXYZRGB>::ConstPtr GetPoints() const;
 
-        /// Check if this block intersects another
-        /// \param other The other map block
-        /// \return Returns true if intersects
-        bool Intersects(const MapBlock& other) const;
-
-        /// Calculate ratio of overlap with the other block
-        /// \param other The other block
-        /// \return The ratio of overlap from 0.0 to 1.0
-        float OverlapRatio(const MapBlock& other) const;
-
-        /// Get the approximate volume taken by the block
-        /// \return The volume of the block
-        float GetVolume() const;
-
-        friend std::ostream& operator<<(std::ostream& os, const MapBlock& block);
-
-    private:
-        void CalculateBoundingBox();
-
     private:
         size_t m_ID { 0 };
         std::vector<std::shared_ptr<TrackingFrame>> m_KeyFrames;
-        
-    private:
-        pcl::PointXYZRGB m_MinPoint;
-        pcl::PointXYZRGB m_MaxPoint;
         pcl::PointCloud<pcl::PointXYZRGB>::Ptr m_PointCloud;
     };
 }

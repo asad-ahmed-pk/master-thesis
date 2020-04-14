@@ -11,7 +11,6 @@
 #include <memory>
 #include <thread>
 
-#include "ServerUserInterface.hpp"
 #include "reconstruct/ReconstructStatusCode.hpp"
 #include "config/Config.hpp"
 #include "camera/CameraCalib.hpp"
@@ -42,8 +41,6 @@ namespace Server
         std::atomic<bool> m_UserRequestedToQuit { false };
         std::atomic<bool> m_ProcessingStarted { false };
         std::atomic<long> m_NumFramesProcessed { 0 };
-
-        ServerUserInterface m_UserInterface;
         std::thread m_ProcessingThread;
 
     private:

@@ -9,15 +9,15 @@
 
 #include "system/TrackingFrame.hpp"
 
+#include <opencv2/highgui/highgui.hpp>
+
 namespace System
 {
     // Constructor
-    TrackingFrame::TrackingFrame(const cv::Mat& cameraImage, const cv::Mat& disparity, std::shared_ptr<Pipeline::FrameFeatureExtractor> featureExtractor, std::shared_ptr<Reconstruct::Reconstruct3D> reconstructor) :
-    m_3DReconstructor(reconstructor), m_FeatureExtractor(featureExtractor)
+    TrackingFrame::TrackingFrame(const cv::Mat& cameraImage, const cv::Mat& disparity, std::shared_ptr<Reconstruct::Reconstruct3D> reconstructor) : m_3DReconstructor(reconstructor)
     {
         cameraImage.copyTo(m_CameraImage);
         disparity.copyTo(m_Disparity);
-
         SetupFrame();
     }
 
@@ -75,18 +75,6 @@ namespace System
     // Getters
     size_t TrackingFrame::GetID() const {
         return m_ID;
-    }
-
-    std::vector<cv::KeyPoint> TrackingFrame::GetKeypoints() const {
-        return m_Keypoints;
-    }
-
-    cv::Mat TrackingFrame::GetFeatureDescriptors() const {
-        return m_Descriptors;
-    }
-
-    pcl::PointCloud<pcl::PointXYZRGB>::Ptr TrackingFrame::GetKeypointPointCloud() const {
-        return m_KeypointPointCloud;
     }
 
     cv::Mat TrackingFrame::GetCameraImageMask() const {

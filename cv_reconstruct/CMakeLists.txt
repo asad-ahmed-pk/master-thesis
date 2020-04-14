@@ -82,11 +82,9 @@ list(APPEND SERVER_SOURCES
         include/server/MessageConverter.hpp
         include/server/ReconstructionServer.hpp
         include/server/server_constants.hpp
-        include/server/ServerUserInterface.hpp
         include/visualisation/Visualiser.hpp
         src/server/ReconstructionServer.cpp
         src/server/MessageConverter.cpp
-        src/server/ServerUserInterface.cpp
         src/visualisation/Visualiser.cpp
 )
 
@@ -97,13 +95,11 @@ list(APPEND CONFIG_SOURCES
 )
 
 list (APPEND PIPELINE_SOURCES
-        include/pipeline/FrameFeatureExtractor.hpp
         include/pipeline/OpticalFlowEstimator.hpp
-        include/pipeline/PipelineResult.hpp
-        include/pipeline/ReconstructionPipeline.hpp
         include/pipeline/StereoFrame.hpp
-        src/pipeline/FrameFeatureExtractor.cpp
+        include/pipeline/FrameFeatureExtractor.hpp
         src/pipeline/OpticalFlowEstimator.cpp
+        src/pipeline/FrameFeatureExtractor.cpp
 )
 
 list (APPEND SYSTEM_SOURCES
@@ -144,7 +140,6 @@ add_executable(cv_server src/main.cpp ${CAMERA_SOURCES}
         ${CONFIG_SOURCES}
         ${PIPELINE_SOURCES}
         ${SYSTEM_SOURCES}
-        ${POINT_CLOUD_SOURCES}
         ${EXTERN_SOURCES}
 )
 target_link_libraries(cv_server ${OpenCV_LIBS} ${Boost_LIBRARIES} ${PCL_LIBRARIES} ${G2O_LIBS} OpenMP::OpenMP_CXX reconstruction::networking)
@@ -156,7 +151,6 @@ add_executable(reconstruct_test src/test/reconstruct_test_kitti_rectified.cpp sr
         ${CONFIG_SOURCES}
         ${PIPELINE_SOURCES}
         ${SYSTEM_SOURCES}
-        ${POINT_CLOUD_SOURCES}
         ${EXTERN_SOURCES}
 )
 target_link_libraries(reconstruct_test ${OpenCV_LIBS} ${Boost_LIBRARIES} ${PCL_LIBRARIES} ${G2O_LIBS})

@@ -35,12 +35,6 @@ namespace Reconstruct
         /// \return The disparity map
         cv::Mat GenerateDisparityMap(const cv::Mat& leftImage, const cv::Mat& rightImage) const;
 
-        /// Generate point cloud from disparity map
-        /// \param disparity The 8 or 16 bit disparity image
-        /// \param cameraImage A RGB camera image used for creating the disparity map
-        /// \return The generated point cloud with X,Y,Z
-        pcl::PointCloud<pcl::PointXYZRGB> GeneratePointCloud(const cv::Mat& disparity, const cv::Mat& cameraImage) const;
-
         /// Generate point cloud using triangulation method
         /// \param disparity The disparity image (parallax map)
         /// \param cameraImage The RGB camera image (rectified)
@@ -83,12 +77,6 @@ namespace Reconstruct
         /// \param rectRightImage Will be updated with the rectified image for the right camera
         void RectifyImages(const cv::Mat& leftImage, const cv::Mat& rightImage, cv::Mat& rectLeftImage, cv::Mat& rectRightImage) const;
 
-        /// Reproject the disparity map to 3D and generate 3D X,Y,Z coords. Note: Y is positive downwards.
-        /// \param disparity The disparity image
-        /// \param projected3D The 3D image with X,Y,Z coords that will be set
-        /// \return The 3D projected image with each row,col containing X,Y,Z coords for the image
-        void Project3D(const cv::Mat& disparity, cv::Mat& projected3D) const;
-
         /// Set the window size for the block matcher for computing disparity
         /// \param size The window size (odd number)
         void SetStereoBMWindowSize(int size);
@@ -101,19 +89,13 @@ namespace Reconstruct
         /// \param type The type of block matcher to use
         void SetBlockMatcherType(StereoBlockMatcherType type);
 
-        static float GetInvalidDisparityZValue();
-
     private:
         void ConfigureSteoreoMatcher(const Config::Config& config);
-        pcl::PointCloud<pcl::PointXYZRGB> PointCloudMatrixCompute(const cv::Mat& leftImage, const cv::Mat& disparity) const;
 
     private:
         Camera::Calib::StereoCalib m_StereoCameraSetup;
         cv::Ptr<cv::StereoMatcher> m_StereoMatcher { nullptr };
         StereoBlockMatcherType m_StereoBlockMatcherType { STEREO_BLOCK_MATCHER };
-
-    private:
-        cv::Mat m_Q { 4, 4, CV_64F };
     };
 }
 

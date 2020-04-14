@@ -35,7 +35,9 @@ namespace Visualisation
             m_Viewer->spinOnce(100);
             
             // update the internal viewer
-            m_Viewer->updatePointCloud(m_PointCloud, POINT_CLOUD_ID);
+            if (!m_PointCloud->empty()) {
+                m_Viewer->updatePointCloud(m_PointCloud, POINT_CLOUD_ID);
+            }
         }
     }
 
