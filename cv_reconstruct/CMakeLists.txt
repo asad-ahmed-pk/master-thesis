@@ -83,9 +83,11 @@ list(APPEND SERVER_SOURCES
         include/server/ReconstructionServer.hpp
         include/server/server_constants.hpp
         include/visualisation/Visualiser.hpp
+        include/visualisation/PointCloudListener.hpp
         src/server/ReconstructionServer.cpp
         src/server/MessageConverter.cpp
         src/visualisation/Visualiser.cpp
+        src/visualisation/PointCloudListener.cpp
 )
 
 list(APPEND CONFIG_SOURCES

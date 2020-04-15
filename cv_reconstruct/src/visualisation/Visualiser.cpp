@@ -13,9 +13,13 @@
 namespace Visualisation
 {
     // Constructor
-    Visualiser::Visualiser(std::shared_ptr<System::MapDataBase> mapDataBase) : m_MapDataBase(mapDataBase) {
+    Visualiser::Visualiser(std::shared_ptr<System::MapDataBase> mapDataBase) : PointCloudListener(), m_MapDataBase(mapDataBase)
+    {
         // get access to the point cloud being stored in the database
         m_PointCloud = m_MapDataBase->GetPointCloud();
+        
+        // set as listener of DB
+        m_MapDataBase->RegisterAsListener(this);
     }
 
     // Run main loop
@@ -26,30 +30,54 @@ namespace Visualisation
             std::this_thread::sleep_for(std::chrono::milliseconds(100));
         }
         
-        // init internal viewer with point cloud
-        InitInternalViewer();
+        // update viewer
+        Update();
 
         // viewer main loop
         while (!m_Viewer->wasStopped())
         {
-            m_Viewer->spinOnce(100);
-            
             // update the internal viewer
-            if (!m_PointCloud->empty()) {
-                m_Viewer->updatePointCloud(m_PointCloud, POINT_CLOUD_ID);
+            Update();
+            m_Viewer->spinOnce(100);
+        }
+    }
+    
+    // Main update loop
+    void Visualiser::Update()
+    {
+        size_t id;
+        pcl::PointCloud<pcl::PointXYZRGB>::ConstPtr cloud;
+        
+        // Get clouds pending for addition and add to the viewer
+        while (GetNextPendingCloudForAddition(id, cloud))
+        {
+            if (!m_FirstCloudAdded) {
+                InitInternalViewer(id, cloud);
             }
+            else {
+                pcl::visualization::PointCloudColorHandlerRGBField<pcl::PointXYZRGB> rgb(cloud);
+                m_Viewer->addPointCloud(cloud, rgb, std::to_string(id));
+                m_Viewer->setPointCloudRenderingProperties(pcl::visualization::PCL_VISUALIZER_POINT_SIZE, 1, std::to_string(id));
+            }
+        }
+        
+        // Get clouds pending deletion and remove from viewer
+        while (GetNextPendingCloudIDForDeletion(id)) {
+            m_Viewer->removePointCloud(std::to_string(id));
         }
     }
 
     // Create internal viewer
-    void Visualiser::InitInternalViewer()
+    void Visualiser::InitInternalViewer(size_t id, pcl::PointCloud<pcl::PointXYZRGB>::ConstPtr cloud)
     {
         m_Viewer = pcl::visualization::PCLVisualizer::Ptr { new pcl::visualization::PCLVisualizer ("Scene Viewer") };
         m_Viewer->setBackgroundColor(0, 0, 0);
-        pcl::visualization::PointCloudColorHandlerRGBField<pcl::PointXYZRGB> rgb(m_PointCloud);
-        m_Viewer->addPointCloud<pcl::PointXYZRGB>(m_PointCloud, rgb, POINT_CLOUD_ID);
-        m_Viewer->setPointCloudRenderingProperties(pcl::visualization::PCL_VISUALIZER_POINT_SIZE, 1, POINT_CLOUD_ID);
+        pcl::visualization::PointCloudColorHandlerRGBField<pcl::PointXYZRGB> rgb(cloud);
+        m_Viewer->addPointCloud<pcl::PointXYZRGB>(m_PointCloud, rgb, std::to_string(id));
+        m_Viewer->setPointCloudRenderingProperties(pcl::visualization::PCL_VISUALIZER_POINT_SIZE, 1, std::to_string(id));
         m_Viewer->addCoordinateSystem(1.0);
         m_Viewer->initCameraParameters();
+        
+        m_FirstCloudAdded = true;
     }
 }

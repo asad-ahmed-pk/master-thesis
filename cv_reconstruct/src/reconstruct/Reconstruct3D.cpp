@@ -170,15 +170,23 @@ namespace Reconstruct
         cv::Vec3b color;
         float d = 0.0;
         
+        int row = 0; int col = 0;
+        
         // triangulate each 2D point to 3D
         for (const cv::KeyPoint& p : points)
         {
-            d = disparity.at<float>(static_cast<int>(p.pt.y + 0.5), static_cast<int>(p.pt.x + 0.5));
+            row = static_cast<int>(p.pt.y);
+            col = static_cast<int>(p.pt.x);
+            
+            d = disparity.at<float>(row, col);
             color = cameraImage.at<cv::Vec3b>(p.pt.y, p.pt.x);
             
             // no disparity for this point!
-            if (d <= 0.0) {
-                std::cerr << "\nERROR: Negative or 0 disparity!" << d << std::endl;
+            if (d <= 0.0)
+            {
+                // get approximiation from nearest neighbour
+                d = GetNearestNeighbourDisparity(disparity, row, col, 5);
+                std::cerr << "\nERROR: Negative or 0 disparity!. Attempting nearest neighbour approximisation." << d << std::endl;
             }
             
             P = pcl::PointXYZRGB(color[2], color[1], color[0]);
@@ -189,6 +197,32 @@ namespace Reconstruct
             
             triangulatedPoints.push_back(P);
         }
+    }
+
+    // Nearest neighbourhood disparity that is not zero
+    float Reconstruct3D::GetNearestNeighbourDisparity(const cv::Mat& disparity, int row, int col, int n) const
+    {
+        cv::Mat image;
+        cv::Rect roi;
+        
+        roi.x = (col - n) >= 0 ? (col - n) : 0;
+        roi.y = (row - n) >= 0 ? (row - n) : 0;
+        roi.width = (col + n) < disparity.cols ? n : (disparity.cols - 1);
+        roi.height = (row + n) < disparity.rows ? n : (disparity.rows - 1);
+        
+        image = disparity(roi);
+        
+        for (int i = 0; i < image.rows; i++)
+        {
+            for (int j = 0; j < image.cols; j++)
+            {
+                if (image.at<float>(row, col) > 0) {
+                    return image.at<float>(row, col);
+                }
+            }
+        }
+        
+        return 0;
     }
 
     // Back projection

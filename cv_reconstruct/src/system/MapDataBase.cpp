@@ -15,6 +15,15 @@ namespace System
 
     }
 
+    bool MapDataBase::SafeToRead() const {
+        return !m_IsUpdatingCurrentPointCloud;
+    }
+
+    // Listener
+    void MapDataBase::RegisterAsListener(Visualisation::PointCloudListener* listener) {
+        m_Listener = listener;
+    }
+
     // Add block
     size_t MapDataBase::InsertBlock(std::shared_ptr<MapBlock> block)
     {
@@ -27,12 +36,19 @@ namespace System
         m_Blocks[id]->SetID(id);
         
         // track the indices of the points for this cloud
-        m_PointCloudIndices[id] = std::make_tuple(m_CurrentPointCloud->size(), m_CurrentPointCloud->size() + block->GetPoints()->size());
+        size_t startIndex = m_CurrentPointCloud->size();
+        size_t endIndex = startIndex + block->GetPoints()->size();
+        m_PointCloudIndices[id] = std::make_tuple(startIndex, endIndex);
         
         // append to point cloud
         *m_CurrentPointCloud += *block->GetPoints();
         
         m_UpdateMutex.unlock();
+        
+        // notify listener
+        if (m_Listener != nullptr) {
+            m_Listener->PointCloudWasAdded(block->GetID(), block->GetPoints());
+        }
 
         return id;
     }
@@ -71,6 +87,11 @@ namespace System
         }
         
         m_UpdateMutex.unlock();
+        
+        // notify listener
+        if (m_Listener != nullptr) {
+            m_Listener->PointCloudWasDeleted(id);
+        }
     }
 
     // Block merge
@@ -91,6 +112,8 @@ namespace System
             }
         }
         
+        m_IsUpdatingCurrentPointCloud = true;
+        
         // create new merged block
         std::shared_ptr<MapBlock> mergedBlock = std::make_shared<MapBlock>(keyFrames, points);
         InsertBlock(mergedBlock);
@@ -99,6 +122,8 @@ namespace System
         for (auto block : blocks) {
             DeleteBlock(block->GetID());
         }
+        
+        m_IsUpdatingCurrentPointCloud = false;
     }
 
     // Is Empty

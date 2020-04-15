@@ -15,6 +15,7 @@
 #include <pcl/point_types.h>
 #include <pcl/point_cloud.h>
 
+#include "visualisation/PointCloudListener.hpp"
 #include "system/MapBlock.hpp"
 
 namespace System
@@ -52,12 +53,18 @@ namespace System
         /// Get access to the current point cloud being maintained and updated by the database
         /// \return A const shared pointer to the underlying point cloud being actively built and refined
         pcl::PointCloud<pcl::PointXYZRGB>::ConstPtr GetPointCloud() const;
+        
+        void RegisterAsListener(Visualisation::PointCloudListener* listener);
+        
+        bool SafeToRead() const;
 
     private:
         std::unordered_map<size_t, std::shared_ptr<MapBlock>> m_Blocks;
         std::map<size_t, std::tuple<size_t, size_t>> m_PointCloudIndices;
         pcl::PointCloud<pcl::PointXYZRGB>::Ptr m_CurrentPointCloud { new pcl::PointCloud<pcl::PointXYZRGB>() };
         std::mutex m_UpdateMutex;
+        std::atomic<bool> m_IsUpdatingCurrentPointCloud { false };
+        Visualisation::PointCloudListener* m_Listener;         // no ownership
         size_t m_NextID { 0 };
     };
 }

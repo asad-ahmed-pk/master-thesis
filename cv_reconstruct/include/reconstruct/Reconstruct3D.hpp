@@ -91,6 +91,7 @@ namespace Reconstruct
 
     private:
         void ConfigureSteoreoMatcher(const Config::Config& config);
+        float GetNearestNeighbourDisparity(const cv::Mat& disparity, int row, int col, int n) const;
 
     private:
         Camera::Calib::StereoCalib m_StereoCameraSetup;

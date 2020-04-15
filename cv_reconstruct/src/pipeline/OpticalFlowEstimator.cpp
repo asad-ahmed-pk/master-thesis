@@ -116,7 +116,7 @@ namespace Features
         }
         
         // estimate flow from first image to second image
-        EstimateCorrespondingPixels(images[0], images[1], trackedPoints[0], trackedPoints[1]);
+        EstimateCorrespondingPixels(images[0], images[1], trackedPoints[0], trackedPoints[1], mask);
         
         // setup second image as greyscale and estimate flow from second image and onwards
         cv::Mat prevImage; cv::Mat nextImage; cv::Mat flow;

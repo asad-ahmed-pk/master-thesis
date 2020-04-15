@@ -94,7 +94,7 @@ namespace System
             cameras.push_back(frame.GetID());
             images.push_back(frame.GetCameraImage());
         }
-        m_OpticalFlowEstimator->EstimateCorrespondingPixels(images, projectedPoints);
+        m_OpticalFlowEstimator->EstimateCorrespondingPixels(images, projectedPoints, keyFrames.begin()->GetCameraImageMask());
         
         // project first keyframe's points to 3D (all other keyframes can see this)
         m_3DReconstructor->TriangulatePoints(keyFrames.begin()->GetDisparity(), images[0], projectedPoints[0], points3D);
@@ -133,11 +133,13 @@ namespace System
         std::cout << "\nLocal BA updated map database" << std::endl;
         
         // debug: save to disk
+        /*
         static int num = 1;
         pcl::PointCloud<pcl::PointXYZRGB>::Ptr map { new pcl::PointCloud<pcl::PointXYZRGB>() };
         pcl::io::savePCDFileBinary("BA_BLOCK_" + std::to_string(num) + ".pcd", cloud);
         num++;
         
         std::cout << "\nSaved to disk" << std::endl;
+        */
     }
 }
