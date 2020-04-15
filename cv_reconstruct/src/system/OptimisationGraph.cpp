@@ -94,15 +94,20 @@ namespace System
     {
         // create 3D point vertices that cameras are looking at
         int pointVertexID = 0;
-        std::vector<g2o::VertexSBAPointXYZ*> pointVertices;
+        std::vector<VertexSBAPointXYZRGB*> pointVertices;
         for (size_t i = 0; i < pointsXYZ.size(); i++)
         {
             pointVertexID = m_NextValidVertexID++;
             
-            g2o::VertexSBAPointXYZ* v = new g2o::VertexSBAPointXYZ();
+            //g2o::VertexSBAPointXYZ* v = new g2o::VertexSBAPointXYZ();
+            VertexSBAPointXYZRGB* v = new VertexSBAPointXYZRGB();
             v->setId(pointVertexID);
             v->setMarginalized(true);
             v->setEstimate(Eigen::Vector3d(pointsXYZ[i].x, pointsXYZ[i].y, pointsXYZ[i].z));
+            
+            // colour information
+            Eigen::Vector3i color = pointsXYZ[i].getRGBVector3i();
+            v->SetColor(color(0), color(1), color(2));
             
             m_Optimiser.addVertex(v);
             pointVertices.push_back(v);
@@ -178,15 +183,25 @@ namespace System
     }
 
     // Get points camera sees
-    void OptimisationGraph::GetPointsObservedByCamera(int camera, std::vector<pcl::PointXYZ>& points)
+    void OptimisationGraph::GetPointsObservedByCamera(int camera, std::vector<pcl::PointXYZRGB>& points)
     {
         if (m_CameraToPointsMap.find(camera) != m_CameraToPointsMap.end())
         {
             Eigen::Vector3d point;
-            for (g2o::VertexSBAPointXYZ* pointVertex : m_CameraToPointsMap[camera])
+            Eigen::Vector3i color;
+            pcl::PointXYZRGB colorPoint;
+            
+            for (VertexSBAPointXYZRGB* pointVertex : m_CameraToPointsMap[camera])
             {
+                color = pointVertex->GetColor();
                 point = pointVertex->estimate();
-                points.push_back(pcl::PointXYZ(point(0), point(1), point(2)));
+                
+                colorPoint = pcl::PointXYZRGB(color(0), color(1), color(2));
+                colorPoint.x = point(0);
+                colorPoint.y = point(1);
+                colorPoint.z = point(2);
+                
+                points.push_back(colorPoint);
             }
         }
     }

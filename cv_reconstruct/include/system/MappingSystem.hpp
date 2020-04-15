@@ -49,6 +49,7 @@ namespace System
         
     private:
         void LocalOptimisation();
+        void FullBA();
 
     private:
         std::unordered_map<size_t, int> m_CameraGraphIDs;

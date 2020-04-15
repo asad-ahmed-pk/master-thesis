@@ -18,6 +18,21 @@ namespace pcl {
 
 namespace System
 {
+    class VertexSBAPointXYZRGB : public g2o::VertexSBAPointXYZ
+    {
+    public:
+        void SetColor(int r, int g, int b) {
+            this->r = r; this->g = g; this->b = b;
+        }
+        
+        Eigen::Vector3i GetColor() {
+            return Eigen::Vector3i(r, g, b);
+        }
+        
+    private:
+       int r; int g; int b;
+   };
+
     class OptimisationGraph
     {
     public:
@@ -61,7 +76,7 @@ namespace System
         /// Get the 3D points observed by the camera with the given ID
         /// \param camera The ID of the camera
         /// \param points Will be populated with points the camera is observing
-        void GetPointsObservedByCamera(int camera, std::vector<pcl::PointXYZ>& points);
+        void GetPointsObservedByCamera(int camera, std::vector<pcl::PointXYZRGB>& points);
         
         /// Perform optimisation
         /// \param iterations The number of iterations to perform. Default is 10.
@@ -81,7 +96,7 @@ namespace System
         int m_FixedVertexCount { 0 };
         
     private:
-        std::unordered_map<int, std::vector<g2o::VertexSBAPointXYZ*>> m_CameraToPointsMap;
+        std::unordered_map<int, std::vector<VertexSBAPointXYZRGB*>> m_CameraToPointsMap;
         std::vector<g2o::EdgeProjectXYZ2UV*> m_TempEdges;
         
     private:

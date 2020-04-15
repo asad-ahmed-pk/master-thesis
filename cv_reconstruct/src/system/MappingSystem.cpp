@@ -107,23 +107,13 @@ namespace System
         
         // get 3D points back and merge blocks in map
         // get optimised 3D points
-        std::vector<pcl::PointXYZ> optimisedPoints;
+        std::vector<pcl::PointXYZRGB> optimisedPoints;
         m_OptimisationGraph->GetPointsObservedByCamera(cameras[0], optimisedPoints);
         
-        // add colour information to points
+        // prepare point cloud
         pcl::PointCloud<pcl::PointXYZRGB> cloud;
-        cv::Vec3b color;
-        cv::Mat cameraImage = images[0];
-        for (size_t i = 0; i < optimisedPoints.size(); i++)
-        {
-            color = cameraImage.at<cv::Vec3b>(projectedPoints[0][i].pt.y, projectedPoints[0][i].pt.x);
-            pcl::PointXYZRGB p(color[2], color[1], color[0]);
-            
-            p.x = optimisedPoints[i].x;
-            p.y = optimisedPoints[i].y;
-            p.z = optimisedPoints[i].z;
-            
-            cloud.push_back(p);
+        for (size_t i = 0; i < optimisedPoints.size(); i++) {
+            cloud.push_back(optimisedPoints[i]);
         }
         
         // merge the set of blocks
@@ -141,5 +131,14 @@ namespace System
         
         std::cout << "\nSaved to disk" << std::endl;
         */
+    }
+
+    // Perform full BA
+    void MappingSystem::FullBA()
+    {
+        m_OptimisationGraph->Optimise(20);
+        
+        
+        
     }
 }
