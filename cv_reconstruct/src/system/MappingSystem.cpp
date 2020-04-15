@@ -11,7 +11,7 @@
 #define MIN_OVERLAP_RATIO_NEDDED_FOR_INSERT 0.2f
 #define MAX_OVERLAP_RATIO_NEDDED_FOR_INSERT 0.6f
 
-#define NUM_BLOCKS_FOR_LOCAL_OPTIMISATION 3
+#define NUM_BLOCKS_FOR_LOCAL_OPTIMISATION 5
 
 #include <pcl/io/pcd_io.h>
 
@@ -45,8 +45,10 @@ namespace System
         std::shared_ptr<MapBlock> block = std::make_shared<MapBlock>(keyFrames, points);
         m_MapDataBase->InsertBlock(block);
         
-        // check if local optimisation is needed
+        // push onto unpotimised block list
         m_UnoptimisedBlocks.push_back(block);
+        
+        // check if local BA is needed
         if (m_UnoptimisedBlocks.size() >= NUM_BLOCKS_FOR_LOCAL_OPTIMISATION) {
             LocalOptimisation();
         }
@@ -79,7 +81,8 @@ namespace System
             {
                 // if not already added to graph - add it
                 if (m_CameraGraphIDs.find(frame->GetID()) == m_CameraGraphIDs.end()) {
-                    m_OptimisationGraph->AddDefaultCameraPoseVertex(frame->GetID() < 2);
+                    int cameraVertexID = m_OptimisationGraph->AddDefaultCameraPoseVertex(frame->GetID() < 2);
+                    m_CameraGraphIDs[frame->GetID()] = cameraVertexID;
                 }
                 keyFrames.insert(*frame);
             }
@@ -91,7 +94,7 @@ namespace System
         std::vector<pcl::PointXYZRGB> points3D;
         
         for (const TrackingFrame& frame : keyFrames) {
-            cameras.push_back(frame.GetID());
+            cameras.push_back(m_CameraGraphIDs[frame.GetID()]);
             images.push_back(frame.GetCameraImage());
         }
         m_OpticalFlowEstimator->EstimateCorrespondingPixels(images, projectedPoints, keyFrames.begin()->GetCameraImageMask());
@@ -136,9 +139,22 @@ namespace System
     // Perform full BA
     void MappingSystem::FullBA()
     {
+        // perform full 20 optimisations
         m_OptimisationGraph->Optimise(20);
         
+        // get all points and save point cloud
+        std::vector<pcl::PointXYZRGB> points;
+        std::vector<Eigen::Isometry3d> poses;
         
+        m_OptimisationGraph->GetAllPointsAndPoses(points, poses);
         
+        // prepare point cloud
+        pcl::PointCloud<pcl::PointXYZRGB> cloud;
+        for (size_t i = 0; i < points.size(); i++) {
+            cloud.push_back(points[i]);
+        }
+        
+        // save to disk
+        pcl::io::savePCDFileBinary("full_optimised_cloud.pcd", cloud);
     }
 }

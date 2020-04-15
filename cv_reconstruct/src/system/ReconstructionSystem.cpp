@@ -53,8 +53,12 @@ namespace System
     }
 
     // Shutdown request
-    void ReconstructionSystem::RequestShutdown() {
+    void ReconstructionSystem::RequestShutdown()
+    {
         m_RequestedShutdown = true;
+        
+        // perform full BA and save to disk
+        m_MappingSystem->FullBA();
     }
 
     // Get current map

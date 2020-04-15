@@ -18,6 +18,7 @@ namespace pcl {
 
 namespace System
 {
+    /// Extension to G2o vertex point for storing color data
     class VertexSBAPointXYZRGB : public g2o::VertexSBAPointXYZ
     {
     public:
@@ -77,6 +78,11 @@ namespace System
         /// \param camera The ID of the camera
         /// \param points Will be populated with points the camera is observing
         void GetPointsObservedByCamera(int camera, std::vector<pcl::PointXYZRGB>& points);
+        
+        /// Get all points and poses in the current graph
+        /// \param points Will be populated with 3D points
+        /// \param poses Will be populated with poses
+        void GetAllPointsAndPoses(std::vector<pcl::PointXYZRGB>& points, std::vector<Eigen::Isometry3d>& poses);
         
         /// Perform optimisation
         /// \param iterations The number of iterations to perform. Default is 10.

@@ -47,9 +47,10 @@ namespace System
         /// \return A shared pointer to the map database
         std::shared_ptr<MapDataBase> GetMapDataBase() const;
         
+        void FullBA();
+        
     private:
         void LocalOptimisation();
-        void FullBA();
 
     private:
         std::unordered_map<size_t, int> m_CameraGraphIDs;

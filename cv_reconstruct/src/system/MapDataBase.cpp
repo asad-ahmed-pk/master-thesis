@@ -138,6 +138,7 @@ namespace System
     // Get full point cloud
     void MapDataBase::GetFullPointCloud(pcl::PointCloud<pcl::PointXYZRGB>::Ptr cloud) const
     {
+        // perform full BA
         for (const auto& pair : m_Blocks) {
             *cloud += *pair.second->GetPoints();
         }

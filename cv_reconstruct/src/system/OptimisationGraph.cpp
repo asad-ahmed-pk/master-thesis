@@ -206,6 +206,21 @@ namespace System
         }
     }
 
+    // Get all points and poses
+    void OptimisationGraph::GetAllPointsAndPoses(std::vector<pcl::PointXYZRGB>& points, std::vector<Eigen::Isometry3d>& poses)
+    {
+        for (auto pair : m_CameraToPointsMap)
+        {
+            // get pose
+            int poseVertexID = pair.first;
+            g2o::VertexSE3Expmap* pose = dynamic_cast<g2o::VertexSE3Expmap*>(m_Optimiser.vertex(poseVertexID));
+            poses.push_back(pose->estimate());
+            
+            // get points for this pose
+            GetPointsObservedByCamera(poseVertexID, points);
+        }
+    }
+
     // Optimisation
     void OptimisationGraph::Optimise(int iterations) {
         m_Optimiser.initializeOptimization();

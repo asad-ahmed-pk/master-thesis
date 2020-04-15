@@ -158,9 +158,13 @@ namespace Server
         // save current built map (point cloud) to file
         std::cout << "\n\nSaving current built map to disk..." << std::endl;
 
+        /*
         pcl::PointCloud<pcl::PointXYZRGB>::Ptr cloud { new pcl::PointCloud<pcl::PointXYZRGB>() };
         m_ReconstructionSystem->GetCurrentBuiltMap(cloud);
 
         pcl::io::savePCDFileBinary("full_cloud.pcd", *cloud);
+        */
+        
+        m_ReconstructionSystem->RequestShutdown();
     }
 }
