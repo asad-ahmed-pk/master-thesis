@@ -13,9 +13,6 @@ endif()
 # OpenCV
 find_package(OpenCV 4.1 REQUIRED)
 
-# OpenMP
-find_package(OpenMP REQUIRED)
-
 # Boost
 find_package(Boost 1.60 COMPONENTS filesystem REQUIRED)
 include_directories(${Boost_INCLUDE_DIR})
@@ -144,7 +141,7 @@ add_executable(cv_server src/main.cpp ${CAMERA_SOURCES}
         ${SYSTEM_SOURCES}
         ${EXTERN_SOURCES}
 )
-target_link_libraries(cv_server ${OpenCV_LIBS} ${Boost_LIBRARIES} ${PCL_LIBRARIES} ${G2O_LIBS} OpenMP::OpenMP_CXX reconstruction::networking)
+target_link_libraries(cv_server ${OpenCV_LIBS} ${Boost_LIBRARIES} ${PCL_LIBRARIES} ${G2O_LIBS} reconstruction::networking)
 
 # Reconstruct module test program
 add_executable(reconstruct_test src/test/reconstruct_test_kitti_rectified.cpp src/test/tests_common.cpp

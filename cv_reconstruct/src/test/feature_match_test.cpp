@@ -7,6 +7,7 @@
 #include <vector>
 #include <random>
 #include <iostream>
+#include <chrono>
 #include <algorithm>
 
 #include <opencv2/core/core.hpp>
@@ -54,8 +55,14 @@ void RunOpticalFlowOnNImages(const std::string& prefix, const std::vector<cv::Ma
     
     // run optical flow on N images
     std::cout << "\nRunning Optical Flow";
-    opticalFlow.EstimateCorrespondingPixelsv2(images, keypoints, mask);
-    std::cout << "\nDone" << std::endl;
+    
+    // record time
+    auto start = std::chrono::high_resolution_clock::now();
+    opticalFlow.EstimateCorrespondingPixels(images, keypoints, mask);
+    auto end = std::chrono::high_resolution_clock::now();
+    
+    std::cout << "\nDone";
+    std::cout << "\nTime Taken: " << std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count() << " ms" << std::endl;
     
     // generate random indices
     std::vector<size_t> sampleIndices;

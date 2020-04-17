@@ -55,7 +55,7 @@ namespace System
         // find correspondences between frames
         std::vector<cv::Mat> images { recentKeyFrame->GetCameraImage(), currentFrame->GetCameraImage() };
         std::vector<std::vector<cv::KeyPoint>> keyFrameKeyPoints;
-        m_OpticalFlowEstimator->EstimateCorrespondingPixelsv2(images, keyFrameKeyPoints, recentKeyFrame->GetCameraImageMask());
+        m_OpticalFlowEstimator->EstimateCorrespondingPixels(images, keyFrameKeyPoints, recentKeyFrame->GetCameraImageMask());
         
         // keyframe pose is already in graph - add (temporarily) the current frame pose to graph
         int currentCameraID = m_OptimisationGraph->AddDefaultCameraPoseVertex(false);

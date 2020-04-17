@@ -36,8 +36,6 @@ namespace Features
         /// \param An optional mask to apply on the first image before tracking the flow of pixels
         void EstimateCorrespondingPixels(const std::vector<cv::Mat>& images, std::vector<std::vector<cv::KeyPoint>>& trackedPoints, cv::InputArray mask = cv::noArray());
         
-        void EstimateCorrespondingPixelsv2(const std::vector<cv::Mat>& images, std::vector<std::vector<cv::KeyPoint>>& trackedPoints, cv::InputArray mask = cv::noArray());
-        
     private:
         cv::Ptr<cv::FarnebackOpticalFlow> m_FarnebackOF;
     };
