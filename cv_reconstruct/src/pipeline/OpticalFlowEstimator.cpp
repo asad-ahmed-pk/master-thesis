@@ -3,15 +3,18 @@
 // Estimates pixel movement using Optical Flow
 //
 
+#include <iostream>
+#include <unordered_set>
+
 #include "pipeline/OpticalFlowEstimator.hpp"
 
-#define NUM_LEVELS 10
+#define NUM_LEVELS 3
 #define PYR_SCALE 0.5
 #define FAST_PYR false
-#define WIN_SIZE 29
+#define WIN_SIZE 5
 #define NUM_ITERS 10
-#define POLY_N 7
-#define POLY_SIGMA 1.1
+#define POLY_N 5
+#define POLY_SIGMA 1.0
 
 namespace Features
 {
@@ -185,5 +188,149 @@ namespace Features
                 iters[j] = trackedPoints[j + 1].begin();
             }
         }
+    }
+
+    void OpticalFlowEstimator::EstimateCorrespondingPixelsv2(const std::vector<cv::Mat>& images, std::vector<std::vector<cv::KeyPoint>>& trackedPoints, cv::InputArray mask)
+    {
+        // need at least 2 images
+        if (images.size() < 2) {
+            std::cerr << "\nWarning: Optical Flow Estimator requires at least 2 images!" << std::endl;
+            return;
+        }
+        
+        // convert all images to greyscale
+        std::vector<cv::Mat> greyScaleImages;
+        for (const cv::Mat& image : images) {
+            cv::Mat greyScaleImage;
+            cv::cvtColor(image, greyScaleImage, cv::COLOR_BGR2GRAY);
+            greyScaleImages.push_back(greyScaleImage);
+        }
+        
+        // store cols for later access and for bounds checking
+        int rows = images[0].rows;
+        int cols = images[0].cols;
+        
+        // create the keypoint MxN matrix
+        // M: number of images
+        // N: number of pixels (must match in each image)
+        size_t M = images.size();
+        size_t N = rows * cols;
+        cv::KeyPoint defaultValue { 0.0, 0.0, 8.0 };
+        
+        // prepare data: keypoint matrix, and flow image
+        std::vector<std::vector<cv::KeyPoint>> keypoints(M, std::vector<cv::KeyPoint>(N, defaultValue));
+        cv::Mat flow;
+        
+        // first image keypoints: (x,y) coordinates of image
+        for (int row = 0; row < rows; row++) {
+            for (int col = 0; col < cols; col++) {
+                keypoints[0][row * cols + col].pt.x = col;
+                keypoints[0][row * cols + col].pt.y = row;
+            }
+        }
+        
+        // invalid pixel indices
+        std::unordered_set<size_t> outOfBoundKeyPointIndices;
+        
+        // determine if mask is being applied
+        bool isMasked = (&mask != &cv::noArray());
+        if (isMasked)
+        {
+            cv::Mat maskImage = mask.getMat();
+            
+            // add indices for all pixels in mask to out of bounds indices
+            for (int row = 0; row < maskImage.rows; row++)
+            {
+                for (int col = 0; col < maskImage.cols; col++)
+                {
+                    int value = static_cast<int>(maskImage.at<unsigned char>(row, col));
+                    if (value == 0) {
+                        size_t index = row * maskImage.cols + col;
+                        outOfBoundKeyPointIndices.insert(index);
+                    }
+                }
+            }
+        }
+        
+        // optical flow of first 2 images
+        m_FarnebackOF->calc(greyScaleImages[0], greyScaleImages[1], flow);
+        /*
+        flow.forEach<cv::Vec2f>([&](const cv::Vec2f& d, const int* position) -> void {
+            int col = position[0];
+            int row = position[1];
+            keypoints[1][row * cols + col].pt.x += d[0];
+            keypoints[1][row * cols + col].pt.y += d[1];
+        });
+        */
+        size_t index = 0;
+        for (int row = 0; row < rows; row++)
+        {
+            for (int col = 0; col < cols; col++)
+            {
+                cv::Vec2f delta = flow.at<cv::Vec2f>(row, col);
+                index = row * cols + col;
+                
+                keypoints[1][index].pt.x = keypoints[0][index].pt.x + delta[0];
+                keypoints[1][index].pt.y = keypoints[0][index].pt.y + delta[1];
+                
+                // make sure not out of bounds
+                if (keypoints[1][index].pt.x < 0 || keypoints[1][index].pt.x >= cols) {
+                    outOfBoundKeyPointIndices.insert(index);
+                }
+                else if (keypoints[1][index].pt.y < 0 || keypoints[1][index].pt.y >= rows) {
+                    outOfBoundKeyPointIndices.insert(index);
+                }
+            }
+        }
+        
+        // if more images, process iteratively while tracking pixel movement across remaining images
+        if (greyScaleImages.size() > 2)
+        {
+            for (size_t m = 2; m < M; m++)
+            {
+                // optical flow on image (m - 1) and m
+                m_FarnebackOF->calc(greyScaleImages[m - 1], greyScaleImages[m], flow);
+                for (size_t index = 0; index < N; index++)
+                {
+                    // only process valid pixel
+                    if (outOfBoundKeyPointIndices.find(index) == outOfBoundKeyPointIndices.end())
+                    {
+                        int row = keypoints[m - 1][index].pt.y;
+                        int col = keypoints[m - 1][index].pt.x;
+                        
+                        cv::Vec2f delta = flow.at<cv::Vec2f>(row, col);
+                        
+                        keypoints[m][index].pt.x = keypoints[m - 1][index].pt.x + delta[0];
+                        keypoints[m][index].pt.y = keypoints[m - 1][index].pt.y + delta[1];
+                        
+                        // make sure not out of bounds
+                        if (keypoints[m][index].pt.x < 0 || keypoints[m][index].pt.x >= cols) {
+                            outOfBoundKeyPointIndices.insert(index);
+                        }
+                        else if (keypoints[m][index].pt.y < 0 || keypoints[m][index].pt.y >= rows) {
+                            outOfBoundKeyPointIndices.insert(index);
+                        }
+                    }
+                }
+            }
+        }
+        
+        // allocate space for tracked points
+        for (size_t m = 0; m < M; m++) {
+            trackedPoints.push_back(std::vector<cv::KeyPoint>());
+        }
+        
+        // filter out bad pixels
+        for (size_t n = 0; n < N; n++)
+        {
+            if (outOfBoundKeyPointIndices.find(n) == outOfBoundKeyPointIndices.end())
+            {
+                for (size_t m = 0; m < M; m++) {
+                    trackedPoints[m].push_back(keypoints[m][n]);
+                }
+            }
+        }
+        
+        std::cout << "\nTracking Complete. " << trackedPoints[0].size() << " common points matched." << std::endl;
     }
 }

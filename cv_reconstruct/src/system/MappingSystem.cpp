@@ -15,6 +15,8 @@
 
 #include <pcl/io/pcd_io.h>
 
+#include <opencv2/highgui/highgui.hpp>
+
 namespace System
 {
     // Constructor
@@ -97,7 +99,7 @@ namespace System
             cameras.push_back(m_CameraGraphIDs[frame.GetID()]);
             images.push_back(frame.GetCameraImage());
         }
-        m_OpticalFlowEstimator->EstimateCorrespondingPixels(images, projectedPoints, keyFrames.begin()->GetCameraImageMask());
+        m_OpticalFlowEstimator->EstimateCorrespondingPixelsv2(images, projectedPoints, keyFrames.begin()->GetCameraImageMask());
         
         // project first keyframe's points to 3D (all other keyframes can see this)
         m_3DReconstructor->TriangulatePoints(keyFrames.begin()->GetDisparity(), images[0], projectedPoints[0], points3D);

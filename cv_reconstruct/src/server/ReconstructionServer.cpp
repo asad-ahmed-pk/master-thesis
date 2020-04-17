@@ -23,7 +23,7 @@
 #include <opencv2/imgproc/imgproc.hpp>
 
 #define CALIB_FILE_PATH "calib.json"
-#define IMAGE_DOWNSIZE_FACTOR 0.3
+#define IMAGE_DOWNSIZE_FACTOR 1.0
 
 namespace Server
 {
