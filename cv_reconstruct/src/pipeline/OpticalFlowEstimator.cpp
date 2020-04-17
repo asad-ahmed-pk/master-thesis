@@ -215,7 +215,7 @@ namespace Features
         // N: number of pixels (must match in each image)
         size_t M = images.size();
         size_t N = rows * cols;
-        cv::KeyPoint defaultValue { 0.0, 0.0, 8.0 };
+        cv::KeyPoint defaultValue { 0.0, 0.0, 1.0 };
         
         // prepare data: keypoint matrix, and flow image
         std::vector<std::vector<cv::KeyPoint>> keypoints(M, std::vector<cv::KeyPoint>(N, defaultValue));
@@ -245,8 +245,11 @@ namespace Features
                 {
                     int value = static_cast<int>(maskImage.at<unsigned char>(row, col));
                     if (value == 0) {
-                        size_t index = row * maskImage.cols + col;
+                        size_t index = row * cols + col;
                         outOfBoundKeyPointIndices.insert(index);
+                    }
+                    else {
+                        int a = 0;
                     }
                 }
             }
@@ -270,15 +273,19 @@ namespace Features
                 cv::Vec2f delta = flow.at<cv::Vec2f>(row, col);
                 index = row * cols + col;
                 
-                keypoints[1][index].pt.x = keypoints[0][index].pt.x + delta[0];
-                keypoints[1][index].pt.y = keypoints[0][index].pt.y + delta[1];
-                
-                // make sure not out of bounds
-                if (keypoints[1][index].pt.x < 0 || keypoints[1][index].pt.x >= cols) {
-                    outOfBoundKeyPointIndices.insert(index);
-                }
-                else if (keypoints[1][index].pt.y < 0 || keypoints[1][index].pt.y >= rows) {
-                    outOfBoundKeyPointIndices.insert(index);
+                // only access valid pixels
+                if (outOfBoundKeyPointIndices.find(index) == outOfBoundKeyPointIndices.end())
+                {
+                    keypoints[1][index].pt.x = keypoints[0][index].pt.x + delta[0];
+                    keypoints[1][index].pt.y = keypoints[0][index].pt.y + delta[1];
+                    
+                    // make sure not out of bounds
+                    if (keypoints[1][index].pt.x < 0 || keypoints[1][index].pt.x >= cols) {
+                        outOfBoundKeyPointIndices.insert(index);
+                    }
+                    else if (keypoints[1][index].pt.y < 0 || keypoints[1][index].pt.y >= rows) {
+                        outOfBoundKeyPointIndices.insert(index);
+                    }
                 }
             }
         }
@@ -331,6 +338,6 @@ namespace Features
             }
         }
         
-        std::cout << "\nTracking Complete. " << trackedPoints[0].size() << " common points matched." << std::endl;
+        std::cout << "\nTracking complete. " << trackedPoints[0].size() << " common points matched." << std::endl;
     }
 }

@@ -11,7 +11,7 @@
 #define MIN_OVERLAP_RATIO_NEDDED_FOR_INSERT 0.2f
 #define MAX_OVERLAP_RATIO_NEDDED_FOR_INSERT 0.6f
 
-#define NUM_BLOCKS_FOR_LOCAL_OPTIMISATION 5
+#define NUM_BLOCKS_FOR_LOCAL_OPTIMISATION 3
 
 #include <pcl/io/pcd_io.h>
 
@@ -141,8 +141,8 @@ namespace System
     // Perform full BA
     void MappingSystem::FullBA()
     {
-        // perform full 20 optimisations
-        m_OptimisationGraph->Optimise(20);
+        // perform full optimisation
+        m_OptimisationGraph->Optimise(10);
         
         // get all points and save point cloud
         std::vector<pcl::PointXYZRGB> points;

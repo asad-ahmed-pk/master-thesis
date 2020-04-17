@@ -45,13 +45,16 @@ int main(int argc, char** argv)
 
 void RunOpticalFlowOnNImages(const std::string& prefix, const std::vector<cv::Mat>& images)
 {
+    // read in frame 0 mask
+    cv::Mat mask = cv::imread("keyframe_mask.png", cv::IMREAD_GRAYSCALE);
+    
     // prepare optical flow data
     std::vector<std::vector<cv::KeyPoint>> keypoints;
     Features::OpticalFlowEstimator opticalFlow;
     
     // run optical flow on N images
     std::cout << "\nRunning Optical Flow";
-    opticalFlow.EstimateCorrespondingPixelsv2(images, keypoints);
+    opticalFlow.EstimateCorrespondingPixelsv2(images, keypoints, mask);
     std::cout << "\nDone" << std::endl;
     
     // generate random indices

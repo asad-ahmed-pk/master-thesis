@@ -53,33 +53,23 @@ namespace System
     void Tracker::TrackFrame(std::shared_ptr<TrackingFrame> currentFrame, std::shared_ptr<TrackingFrame> recentKeyFrame)
     {
         // find correspondences between frames
-        std::vector<cv::KeyPoint> keyFrameKeyPoints;
-        std::vector<cv::KeyPoint> currentFrameKeyPoints;
-        //m_FeatureExtractor->ComputeCorrespondences(recentKeyFrame->GetCameraImage(), currentFrame->GetCameraImage(), keyFrameKeyPoints, currentFrameKeyPoints, recentKeyFrame->GetCameraImageMask(), currentFrame->GetCameraImageMask());
-        m_OpticalFlowEstimator->EstimateCorrespondingPixels(recentKeyFrame->GetCameraImage(), currentFrame->GetCameraImage(), keyFrameKeyPoints, currentFrameKeyPoints, recentKeyFrame->GetCameraImageMask(), currentFrame->GetCameraImageMask());
-        
-        // not enough matches - will not get a robust solution for alignment
-        if (keyFrameKeyPoints.size() <= MIN_CORRESPONDENCES_NEEDED) {
-            std::cerr << "\nTracking lost (" << keyFrameKeyPoints.size() << " matches found)";
-            cv::Mat output;
-        }
+        std::vector<cv::Mat> images { recentKeyFrame->GetCameraImage(), currentFrame->GetCameraImage() };
+        std::vector<std::vector<cv::KeyPoint>> keyFrameKeyPoints;
+        m_OpticalFlowEstimator->EstimateCorrespondingPixelsv2(images, keyFrameKeyPoints, recentKeyFrame->GetCameraImageMask());
         
         // keyframe pose is already in graph - add (temporarily) the current frame pose to graph
         int currentCameraID = m_OptimisationGraph->AddDefaultCameraPoseVertex(false);
         
         // add common 3D keypoints to graph (points seen by keyframe camera and this frame's camera)
         std::vector<pcl::PointXYZRGB> triangulatedPoints;
-        m_3DReconstructor->TriangulatePoints(recentKeyFrame->GetDisparity(), recentKeyFrame->GetCameraImage(), keyFrameKeyPoints, triangulatedPoints);
+        m_3DReconstructor->TriangulatePoints(recentKeyFrame->GetDisparity(), recentKeyFrame->GetCameraImage(), keyFrameKeyPoints[0], triangulatedPoints);
         
         // get last recent keyframe camera ID
         int keyFrameCameraID = m_KeyFramePoseVertexIDs[recentKeyFrame->GetID()];
         
         // add 3D points for these 2 cameras looking at these common 3D points
         std::vector<int> cameras { keyFrameCameraID, currentCameraID };
-        std::vector<std::vector<cv::KeyPoint>> projectedPoints;
-        projectedPoints.emplace_back(std::move(keyFrameKeyPoints));
-        projectedPoints.emplace_back(std::move(currentFrameKeyPoints));
-        m_OptimisationGraph->AddCamerasLookingAtPoints(cameras, triangulatedPoints, projectedPoints, true);
+        m_OptimisationGraph->AddCamerasLookingAtPoints(cameras, triangulatedPoints, keyFrameKeyPoints, true);
         
         // solve for poses
         m_OptimisationGraph->Optimise();
