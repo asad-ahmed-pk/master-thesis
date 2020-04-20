@@ -3,7 +3,7 @@
 # Project
 cmake_minimum_required(VERSION 3.10)
 project(cv_reconstruct)
-set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD 14)
 
 # Mac OSX Check
 if (${CMAKE_SYSTEM_NAME} MATCHES "Darwin")
@@ -11,7 +11,7 @@ if (${CMAKE_SYSTEM_NAME} MATCHES "Darwin")
 endif()
 
 # OpenCV
-find_package(OpenCV 4.1 REQUIRED)
+find_package(OpenCV 4.1 REQUIRED COMPONENTS sfm viz)
 
 # Boost
 find_package(Boost 1.60 COMPONENTS filesystem REQUIRED)
@@ -154,9 +154,13 @@ add_executable(reconstruct_test src/test/reconstruct_test_kitti_rectified.cpp sr
 )
 target_link_libraries(reconstruct_test ${OpenCV_LIBS} ${Boost_LIBRARIES} ${PCL_LIBRARIES} ${G2O_LIBS})
 
-# Feature Matching test program
+# Feature matching test program
 add_executable(feature_match_test src/test/feature_match_test.cpp src/pipeline/OpticalFlowEstimator.cpp include/pipeline/OpticalFlowEstimator.hpp)
 target_link_libraries(feature_match_test ${OpenCV_LIBS})
+
+# SfM test program
+add_executable(sfm_test src/test/sfm_test.cpp)
+target_link_libraries(sfm_test ${OpenCV_LIBS} ${Boost_LIBRARIES} ${PCL_LIBRARIES})
 
 # Catch2 Tests
 add_executable(test_camera_calib_parser test/test_camera_calib_parser.cpp ${CAMERA_SOURCES} ${RECONSTRUCT_3D_SOURCES} ${CONFIG_SOURCES} ${EXTERN_SOURCES} ${TESTING_SOURCES})

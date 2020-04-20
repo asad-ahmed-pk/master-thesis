@@ -42,7 +42,7 @@ namespace System
     }
 
     // Add empty vertex
-    int OptimisationGraph::AddDefaultCameraPoseVertex(bool isFixed)
+    int OptimisationGraph::AddDefaultCameraPoseVertex(bool isFixed, g2o::SE3Quat estimate)
     {
         int id = m_NextValidVertexID++;
         
@@ -50,7 +50,8 @@ namespace System
         
         v->setId(id);
         v->setFixed(isFixed);
-        v->setEstimate(g2o::SE3Quat());
+        v->setEstimate(estimate);
+        //v->setEstimate(g2o::SE3Quat());
         
         m_Optimiser.addVertex(v);
         
@@ -179,6 +180,21 @@ namespace System
         else {
             std::cerr << "Error: Invalid camera ID: " << camera << "!" << std::endl;
             return Eigen::Isometry3d::Identity();
+        }
+    }
+
+    g2o::SE3Quat OptimisationGraph::GetCameraVertexPose(int camera)
+    {
+        // get the pose vertex from the graph
+        g2o::VertexSE3Expmap* v = dynamic_cast<g2o::VertexSE3Expmap*>(m_Optimiser.vertex(camera));
+        if (v != nullptr) {
+            g2o::SE3Quat pose = v->estimate();
+            std:: cout << "\nPose: " << pose.translation().transpose();
+            return pose;
+        }
+        else {
+            std::cerr << "Error: Invalid camera ID: " << camera << "!" << std::endl;
+            return g2o::SE3Quat();
         }
     }
 

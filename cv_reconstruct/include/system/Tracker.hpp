@@ -6,6 +6,7 @@
 #ifndef MASTER_THESIS_TRACKER_HPP
 #define MASTER_THESIS_TRACKER_HPP
 
+#include <string>
 #include <memory>
 #include <unordered_map>
 
@@ -41,6 +42,7 @@ namespace System
         
     private:
         void TrackFrame(std::shared_ptr<TrackingFrame> currentFrame, std::shared_ptr<TrackingFrame> recentKeyFrame);
+        Eigen::Matrix4f PoseFromCVRT(const cv::Mat& R, const cv::Mat t) const;
 
     private:
         std::shared_ptr<Pipeline::FrameFeatureExtractor> m_FeatureExtractor;
@@ -56,6 +58,10 @@ namespace System
         Eigen::Matrix4d m_CurrentPose = Eigen::Matrix4d::Identity();
         std::unique_ptr<OptimisationGraph> m_OptimisationGraph;
         std::unique_ptr<Features::OpticalFlowEstimator> m_OpticalFlowEstimator;
+        
+    private:
+        std::vector<std::shared_ptr<TrackingFrame>> m_TrackedKeyFrames;
+        std::vector<std::string> m_KeyFrameImagePaths;
     };
 }
 

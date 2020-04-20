@@ -16,7 +16,7 @@
 
 #include "pipeline/OpticalFlowEstimator.hpp"
 
-#define NUM_KEYFRAMES 5
+#define NUM_KEYFRAMES 3
 #define SAMPLE_SIZE 20
 #define IMAGE_FILE_PREFIX "keyframe_"
 
@@ -47,7 +47,7 @@ int main(int argc, char** argv)
 void RunOpticalFlowOnNImages(const std::string& prefix, const std::vector<cv::Mat>& images)
 {
     // read in frame 0 mask
-    cv::Mat mask = cv::imread("keyframe_mask.png", cv::IMREAD_GRAYSCALE);
+    //cv::Mat mask = cv::imread("keyframe_mask.png", cv::IMREAD_GRAYSCALE);
     
     // prepare optical flow data
     std::vector<std::vector<cv::KeyPoint>> keypoints;
@@ -58,7 +58,7 @@ void RunOpticalFlowOnNImages(const std::string& prefix, const std::vector<cv::Ma
     
     // record time
     auto start = std::chrono::high_resolution_clock::now();
-    opticalFlow.EstimateCorrespondingPixels(images, keypoints, mask);
+    opticalFlow.EstimateCorrespondingPixels(images, keypoints);
     auto end = std::chrono::high_resolution_clock::now();
     
     std::cout << "\nDone";

@@ -7,6 +7,7 @@
 #define KEYFRAME_DATABASE_HPP
 
 #include <mutex>
+#include <string>
 #include <unordered_map>
 #include <memory>
 
@@ -41,7 +42,7 @@ namespace System
         /// Update the pose of the given keyframe
         /// \param id The id of the Keyframe
         /// \param pose The new pose for the keyframe
-        void UpdateKeyFramePose(size_t id, const Eigen::Isometry3d& pose);
+        void UpdateKeyFramePose(size_t id, const Eigen::Matrix4f& pose);
         
         /// Check if empty
         /// \return True if database has no keyframes
@@ -50,6 +51,14 @@ namespace System
         /// Get count
         /// \return The number of keyframes currently in the database
         size_t GetCount() const;
+        
+        /// Get the path of a keyframe image on disk
+        /// \param id The id the keyframe
+        /// \return Returns the string path
+        std::string GetKeyFrameImagePath(size_t id) const;
+        
+        /// Dump keyframe poses to CSV file
+        void DumpPosesToCSV();
         
     private:
         size_t m_NextUsableID { 0 };

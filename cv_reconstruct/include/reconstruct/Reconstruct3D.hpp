@@ -34,6 +34,8 @@ namespace Reconstruct
         /// \param rightImage The right camera image
         /// \return The disparity map
         cv::Mat GenerateDisparityMap(const cv::Mat& leftImage, const cv::Mat& rightImage) const;
+        
+        pcl::PointCloud<pcl::PointXYZRGB> GeneratePointCloud(const cv::Mat& disparity, const cv::Mat& cameraImage) const;
 
         /// Generate point cloud using triangulation method
         /// \param disparity The disparity image (parallax map)
@@ -94,6 +96,7 @@ namespace Reconstruct
         float GetNearestNeighbourDisparity(const cv::Mat& disparity, int row, int col, int n) const;
 
     private:
+        cv::Mat m_Q;
         Camera::Calib::StereoCalib m_StereoCameraSetup;
         cv::Ptr<cv::StereoMatcher> m_StereoMatcher { nullptr };
         StereoBlockMatcherType m_StereoBlockMatcherType { STEREO_BLOCK_MATCHER };

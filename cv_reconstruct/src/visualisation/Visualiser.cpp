@@ -13,7 +13,7 @@
 namespace Visualisation
 {
     // Constructor
-    Visualiser::Visualiser(std::shared_ptr<System::MapDataBase> mapDataBase) : PointCloudListener(), m_MapDataBase(mapDataBase)
+    Visualiser::Visualiser(std::shared_ptr<System::MapDataBase> mapDataBase, std::shared_ptr<System::KeyFrameDatabase> kfDataBase) : PointCloudListener(), m_MapDataBase(mapDataBase), m_KeyFrameDataBase(kfDataBase)
     {
         // get access to the point cloud being stored in the database
         m_PointCloud = m_MapDataBase->GetPointCloud();
@@ -48,6 +48,14 @@ namespace Visualisation
         size_t id;
         pcl::PointCloud<pcl::PointXYZRGB>::ConstPtr cloud;
         
+        // update current point cloud poses
+        for (auto id : m_PointCloudsInViewer)
+        {
+            Eigen::Affine3f affine;
+            affine.matrix() = m_KeyFrameDataBase->SelectKeyFrame(id)->GetTrackedPose();
+            m_Viewer->updatePointCloudPose(std::to_string(id), affine);
+        }
+        
         // Get clouds pending for addition and add to the viewer
         while (GetNextPendingCloudForAddition(id, cloud))
         {
@@ -59,6 +67,8 @@ namespace Visualisation
                 m_Viewer->addPointCloud(cloud, rgb, std::to_string(id));
                 m_Viewer->setPointCloudRenderingProperties(pcl::visualization::PCL_VISUALIZER_POINT_SIZE, 1, std::to_string(id));
             }
+            
+            m_PointCloudsInViewer.insert(id);
         }
         
         // Get clouds pending deletion and remove from viewer

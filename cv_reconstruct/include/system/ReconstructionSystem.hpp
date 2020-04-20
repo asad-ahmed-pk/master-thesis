@@ -62,6 +62,8 @@ namespace System
         /// Get access to the map database
         /// \return A shared pointer to the map database
         std::shared_ptr<MapDataBase> GetMapDataBase() const;
+        
+        std::shared_ptr<KeyFrameDatabase> GetKeyFrameDataBase() const;
 
     private:
         Config::Config m_Config;

@@ -14,7 +14,7 @@
 namespace System
 {
     // Constructor
-    TrackingFrame::TrackingFrame(const cv::Mat& cameraImage, const cv::Mat& disparity, std::shared_ptr<Reconstruct::Reconstruct3D> reconstructor) : m_3DReconstructor(reconstructor)
+    TrackingFrame::TrackingFrame(const cv::Mat& cameraImage, const cv::Mat& disparity, std::shared_ptr<Reconstruct::Reconstruct3D> reconstructor, const GPS& gps) : m_3DReconstructor(reconstructor), m_GPSLocation(gps)
     {
         cameraImage.copyTo(m_CameraImage);
         disparity.copyTo(m_Disparity);
@@ -27,6 +27,9 @@ namespace System
         // prune the disparity and set the mask
         m_Mask = cv::Mat(m_CameraImage.rows, m_CameraImage.cols, CV_8U);
         PruneDisparityImage(m_Disparity, m_Mask);
+        
+        // convert disparity to float range
+        m_Disparity.convertTo(m_Disparity, CV_32F, 1.0 / 16.0, 0.0);
         
         // further update mask to only be valid where disparity is not zero
         for (int row = 0; row < m_Mask.rows; row++)
@@ -61,14 +64,16 @@ namespace System
                 }
             }
         }
-        
-        // convert disparity to float range
-        disparity.convertTo(disparity, CV_32F, 1.0 / 16.0, 0.0);
+    }
+
+    float TrackingFrame::DistanceFrom(const TrackingFrame& other) {
+        return m_GPSLocation.DistanceBetweenOtherGPS(other.m_GPSLocation);
     }
 
     // Dense point cloud
     pcl::PointCloud<pcl::PointXYZRGB>::Ptr TrackingFrame::GetDensePointCloud() const {
-        pcl::PointCloud<pcl::PointXYZRGB>::Ptr cloud { new pcl::PointCloud<pcl::PointXYZRGB>(m_3DReconstructor->Triangulate3D(m_Disparity, m_CameraImage)) };
+        pcl::PointCloud<pcl::PointXYZRGB>::Ptr cloud { new pcl::PointCloud<pcl::PointXYZRGB>(m_3DReconstructor->Triangulate3D(m_Disparity, m_CameraImage, m_Mask)) };
+        //pcl::PointCloud<pcl::PointXYZRGB>::Ptr cloud { new pcl::PointCloud<pcl::PointXYZRGB>(m_3DReconstructor->GeneratePointCloud(m_Disparity, m_CameraImage)) };
         return cloud;
     }
 
@@ -90,8 +95,12 @@ namespace System
     }
 
     // Set tracked pose
-    void TrackingFrame::SetTrackedPose(const Eigen::Isometry3d& pose) {
-        m_Pose = pose;
+    void TrackingFrame::SetTrackedPose(const Eigen::Matrix4f& pose) {
+        m_EstimatedPose = pose;
+    }
+
+    Eigen::Matrix4f TrackingFrame::GetTrackedPose() const {
+        return m_EstimatedPose;
     }
 
     // Set id

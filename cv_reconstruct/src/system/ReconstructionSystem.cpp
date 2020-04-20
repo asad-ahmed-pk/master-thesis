@@ -20,7 +20,7 @@ namespace System
         m_KeyFrameDatabase = std::make_shared<KeyFrameDatabase>();
         
         // mapping subsystem: performs windowed BA and local optimisation of the map
-        m_MappingSystem = std::make_shared<MappingSystem>(m_3DReconstructor);
+        m_MappingSystem = std::make_shared<MappingSystem>(m_3DReconstructor, m_KeyFrameDatabase);
         m_MappingSystem->StartOptimisationThread();
         
         // tracker: tracks frames for local mapping and quick localisation
@@ -48,7 +48,11 @@ namespace System
         disparity = m_3DReconstructor->GenerateDisparityMap(leftImage, rightImage);
 
         // create the tracking frame for this stereo frame and pass to tracker to track
-        std::shared_ptr<TrackingFrame> frame { new TrackingFrame(leftImage, disparity, m_3DReconstructor) };
+        GPS gps;
+        gps.Latitude = stereoFrame.Translation(0);
+        gps.Longitude = stereoFrame.Translation(1);
+        gps.Altitude = stereoFrame.Translation(2);
+        std::shared_ptr<TrackingFrame> frame { new TrackingFrame(leftImage, disparity, m_3DReconstructor, gps) };
         m_Tracker->TrackFrame(frame);
     }
 
@@ -57,8 +61,11 @@ namespace System
     {
         m_RequestedShutdown = true;
         
+        // dump keyframe poses
+        m_KeyFrameDatabase->DumpPosesToCSV();
+        
         // perform full BA and save to disk
-        m_MappingSystem->FullBA();
+        //m_MappingSystem->FullBA();
     }
 
     // Get current map
@@ -69,5 +76,9 @@ namespace System
     // Get map database
     std::shared_ptr<MapDataBase> ReconstructionSystem::GetMapDataBase() const {
         return m_MappingSystem->GetMapDataBase();
+    }
+
+    std::shared_ptr<KeyFrameDatabase> ReconstructionSystem::GetKeyFrameDataBase() const {
+        return m_KeyFrameDatabase;
     }
 }

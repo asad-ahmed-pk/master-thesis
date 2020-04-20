@@ -70,7 +70,7 @@ namespace Server
         std::cout << "\nClient connected. Recieving stereo stream..." << std::endl;
         
         // create and run visualiser (on main thread)
-        m_Visualiser = std::make_unique<Visualisation::Visualiser>(m_ReconstructionSystem->GetMapDataBase());
+        m_Visualiser = std::make_unique<Visualisation::Visualiser>(m_ReconstructionSystem->GetMapDataBase(), m_ReconstructionSystem->GetKeyFrameDataBase());
         m_Visualiser->Run();
         
         // if here - window was closed
@@ -142,8 +142,8 @@ namespace Server
                 frame.ID = m_NumFramesProcessed;
                 
                 // downsize the image to half its size
-                cv::resize(frame.LeftImage, frame.LeftImage, cv::Size(frame.LeftImage.cols * IMAGE_DOWNSIZE_FACTOR, frame.LeftImage.rows * IMAGE_DOWNSIZE_FACTOR));
-                cv::resize(frame.RightImage, frame.RightImage, cv::Size(frame.RightImage.cols * IMAGE_DOWNSIZE_FACTOR, frame.RightImage.rows * IMAGE_DOWNSIZE_FACTOR));
+                //cv::resize(frame.LeftImage, frame.LeftImage, cv::Size(frame.LeftImage.cols * IMAGE_DOWNSIZE_FACTOR, frame.LeftImage.rows * IMAGE_DOWNSIZE_FACTOR));
+                //cv::resize(frame.RightImage, frame.RightImage, cv::Size(frame.RightImage.cols * IMAGE_DOWNSIZE_FACTOR, frame.RightImage.rows * IMAGE_DOWNSIZE_FACTOR));
 
                 // submit to reconstruction system for processing
                 m_ReconstructionSystem->ProcessStereoFrame(frame);

@@ -23,6 +23,12 @@ void PointCloudListener::PointCloudWasDeleted(size_t id)
     m_DeletionMutex.unlock();
 }
 
+// Point cloud updated
+void PointCloudListener::PointCloudWasUpdated(size_t id)
+{
+    
+}
+
 // Get next pending cloud for addition
 bool PointCloudListener::GetNextPendingCloudForAddition(size_t& id, pcl::PointCloud<pcl::PointXYZRGB>::ConstPtr& cloud)
 {

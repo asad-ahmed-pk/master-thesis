@@ -23,9 +23,16 @@ namespace Reconstruct
     //constexpr int SGM_P2 = 32 * 3 * SGM_BLOCK_SIZE * SGM_BLOCK_SIZE;
 
     // Constructor
-    Reconstruct3D::Reconstruct3D(const Camera::Calib::StereoCalib& stereoSetup, const Config::Config& config) : m_StereoCameraSetup(stereoSetup) {
+    Reconstruct3D::Reconstruct3D(const Camera::Calib::StereoCalib& stereoSetup, const Config::Config& config) : m_StereoCameraSetup(stereoSetup)
+{
         // setup stereo matcher
         ConfigureSteoreoMatcher(config);
+    
+        // calculate and store the Q matrix (3D projection)
+        Eigen::Matrix4f Q = Eigen::Matrix4f::Identity();
+        float f = (m_StereoCameraSetup.LeftCameraCalib.K(0, 0) + m_StereoCameraSetup.RightCameraCalib.K(0, 0)) / 2.0f;
+        Q(2, 2) = 0.005 * f;
+        cv::eigen2cv(Q, m_Q);
     }
 
     // Configure stereo matcher from config
@@ -93,6 +100,56 @@ namespace Reconstruct
             cx = m_StereoCameraSetup.LeftCameraCalib.K(0, 2);
             cy = m_StereoCameraSetup.LeftCameraCalib.K(1, 2);
         }
+    }
+
+    // Point cloud generation
+    pcl::PointCloud<pcl::PointXYZRGB> Reconstruct3D::GeneratePointCloud(const cv::Mat& disparity, const cv::Mat& cameraImage) const
+    {
+        cv::Mat reprojected3D;
+        cv::reprojectImageTo3D(disparity, reprojected3D, m_Q, true);
+
+        pcl::PointCloud<pcl::PointXYZRGB> pointCloud;
+        cv::Vec3f coords;
+        pcl::PointXYZRGB point;
+
+        uint32_t count = 0;
+
+        for (int row = 0; row < reprojected3D.rows; row++)
+        {
+            for (int col = 0; col < reprojected3D.cols; col++)
+            {
+                coords = reprojected3D.at<cv::Vec3f>(row, col);
+
+                // skip points with infinity values and zero depth
+                if (coords[2] == MISSING_DISPARITY_Z) {
+                    continue;
+                }
+
+                // set 3D point X,Y,Z and RGB
+                point.x = (coords[0] - (cameraImage.cols / 2.0f));
+                point.y = -(coords[1] - (cameraImage.rows / 2.0f));
+                point.z = coords[2];
+
+                point.r = cameraImage.at<cv::Vec3b>(row, col)[2];
+                point.g = cameraImage.at<cv::Vec3b>(row, col)[1];
+                point.b = cameraImage.at<cv::Vec3b>(row, col)[0];
+
+                pointCloud.push_back(point);
+
+                count++;
+            }
+        }
+
+        pointCloud.width = count;
+        pointCloud.height = 1;
+        pointCloud.is_dense = true;
+
+        // perspective fix
+        Eigen::Matrix4f P = Eigen::Matrix4f::Identity();
+        P(0, 0) = -1;
+        pcl::transformPointCloud(pointCloud, pointCloud, P);
+
+        return pointCloud;
     }
 
     // Generate point cloud by direct calculation from disparity

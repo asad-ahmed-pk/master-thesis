@@ -49,7 +49,7 @@ namespace System
         /// Add a default camera pose vertex with the given internal ID
         /// \param isFixed Set to true if this vertex will be fixed
         /// \return The ID of the newly created vertex
-        int AddDefaultCameraPoseVertex(bool isFixed);
+        int AddDefaultCameraPoseVertex(bool isFixed, g2o::SE3Quat estimate = g2o::SE3Quat());
         
         /// Remove the camera pose vertex with the given ID
         /// \param id The ID to set for the vertex
@@ -73,6 +73,8 @@ namespace System
         /// \param camera The ID of the camera pose vertex
         /// \return The estimated isomtery for the pose
         Eigen::Isometry3d GetCameraPose(int camera);
+        
+        g2o::SE3Quat GetCameraVertexPose(int camera);
         
         /// Get the 3D points observed by the camera with the given ID
         /// \param camera The ID of the camera

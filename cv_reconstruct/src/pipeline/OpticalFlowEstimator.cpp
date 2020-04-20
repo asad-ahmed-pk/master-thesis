@@ -11,7 +11,7 @@
 #define NUM_LEVELS 3
 #define PYR_SCALE 0.5
 #define FAST_PYR false
-#define WIN_SIZE 5
+#define WIN_SIZE 179
 #define NUM_ITERS 10
 #define POLY_N 5
 #define POLY_SIGMA 1.0
@@ -20,7 +20,7 @@ namespace Features
 {
     // Constructor
     OpticalFlowEstimator::OpticalFlowEstimator() {
-        m_FarnebackOF = cv::FarnebackOpticalFlow::create(NUM_LEVELS, PYR_SCALE, FAST_PYR, WIN_SIZE, NUM_ITERS, POLY_N, POLY_SIGMA);
+        //m_FarnebackOF = cv::FarnebackOpticalFlow::create(NUM_LEVELS, PYR_SCALE, FAST_PYR, WIN_SIZE, NUM_ITERS, POLY_N, POLY_SIGMA);
     }
 
     // Flow from image1 to image2

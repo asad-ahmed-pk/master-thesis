@@ -54,6 +54,8 @@ namespace System
         /// \return A const shared pointer to the underlying point cloud being actively built and refined
         pcl::PointCloud<pcl::PointXYZRGB>::ConstPtr GetPointCloud() const;
         
+        pcl::PointCloud<pcl::PointXYZRGB>::ConstPtr GetPointCloud(size_t id);
+        
         void RegisterAsListener(Visualisation::PointCloudListener* listener);
         
         bool SafeToRead() const;

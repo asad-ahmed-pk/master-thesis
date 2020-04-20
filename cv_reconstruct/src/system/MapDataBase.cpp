@@ -131,6 +131,10 @@ namespace System
         return m_Blocks.empty();
     }
 
+    pcl::PointCloud<pcl::PointXYZRGB>::ConstPtr MapDataBase::GetPointCloud(size_t id) {
+        return m_Blocks[id]->GetPoints();
+    }
+
     pcl::PointCloud<pcl::PointXYZRGB>::ConstPtr MapDataBase::GetPointCloud() const {
         return m_CurrentPointCloud;
     }

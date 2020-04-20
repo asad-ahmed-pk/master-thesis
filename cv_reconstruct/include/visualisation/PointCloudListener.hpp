@@ -34,6 +34,8 @@ public:
     /// \param id The ID of the point cloud that was deleted
     void PointCloudWasDeleted(size_t id);
     
+    void PointCloudWasUpdated(size_t id);
+    
     /// Get next pending cloud for addition
     /// \param id Will be set to the ID for the next point cloud
     /// \param cloud Will be set to point to a cloud pending addition
