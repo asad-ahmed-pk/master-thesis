@@ -17,10 +17,19 @@
 #include <pcl/point_cloud.h>
 #include <pcl/point_types.h>
 
+// KITTI
 #define fx 959.791015
 #define fy 956.925109
 #define cx 696.021728
 #define cy 224.180603
+
+// Custom StereoPI
+/*
+#define fx 312.0666033808294
+#define fy 311.9593070284793
+#define cx 153.1568537097782
+#define cy 128.818234056104
+*/
 
 using namespace std;
 using namespace cv;

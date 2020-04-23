@@ -55,6 +55,11 @@ namespace System
             m_KeyFrameDatabase->InsertKeyFrame(frame);
             m_TrackedKeyFrames.push_back(frame);
             m_KeyFrameImagePaths.push_back(m_KeyFrameDatabase->GetKeyFrameImagePath(frame->GetID()));
+            
+            // save first keyframe point cloud for debugging
+            auto pc = frame->GetDensePointCloud();
+            cv::imwrite("keyframe_0_disparity.png", frame->GetDisparity());
+            pcl::io::savePCDFileBinary("keyframe_0_point_cloud.pcd", *pc);
         }
         else {
             // track against last keyframe
@@ -92,42 +97,15 @@ namespace System
         m_3DReconstructor->GetCameraParameters(fx, fy, cx, cy);
         cv::Matx33d K = cv::Matx33d( fx, 0, cx, 0, fy, cy, 0, 0, 1);
         
+        // run OpenCV SfM pipeline for pose estimation
         std::vector<cv::Mat> Rs_est, ts_est, points3d_estimated;
         cv::sfm::reconstruct(m_KeyFrameImagePaths, Rs_est, ts_est, K, points3d_estimated, true);
-        
-        /*
-        std::cout << "\n----------------------------\n" << std::endl;
-        std::cout << "Reconstruction: " << std::endl;
-        std::cout << "============================" << std::endl;
-        std::cout << "Estimated 3D points: " << points3d_estimated.size() << std::endl;
-        std::cout << "Estimated cameras: " << Rs_est.size() << std::endl;
-        std::cout << "Refined intrinsics: " << std::endl << K << std::endl << std::endl;
-        std::cout << "3D Visualization: " << std::endl;
-        std::cout << "============================" << std::endl;
-        */
-        
-        // get points
-        if (currentFrame->GetID() == 15)
-        {
-            std::vector<cv::Vec3f> point_cloud_est;
-            for (int i = 0; i < points3d_estimated.size(); ++i)
-              point_cloud_est.push_back(cv::Vec3f(points3d_estimated[i]));
-            
-            // save as PCD
-            pcl::PointCloud<pcl::PointXYZ> pcd;
-            for (auto cvp : point_cloud_est) {
-                pcl::PointXYZ p(cvp(0), cvp(1), cvp(2));
-                pcd.push_back(p);
-            }
-            pcl::io::savePCDFileBinary("opencv_sfm_output.pcd", pcd);
-        }
-        
         
         // keyframes to send to mapper
         std::vector<std::shared_ptr<TrackingFrame>> processedKeyFrames;
         
         // update all poses
-        for (size_t i = 0; i < m_TrackedKeyFrames.size(); i++) {
+        for (size_t i = 0; i < Rs_est.size(); i++) {
             auto kf = m_TrackedKeyFrames[i];
             kf->SetTrackedPose(PoseFromCVRT(Rs_est[i], ts_est[i]));
         }

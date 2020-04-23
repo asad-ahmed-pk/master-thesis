@@ -306,13 +306,13 @@ namespace System
             outrem.setMinNeighborsInRadius(300);
             //outrem.filter (*keyFramePointCloud);
             
-            // scale down cloud
+            // scale point cloud
             float S = 2.0;
             Eigen::Matrix4f ST = Eigen::Matrix4f::Identity();
             ST (0,0) = ST (0,0) * S;
             ST (1,1) = ST (1,1) * S;
             ST (2,2) = ST (2,2) * S;
-            pcl::transformPointCloud(*keyFramePointCloud, *keyFramePointCloud, ST);
+            //pcl::transformPointCloud(*keyFramePointCloud, *keyFramePointCloud, ST);
             
             // move cloud to estimated pose
             pcl::transformPointCloud(*keyFramePointCloud, *keyFramePointCloud, keyFrame->GetTrackedPose());

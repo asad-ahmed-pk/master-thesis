@@ -30,6 +30,12 @@ namespace Visualisation
             std::this_thread::sleep_for(std::chrono::milliseconds(100));
         }
         
+        // wait until queue has a point cloud if viewer has not been init
+        while (m_Viewer == nullptr) {
+            std::this_thread::sleep_for(std::chrono::milliseconds(100));
+            Update();
+        }
+        
         // update viewer
         Update();
 

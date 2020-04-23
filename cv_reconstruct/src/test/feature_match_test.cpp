@@ -16,7 +16,7 @@
 
 #include "pipeline/OpticalFlowEstimator.hpp"
 
-#define NUM_KEYFRAMES 3
+#define NUM_KEYFRAMES 4
 #define SAMPLE_SIZE 20
 #define IMAGE_FILE_PREFIX "keyframe_"
 

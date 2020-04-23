@@ -20,7 +20,7 @@ namespace Features
 {
     // Constructor
     OpticalFlowEstimator::OpticalFlowEstimator() {
-        //m_FarnebackOF = cv::FarnebackOpticalFlow::create(NUM_LEVELS, PYR_SCALE, FAST_PYR, WIN_SIZE, NUM_ITERS, POLY_N, POLY_SIGMA);
+        m_FarnebackOF = cv::FarnebackOpticalFlow::create(NUM_LEVELS, PYR_SCALE, FAST_PYR, WIN_SIZE, NUM_ITERS, POLY_N, POLY_SIGMA);
     }
 
     // Flow from image1 to image2

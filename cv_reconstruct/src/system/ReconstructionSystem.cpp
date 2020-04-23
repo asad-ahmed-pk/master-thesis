@@ -3,6 +3,10 @@
 // Main system for 3D reconstruction. Computes keyframes, and creates 3D map.
 //
 
+#include <pcl/point_cloud.h>
+#include <pcl/point_types.h>
+#include <pcl/io/pcd_io.h>
+
 #include "system/MapDataBase.hpp"
 #include "system/ReconstructionSystem.hpp"
 
@@ -63,6 +67,11 @@ namespace System
         
         // dump keyframe poses
         m_KeyFrameDatabase->DumpPosesToCSV();
+        
+        // save point cloud
+        std::cout << "\nPoint cloud saved to disk: scene_cloud.pcd" << std::endl;
+        auto cloud = m_MappingSystem->GetMapDataBase()->GetPointCloud();
+        pcl::io::savePCDFileBinary("scene_cloud.pcd", *cloud);
         
         // perform full BA and save to disk
         //m_MappingSystem->FullBA();
