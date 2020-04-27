@@ -1,6 +1,9 @@
 # Master Thesis (Jacobs University Bremen)
 ## A Stereo SLAM Pipeline For Dense 3D Reconstruction
 
+![](images/image_01.jpg)
+![](images/image_02.png)
+
 ### Description
 The aim of this thesis is to build a large scale 3D reconstruction pipeline, with applications for realtime 3D mapping.
 
